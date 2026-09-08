@@ -1,0 +1,7 @@
+{
+  "surface": "database",
+  "ts": "2026-06-15T08:01:53Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "ok",
+  "body": {"checks": [{"db": "data/talentshill.db", "tables": 78, "integrity": "ok"}], "all_ok": true, "count": 1}
+}

@@ -1,63 +1,42 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-
-const STORAGE_KEY = "cookie-consent";
+import { useState, useEffect } from 'react';
+import Button from '@/components/ui/Button';
 
 export default function CookieConsent() {
-  const [show, setShow] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      setShow(true);
-    }
+    const consent = localStorage.getItem('cookie-consent');
+    if (!consent) setVisible(true);
   }, []);
 
-  const handleAccept = () => {
-    localStorage.setItem(STORAGE_KEY, "accepted");
-    setShow(false);
+  const accept = () => {
+    localStorage.setItem('cookie-consent', 'accepted');
+    setVisible(false);
   };
 
-  const handleDecline = () => {
-    localStorage.setItem(STORAGE_KEY, "declined");
-    setShow(false);
+  const decline = () => {
+    localStorage.setItem('cookie-consent', 'declined');
+    setVisible(false);
   };
+
+  if (!visible) return null;
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          key="cookie-consent"
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 w-full z-50 bg-gray-900 text-white px-6 py-4 shadow-lg"
-        >
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-center sm:text-left">
-              We use cookies to enhance your experience. By continuing to visit
-              this site you agree to our use of cookies.
-            </p>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={handleDecline}
-                className="px-4 py-2 text-sm rounded-md border border-gray-500 text-gray-300 hover:bg-gray-800 transition-colors cursor-pointer"
-              >
-                Decline
-              </button>
-              <button
-                onClick={handleAccept}
-                className="px-4 py-2 text-sm rounded-md bg-primary text-white hover:bg-accent transition-colors cursor-pointer"
-              >
-                Accept
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)',
+      padding: 'var(--space-4) var(--space-6)', display: 'flex', alignItems: 'center',
+      justifyContent: 'space-between', gap: 'var(--space-4)', zIndex: 500, flexWrap: 'wrap',
+    }}>
+      <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', flex: 1, minWidth: '200px' }}>
+        We use cookies to improve your experience. By continuing, you agree to our cookie policy.
+      </p>
+      <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+        <Button size="sm" variant="ghost" onClick={decline}>Decline</Button>
+        <Button size="sm" onClick={accept}>Accept</Button>
+      </div>
+    </div>
   );
 }

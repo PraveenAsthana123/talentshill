@@ -1,0 +1,82 @@
+.page { padding: var(--space-6); }
+
+/* ── Back Link ── */
+.backLink { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-heading); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); text-decoration: none; margin-bottom: var(--space-6); }
+.backLink:hover { text-decoration: underline; }
+
+/* ── Filter Tabs ── */
+.filterGroup { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
+.filterLabel { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; min-width: 50px; }
+.tabs { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.tab { padding: var(--space-2) var(--space-4); background: none; border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); cursor: pointer; text-transform: capitalize; transition: all 0.15s; }
+.tab:hover { border-color: var(--color-heading); color: var(--color-heading); }
+.tabActive { background: var(--color-heading); border-color: var(--color-heading); color: #fff; }
+
+/* ── Table ── */
+.tableWrap { overflow-x: auto; background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); margin-top: var(--space-4); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.table th { text-align: left; padding: var(--space-4); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; }
+.table td { padding: var(--space-4); border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: rgba(30, 64, 175, 0.03); }
+.selectedRow td { background: rgba(30, 64, 175, 0.06); }
+
+.typeCell { font-weight: var(--font-weight-semibold); text-transform: capitalize; }
+.dateCell { font-size: var(--font-size-xs); color: var(--color-text-secondary); white-space: nowrap; }
+.errorCell { font-size: var(--font-size-xs); color: #dc2626; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.expandCell { font-size: var(--font-size-xs); color: var(--color-text-muted); text-align: center; width: 30px; }
+
+/* ── Status Badges ── */
+.statusBadge { display: inline-block; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); text-transform: capitalize; }
+.statusPending { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.statusRunning { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.statusCompleted { background: rgba(5, 150, 105, 0.1); color: #059669; }
+.statusFailed { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
+
+/* ── Expanded Detail ── */
+.detailCell { padding: 0 !important; border-bottom: 1px solid var(--color-border); }
+.detailContent { padding: var(--space-6); background: rgba(30, 64, 175, 0.02); display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+.detailSectionTitle { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-3); }
+
+/* ── Steps Timeline ── */
+.stepsSection { grid-column: 1; }
+.timeline { display: flex; flex-direction: column; gap: var(--space-3); }
+.timelineItem { display: flex; gap: var(--space-3); align-items: flex-start; }
+.timelineDot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.timelineDot.stepPending { background: #d97706; }
+.timelineDot.stepRunning { background: #3b82f6; }
+.timelineDot.stepCompleted { background: #059669; }
+.timelineDot.stepFailed { background: #dc2626; }
+.timelineBody { flex: 1; }
+.stepName { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+.stepMeta { display: flex; align-items: center; gap: var(--space-2); margin-top: 2px; }
+.stepBadge { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); text-transform: capitalize; }
+.stepBadge.stepPending { color: #d97706; }
+.stepBadge.stepRunning { color: #3b82f6; }
+.stepBadge.stepCompleted { color: #059669; }
+.stepBadge.stepFailed { color: #dc2626; }
+.stepTime { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+.stepMessage { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
+
+/* ── Metrics Table ── */
+.metricsSection { grid-column: 2; }
+.metricsTable { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.metricsTable th { text-align: left; padding: var(--space-2) var(--space-3); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
+.metricsTable td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); }
+.metricName { font-size: var(--font-size-xs); color: var(--color-text-secondary); text-transform: capitalize; }
+.metricValue { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-heading); font-family: monospace; }
+
+/* ── Error Detail ── */
+.errorDetail { grid-column: 1 / -1; }
+.errorPre { background: rgba(220, 38, 38, 0.05); border: 1px solid rgba(220, 38, 38, 0.1); border-radius: var(--radius-md); padding: var(--space-4); font-size: var(--font-size-xs); color: #dc2626; overflow-x: auto; white-space: pre-wrap; word-break: break-word; font-family: monospace; }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: var(--space-12); color: var(--color-text-muted); }
+
+@media (max-width: 768px) {
+  .detailContent { grid-template-columns: 1fr; }
+  .stepsSection { grid-column: 1; }
+  .metricsSection { grid-column: 1; }
+  .errorDetail { grid-column: 1; }
+  .filterGroup { flex-direction: column; align-items: flex-start; }
+}

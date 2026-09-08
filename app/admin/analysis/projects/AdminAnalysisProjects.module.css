@@ -1,0 +1,28 @@
+.page { padding: var(--space-6); }
+
+.backLink { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-heading); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); text-decoration: none; margin-bottom: var(--space-6); }
+.backLink:hover { text-decoration: underline; }
+
+.empty { text-align: center; padding: var(--space-12); color: var(--color-text-muted); }
+
+.projectList { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.projectCard { background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-5); }
+.projectHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3); }
+.projectName { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-heading); }
+.projectStats { display: flex; gap: var(--space-4); }
+.projectStat { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.projectStat strong { color: var(--color-heading); }
+
+.assessmentGrid { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.assessmentChip { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--font-size-xs); min-width: 60px; background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+.chipScore { font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); }
+.chipProgress { font-size: 10px; }
+
+.chip_not_started { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+.chip_in_progress { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.chip_completed { background: rgba(5, 150, 105, 0.1); color: #059669; }
+
+@media (max-width: 768px) {
+  .projectHeader { flex-direction: column; align-items: flex-start; }
+}

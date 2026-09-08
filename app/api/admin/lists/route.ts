@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getAllLists, createList } from '@/lib/db/list-queries';
+import { getSessionUserIdAsync } from '@/lib/security/rbac';
+
+export async function GET() {
+  try {
+    const listsList = getAllLists();
+    return NextResponse.json({ lists: listsList });
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch lists' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { name, description, type, segmentRules } = body;
+
+    if (!name) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
+
+    const userId = await getSessionUserIdAsync(request);
+    const id = createList({
+      name,
+      description,
+      type,
+      segmentRules,
+      createdBy: userId ?? undefined,
+    });
+
+    return NextResponse.json({ id }, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: 'Failed to create list' }, { status: 500 });
+  }
+}

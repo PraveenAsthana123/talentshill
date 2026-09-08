@@ -1,0 +1,7 @@
+{
+  "surface": "embedding",
+  "ts": "2026-06-19T08:02:36Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "skip",
+  "body": {"status": "skip", "reason": "missing chunks or embeddings dir"}
+}

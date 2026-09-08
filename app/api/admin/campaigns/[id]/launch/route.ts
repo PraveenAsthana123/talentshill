@@ -1,0 +1,39 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getCampaignById, updateCampaign } from '@/lib/db/campaign-queries';
+import { createJob } from '@/lib/db/job-queries';
+import { getSessionUserIdAsync } from '@/lib/security/rbac';
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const campaign = getCampaignById(id);
+
+    if (!campaign) {
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+    }
+
+    if (campaign.status !== 'draft' && campaign.status !== 'paused') {
+      return NextResponse.json({ error: 'Campaign cannot be launched in current status' }, { status: 400 });
+    }
+
+    const userId = await getSessionUserIdAsync(request);
+
+    // Update campaign status
+    updateCampaign(id, { status: 'scheduled', startedAt: new Date() });
+
+    // Create a job for the campaign sender
+    createJob({
+      type: 'campaign_send',
+      payload: { campaignId: id },
+      priority: 5,
+      createdBy: userId ?? undefined,
+    });
+
+    return NextResponse.json({ success: true, message: 'Campaign launched' });
+  } catch {
+    return NextResponse.json({ error: 'Failed to launch campaign' }, { status: 500 });
+  }
+}

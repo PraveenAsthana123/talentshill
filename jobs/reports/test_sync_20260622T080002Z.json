@@ -1,0 +1,7 @@
+{
+  "surface": "sync",
+  "ts": "2026-06-22T08:02:44Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "red",
+  "body": {"stats": {}, "errors": 0, "non_zero_stores": 0, "passed": false}
+}

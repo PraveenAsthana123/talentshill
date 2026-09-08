@@ -1,0 +1,32 @@
+.page { padding: var(--space-6); }
+
+.empty { text-align: center; padding: var(--space-12); color: var(--color-text-muted); }
+
+.campaignList { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.campaignCard { background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-5); }
+.campaignHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+.campaignName { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-heading); }
+.campaignStatus { padding: var(--space-1) var(--space-3); background: rgba(99, 102, 241, 0.1); color: #6366f1; border-radius: var(--radius-full); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); text-transform: capitalize; }
+
+.progressSection { margin-bottom: var(--space-4); }
+.progressRow { display: flex; align-items: center; gap: var(--space-3); }
+.progressLabel { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); min-width: 40px; }
+.progressTrack { flex: 1; height: 8px; background: var(--color-border); border-radius: var(--radius-full); overflow: hidden; }
+.progressFill { height: 100%; background: var(--color-heading); border-radius: var(--radius-full); transition: width 0.5s; }
+.progressValue { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-heading); min-width: 80px; text-align: right; }
+
+.funnelSection { padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.funnelTitle { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); margin-bottom: var(--space-3); }
+.funnel { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.funnelStep { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-3) var(--space-4); background: rgba(30, 64, 175, 0.04); border-radius: var(--radius-md); min-width: 80px; }
+.funnelValue { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-heading); }
+.funnelLabel { font-size: var(--font-size-xs); color: var(--color-text-secondary); text-align: center; }
+.funnelArrow { color: var(--color-text-muted); font-size: var(--font-size-lg); }
+
+.bounceAlert { margin-top: var(--space-3); padding: var(--space-2) var(--space-3); background: rgba(220, 38, 38, 0.08); border-radius: var(--radius-md); font-size: var(--font-size-xs); color: #dc2626; font-weight: var(--font-weight-semibold); }
+
+@media (max-width: 768px) {
+  .funnel { flex-direction: column; align-items: flex-start; }
+  .funnelArrow { transform: rotate(90deg); }
+}

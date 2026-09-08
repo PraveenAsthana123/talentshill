@@ -1,0 +1,40 @@
+.page { padding: var(--space-6); }
+
+.message { padding: var(--space-3) var(--space-4); background: rgba(5, 150, 105, 0.1); border: 1px solid rgba(5, 150, 105, 0.3); border-radius: var(--radius-md); color: #059669; font-size: var(--font-size-sm); margin-bottom: var(--space-4); }
+
+.nameBar { display: flex; gap: var(--space-3); align-items: center; margin-bottom: var(--space-6); }
+.nameInput { flex: 1; max-width: 400px; padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); }
+.nameInput::placeholder { color: var(--color-text-muted); font-weight: var(--font-weight-normal); }
+
+.stepIndicators { display: flex; gap: var(--space-1); margin-bottom: var(--space-6); overflow-x: auto; padding-bottom: var(--space-2); }
+.stepIndicator { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); padding: var(--space-2) var(--space-3); background: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; min-width: 100px; transition: all 0.15s; flex-shrink: 0; }
+.stepIndicator:hover { border-color: var(--color-heading); }
+.stepActive { background: var(--color-heading); border-color: var(--color-heading); }
+.stepActive .stepNum { color: #fff; }
+.stepActive .stepLabel { color: rgba(255,255,255,0.9); }
+.stepDone { border-color: #059669; }
+.stepDone .stepNum { color: #059669; }
+.stepNum { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text-muted); }
+.stepLabel { font-size: 10px; color: var(--color-text-muted); text-align: center; white-space: nowrap; }
+
+.stepCard { background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); min-height: 250px; margin-bottom: var(--space-4); }
+.stepContent { display: flex; flex-direction: column; gap: var(--space-4); }
+.stepTitle { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-heading); }
+.hint { font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.5; }
+.hint a { color: var(--color-heading); text-decoration: none; font-weight: var(--font-weight-semibold); }
+.hint a:hover { text-decoration: underline; }
+.statusText { font-size: var(--font-size-sm); color: var(--color-text); }
+
+.select { width: 100%; max-width: 500px; padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: var(--font-size-sm); }
+
+.chipList { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); background: rgba(30, 64, 175, 0.1); border-radius: var(--radius-full); font-size: var(--font-size-xs); color: var(--color-heading); font-family: monospace; }
+.chipRemove { background: none; border: none; color: var(--color-heading); cursor: pointer; font-size: var(--font-size-sm); }
+
+.navButtons { display: flex; justify-content: space-between; }
+
+@media (max-width: 768px) {
+  .stepIndicators { gap: var(--space-1); }
+  .stepIndicator { min-width: 70px; padding: var(--space-2); }
+  .stepLabel { font-size: 8px; }
+}

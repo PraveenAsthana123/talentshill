@@ -1,0 +1,121 @@
+[
+  {
+    "id": "ml-engineer-senior",
+    "title": "Senior ML Engineer",
+    "department": "AI & Machine Learning",
+    "location": "Remote / New York",
+    "type": "full-time",
+    "posted": "2025-12-15",
+    "summary": "Lead the development of production ML pipelines and model deployment infrastructure for enterprise clients.",
+    "description": "We are looking for a Senior ML Engineer to design and build end-to-end ML systems. You will work closely with data scientists and product teams to bring AI models from research to production at scale.",
+    "requirements": [
+      "5+ years experience in ML engineering or related field",
+      "Strong Python skills (PyTorch, TensorFlow, scikit-learn)",
+      "Experience with ML Ops (MLflow, Kubeflow, or similar)",
+      "Cloud platforms (AWS SageMaker, Azure ML, or GCP Vertex)",
+      "Experience deploying models at scale (Docker, Kubernetes)",
+      "Strong communication and client-facing skills"
+    ],
+    "niceToHave": [
+      "Experience with LLMs and RAG pipelines",
+      "Background in NLP or Computer Vision",
+      "Contributions to open-source ML projects"
+    ],
+    "benefits": [
+      "Competitive salary + equity",
+      "Remote-first culture",
+      "Health, dental, and vision insurance",
+      "Annual learning budget ($3,000)",
+      "Conference attendance sponsorship"
+    ]
+  },
+  {
+    "id": "genai-architect",
+    "title": "GenAI Solutions Architect",
+    "department": "Generative AI",
+    "location": "Remote / San Francisco",
+    "type": "full-time",
+    "posted": "2025-12-20",
+    "summary": "Architect and deliver GenAI solutions including RAG pipelines, AI copilots, and custom LLM deployments for enterprise clients.",
+    "description": "As a GenAI Solutions Architect, you will design end-to-end generative AI systems for our clients. This includes building RAG architectures, fine-tuning LLMs, implementing guardrails, and ensuring production reliability.",
+    "requirements": [
+      "4+ years in AI/ML with focus on NLP or GenAI",
+      "Hands-on experience with OpenAI API, Azure OpenAI, or similar",
+      "Experience building RAG systems (vector DBs, embeddings, retrieval)",
+      "Strong software engineering skills (Python, TypeScript)",
+      "Client-facing consulting or pre-sales experience",
+      "Understanding of AI safety and responsible AI practices"
+    ],
+    "niceToHave": [
+      "Experience with LangChain, LlamaIndex, or similar frameworks",
+      "Background in enterprise search or knowledge management",
+      "Published research or blog posts on GenAI topics"
+    ],
+    "benefits": [
+      "Competitive salary + performance bonus",
+      "Remote-first with optional office access",
+      "Latest hardware and tools",
+      "Flexible PTO policy",
+      "401(k) matching"
+    ]
+  },
+  {
+    "id": "robotics-engineer",
+    "title": "Robotics Software Engineer",
+    "department": "Robotics & Automation",
+    "location": "Austin, TX (Hybrid)",
+    "type": "full-time",
+    "posted": "2025-12-10",
+    "summary": "Develop software for industrial robotics systems including path planning, computer vision, and real-time control.",
+    "description": "Join our Robotics team to build cutting-edge software for industrial robots. You will work on perception, planning, and control systems for manufacturing and logistics automation.",
+    "requirements": [
+      "3+ years in robotics software development",
+      "Experience with ROS/ROS2",
+      "Strong C++ and Python skills",
+      "Computer vision experience (OpenCV, point clouds)",
+      "Understanding of kinematics, dynamics, and motion planning",
+      "Experience with real-time systems"
+    ],
+    "niceToHave": [
+      "Experience with simulation (Gazebo, Isaac Sim)",
+      "SLAM and autonomous navigation experience",
+      "Hardware prototyping and sensor integration"
+    ],
+    "benefits": [
+      "Competitive salary",
+      "Robotics lab access",
+      "Health and wellness benefits",
+      "Relocation assistance",
+      "Patent bonus program"
+    ]
+  },
+  {
+    "id": "data-analyst-intern",
+    "title": "Data Analytics Intern",
+    "department": "Analytics",
+    "location": "Remote",
+    "type": "contract",
+    "posted": "2025-12-22",
+    "summary": "Support the analytics team with data analysis, dashboard creation, and client reporting.",
+    "description": "A 6-month internship where you will work alongside senior analysts on real client projects. You will build dashboards, clean datasets, and help derive insights from marketing and customer data.",
+    "requirements": [
+      "Currently pursuing or recently completed degree in Data Science, Statistics, CS, or related",
+      "Proficiency in Python or R",
+      "Basic SQL knowledge",
+      "Familiarity with data visualization (Tableau, Power BI, or similar)",
+      "Strong analytical and problem-solving skills"
+    ],
+    "niceToHave": [
+      "Experience with pandas, numpy, or similar libraries",
+      "Portfolio of data analysis projects",
+      "Interest in AI and machine learning"
+    ],
+    "benefits": [
+      "Competitive stipend",
+      "Mentorship program",
+      "Potential full-time offer",
+      "Flexible hours",
+      "Remote work setup allowance"
+    ]
+  }
+]

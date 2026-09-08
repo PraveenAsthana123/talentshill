@@ -1,0 +1,31 @@
+.page { padding: var(--space-6); }
+
+.section { margin-bottom: var(--space-8); }
+.sectionTitle { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-heading); margin-bottom: var(--space-4); }
+
+.metricsGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-4); }
+.metricCard { background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-5); text-align: center; }
+.metricValue { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-heading); }
+.metricLabel { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+
+.tableWrap { overflow-x: auto; background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.table th { text-align: left; padding: var(--space-4); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; }
+.table td { padding: var(--space-4); border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: rgba(30, 64, 175, 0.03); }
+.nameCell { font-weight: var(--font-weight-semibold); }
+.rateBadge { display: inline-block; padding: var(--space-1) var(--space-2); border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); background: rgba(5, 150, 105, 0.1); color: #059669; }
+
+.twoCol { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+.distCard { background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); }
+.distTitle { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-heading); margin-bottom: var(--space-4); }
+.distList { display: flex; flex-direction: column; gap: var(--space-2); }
+.distItem { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
+.distItem:last-child { border-bottom: none; }
+.distLabel { font-size: var(--font-size-sm); color: var(--color-text); text-transform: capitalize; }
+.distValue { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-heading); }
+
+.empty { text-align: center; padding: var(--space-12); color: var(--color-text-muted); }
+
+@media (max-width: 768px) { .twoCol { grid-template-columns: 1fr; } .metricsGrid { grid-template-columns: repeat(2, 1fr); } }

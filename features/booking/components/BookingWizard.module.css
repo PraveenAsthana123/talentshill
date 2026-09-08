@@ -1,0 +1,586 @@
+.wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ── Progress ── */
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: var(--color-surface-light);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-heading), var(--color-subheading));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.stepIndicator {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+}
+
+.stepDot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface-light);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  transition: all var(--transition-base);
+}
+
+.dotActive {
+  background: var(--color-heading);
+  border-color: var(--color-heading);
+  color: var(--color-white);
+}
+
+.dotCompleted {
+  background: var(--color-subheading);
+  border-color: var(--color-subheading);
+  color: var(--color-white);
+}
+
+.stepLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.stepLabelActive {
+  color: var(--color-heading);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ── Card ── */
+.card {
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  animation: fadeSlideIn 300ms ease;
+}
+
+.cardTitle {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-heading);
+  margin-bottom: var(--space-2);
+}
+
+.cardSubtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+/* ── Navigation ── */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Service Cards ── */
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.categoryCard {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: left;
+  width: 100%;
+}
+
+.categoryCard:hover {
+  border-color: var(--color-heading);
+  transform: translateY(-2px);
+}
+
+.categoryCardSelected {
+  border-color: var(--color-heading);
+  background: rgba(30, 64, 175, 0.06);
+}
+
+.categoryIcon {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.categoryName {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-heading);
+}
+
+.serviceList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.serviceOption {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.serviceOption:hover {
+  border-color: var(--color-subheading);
+}
+
+.serviceOptionSelected {
+  border-color: var(--color-subheading);
+  background: rgba(5, 150, 105, 0.06);
+}
+
+.serviceName {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+.serviceDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* ── Date & Time ── */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.dayHeader {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  padding: var(--space-2) 0;
+}
+
+.dayCell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.dayCell:hover:not(.dayDisabled) {
+  background: rgba(30, 64, 175, 0.1);
+}
+
+.daySelected {
+  background: var(--color-heading);
+  color: var(--color-white);
+}
+
+.dayDisabled {
+  color: var(--color-text-muted);
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dayToday {
+  border-color: var(--color-subheading);
+}
+
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.timeSlot {
+  padding: var(--space-3);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--color-text);
+}
+
+.timeSlot:hover:not(.timeBooked) {
+  border-color: var(--color-heading);
+}
+
+.timeSlotSelected {
+  background: var(--color-heading);
+  color: var(--color-white);
+  border-color: var(--color-heading);
+}
+
+.timeBooked {
+  opacity: 0.3;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.durationCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.durationCard {
+  padding: var(--space-4);
+  text-align: center;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.durationCard:hover {
+  border-color: var(--color-heading);
+}
+
+.durationCardSelected {
+  border-color: var(--color-heading);
+  background: rgba(30, 64, 175, 0.06);
+}
+
+.durationLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+.durationDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* ── Radio Cards (Budget, Timeline) ── */
+.radioCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.radioCard {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.radioCard:hover {
+  border-color: var(--color-heading);
+}
+
+.radioCardSelected {
+  border-color: var(--color-heading);
+  background: rgba(30, 64, 175, 0.06);
+}
+
+.radioCardLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.radioCardDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+/* ── Checkbox Grid ── */
+.checkboxGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.checkboxOption {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.checkboxOption:hover {
+  border-color: var(--color-subheading);
+}
+
+.checkboxOptionSelected {
+  border-color: var(--color-subheading);
+  background: rgba(5, 150, 105, 0.06);
+}
+
+.checkIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.checkIconSelected {
+  background: var(--color-subheading);
+  border-color: var(--color-subheading);
+}
+
+/* ── Form Layout ── */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.formFull {
+  grid-column: 1 / -1;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Confirmation / Summary ── */
+.summarySection {
+  margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.summaryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.summaryTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-subheading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.editBtn {
+  background: none;
+  border: none;
+  color: var(--color-heading);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.editBtn:hover {
+  background: rgba(30, 64, 175, 0.1);
+}
+
+.summaryRow {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-2);
+}
+
+.summaryLabel {
+  color: var(--color-text-muted);
+  min-width: 100px;
+}
+
+.summaryValue {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ── Success ── */
+.successCard {
+  text-align: center;
+  padding: var(--space-10);
+}
+
+.successIcon {
+  font-size: 64px;
+  margin-bottom: var(--space-4);
+}
+
+.successTitle {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-heading);
+  margin-bottom: var(--space-2);
+}
+
+.successText {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+  line-height: var(--line-height-relaxed);
+}
+
+.appointmentId {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.leadBadge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.leadHot {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.leadWarm {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.leadCool {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.leadCold {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.successActions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  margin-top: var(--space-6);
+}
+
+/* ── Calendar Navigation ── */
+.calendarNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.calendarMonth {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-heading);
+}
+
+.calendarNavBtn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+}
+
+.calendarNavBtn:hover {
+  border-color: var(--color-heading);
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .categoryGrid { grid-template-columns: 1fr; }
+  .calendarGrid { gap: var(--space-1); }
+  .timeGrid { grid-template-columns: repeat(3, 1fr); }
+  .durationCards { grid-template-columns: 1fr; }
+  .radioCards { grid-template-columns: 1fr; }
+  .checkboxGrid { grid-template-columns: 1fr; }
+  .formGrid { grid-template-columns: 1fr; }
+  .stepLabel { display: none; }
+  .card { padding: var(--space-5); }
+}

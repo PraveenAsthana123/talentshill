@@ -1,0 +1,18 @@
+.container { padding: var(--space-6); }
+.title { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-heading); margin-bottom: var(--space-6); }
+
+.tabs { display: flex; gap: var(--space-1); margin-bottom: var(--space-6); }
+.tab { padding: var(--space-2) var(--space-4); background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--font-size-sm); cursor: pointer; }
+.tabActive { background: var(--color-heading); color: white; border-color: var(--color-heading); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+.card { display: block; padding: var(--space-4); background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); text-decoration: none; color: inherit; transition: border-color 0.15s; }
+.card:hover { border-color: var(--color-heading); }
+.cardHeader { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2); }
+.cardName { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-heading); }
+.cardDesc { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-2); }
+.cardCategory { font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase; }
+.badge { padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); }
+.badgeConnected { background: #dcfce7; color: #16a34a; }
+.badgeAvailable { background: #f3f4f6; color: #6b7280; }
+.empty { grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: var(--space-8); }

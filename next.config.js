@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export",
   trailingSlash: true,
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: ['better-sqlite3'],
 };
 module.exports = nextConfig;

@@ -1,0 +1,7 @@
+{
+  "surface": "unit",
+  "ts": "2026-06-21T08:02:04Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "red",
+  "body": {"passed": 0, "failed": 0, "errors": 0, "tail": "Running teardown with pytest sessionfinish...  no tests ran in 12.12s "}
+}

@@ -1,0 +1,44 @@
+.container { padding: var(--space-6); max-width: 900px; }
+.title { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-heading); margin-bottom: var(--space-6); }
+
+.stepper { display: flex; gap: var(--space-1); margin-bottom: var(--space-6); }
+.stepItem { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--font-size-xs); color: var(--color-text-muted); }
+.stepActive { background: rgba(30, 64, 175, 0.1); color: var(--color-heading); font-weight: var(--font-weight-semibold); }
+.stepDone { color: var(--color-text); }
+.stepNum { width: 22px; height: 22px; border-radius: 50%; background: var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: var(--font-weight-bold); }
+.stepActive .stepNum { background: var(--color-heading); color: white; }
+.stepDone .stepNum { background: #22c55e; color: white; }
+
+.content { min-height: 300px; }
+.error { padding: var(--space-3); background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); color: #ef4444; font-size: var(--font-size-sm); margin-bottom: var(--space-4); }
+.hint { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-3); }
+.stepTitle { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-heading); margin-bottom: var(--space-3); }
+
+.uploadArea { border: 2px dashed var(--color-border); border-radius: var(--radius-lg); padding: var(--space-8); text-align: center; }
+.uploadText { font-size: var(--font-size-base); color: var(--color-text); margin-bottom: var(--space-4); }
+.fileInput { margin-bottom: var(--space-3); }
+
+.mappingTable { display: flex; flex-direction: column; gap: var(--space-3); }
+.mappingRow { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface-light); border-radius: var(--radius-md); }
+.csvHeader { font-weight: var(--font-weight-semibold); font-size: var(--font-size-sm); min-width: 120px; color: var(--color-text); }
+.arrow { color: var(--color-text-muted); }
+.select { padding: var(--space-1) var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-sm); min-width: 140px; }
+.sampleValue { font-size: var(--font-size-xs); color: var(--color-text-muted); font-style: italic; }
+
+.table { width: 100%; border-collapse: collapse; margin-top: var(--space-3); }
+.table th { text-align: left; padding: var(--space-2) var(--space-3); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); background: var(--color-surface-light); text-transform: uppercase; }
+.table td { padding: var(--space-2) var(--space-3); font-size: var(--font-size-sm); border-top: 1px solid var(--color-border); }
+.totalInfo { margin-top: var(--space-4); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+
+.confirmPane { text-align: center; padding: var(--space-6); }
+.resultsPane { }
+.resultGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-4); }
+.resultCard { padding: var(--space-4); background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); text-align: center; }
+.resultValue { display: block; font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-heading); }
+.resultLabel { font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase; }
+
+.footer { display: flex; align-items: center; margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.spacer { flex: 1; }
+.btnPrimary { padding: var(--space-2) var(--space-5); background: var(--color-heading); color: white; border: none; border-radius: var(--radius-md); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); cursor: pointer; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnSecondary { padding: var(--space-2) var(--space-5); background: white; color: var(--color-text); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--font-size-sm); cursor: pointer; }

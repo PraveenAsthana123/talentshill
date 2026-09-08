@@ -1,0 +1,58 @@
+[
+  {
+    "id": "q1",
+    "question": "How would you describe your organization's current AI maturity?",
+    "type": "single",
+    "options": ["No AI initiatives", "Exploring / proof of concept", "Some AI in production", "AI-first strategy across departments", "AI embedded in all business processes"],
+    "category": "AI Readiness"
+  },
+  {
+    "id": "q2",
+    "question": "What is the quality of your data infrastructure?",
+    "type": "single",
+    "options": ["Siloed spreadsheets and manual processes", "Some centralized databases but inconsistent quality", "Data warehouse with basic governance", "Modern data platform with automated pipelines", "Real-time data mesh with full observability"],
+    "category": "AI Readiness"
+  },
+  {
+    "id": "q3",
+    "question": "Are you currently using or exploring Generative AI / LLMs?",
+    "type": "single",
+    "options": ["Not aware of GenAI applications", "Exploring basic ChatGPT/Copilot usage", "Building internal GenAI prototypes", "GenAI in production for specific use cases", "Multiple GenAI systems deployed enterprise-wide"],
+    "category": "GenAI Adoption"
+  },
+  {
+    "id": "q4",
+    "question": "What GenAI use cases are you most interested in?",
+    "type": "multiple",
+    "options": ["Customer-facing chatbots", "Internal knowledge management", "Code generation / developer tools", "Document processing & intelligence", "Content generation & marketing", "Data analysis & insights"],
+    "category": "GenAI Adoption"
+  },
+  {
+    "id": "q5",
+    "question": "What is your organization's experience with robotics and automation?",
+    "type": "single",
+    "options": ["No automation", "Basic RPA for repetitive tasks", "Some robotics in manufacturing/logistics", "Advanced robotics with computer vision", "Fully autonomous systems in operation"],
+    "category": "Robotics Readiness"
+  },
+  {
+    "id": "q6",
+    "question": "Which robotics capabilities interest you most?",
+    "type": "multiple",
+    "options": ["Industrial robot arms", "Autonomous mobile robots (AMRs)", "Computer vision / quality inspection", "Predictive maintenance", "Digital twins", "Drone operations"],
+    "category": "Robotics Readiness"
+  },
+  {
+    "id": "q7",
+    "question": "How aware is your team of quantum computing applications?",
+    "type": "single",
+    "options": ["Not at all aware", "Heard about it but no understanding", "Basic understanding of quantum concepts", "Exploring quantum algorithms for our domain", "Running quantum PoCs or hybrid quantum-classical systems"],
+    "category": "Quantum Exploration"
+  },
+  {
+    "id": "q8",
+    "question": "Rate your organization's overall technology adoption speed.",
+    "type": "scale",
+    "options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+    "category": "AI Readiness"
+  }
+]

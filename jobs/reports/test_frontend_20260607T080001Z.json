@@ -1,0 +1,7 @@
+{
+  "surface": "frontend",
+  "ts": "2026-06-07T08:01:34Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "red",
+  "body": {"checks": [{"name": "backend health", "url": "http://localhost:8000/api/health", "status": 200, "ok": true}, {"name": "openclaw", "url": "http://localhost:8000/api/v1/openclaw/status", "status": 200, "ok": true}, {"name": "bot health", "url": "http://localhost:8001/bot/health", "error": "Page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8001/bot/health\nCall log:\n  - navigating to \"http://localhost:8001/bot/health\", waiting until \"load\"\n", "ok": false}], "passed": 2, "total": 3}
+}

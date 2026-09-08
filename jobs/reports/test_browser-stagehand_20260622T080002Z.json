@@ -1,0 +1,7 @@
+{
+  "surface": "browser-stagehand",
+  "ts": "2026-06-22T08:02:24Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "ok",
+  "body": {"stagehand_installed": true, "version": "3.21.0", "browserbase_api_key": false, "ready_to_run": false, "note": "operator must export BROWSERBASE_API_KEY to run real Stagehand workflows"}
+}

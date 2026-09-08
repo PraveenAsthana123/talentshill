@@ -1,0 +1,7 @@
+{
+  "surface": "browser-cua",
+  "ts": "2026-06-07T08:01:34Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "skip",
+  "body": {"cua_installed": false, "cua_version": null, "anthropic_api_key": false, "ready_to_run": false, "note": "operator must export ANTHROPIC_API_KEY to run real CUA workflows"}
+}

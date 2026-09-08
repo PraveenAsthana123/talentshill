@@ -29,3 +29,14 @@ terraform/*.tfvars
 *.key
 credentials.*
 secrets.*
+
+# database
+*.db
+*.db-wal
+*.db-shm
+
+# TS build cache -- machine-specific, regenerates automatically
+tsconfig.tsbuildinfo
+
+# operational job-runner logs -- output, not source
+jobs/logs/

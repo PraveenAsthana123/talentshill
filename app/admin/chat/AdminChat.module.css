@@ -1,0 +1,27 @@
+.container { padding: var(--space-6); }
+.title { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-heading); margin-bottom: var(--space-6); }
+
+.tabs { display: flex; gap: var(--space-1); margin-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); }
+.tab { padding: var(--space-2) var(--space-4); background: none; border: none; font-size: var(--font-size-sm); color: var(--color-text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabActive { color: var(--color-heading); border-bottom-color: var(--color-heading); font-weight: var(--font-weight-semibold); }
+
+.filterRow { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); }
+.filterSelect { padding: var(--space-1) var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
+
+.table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.table th { text-align: left; padding: var(--space-3) var(--space-4); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); text-transform: uppercase; background: var(--color-surface-light); }
+.table td { padding: var(--space-3) var(--space-4); font-size: var(--font-size-sm); border-top: 1px solid var(--color-border); }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--font-size-xs); background: #f3f4f6; }
+.badgeActive { background: #dcfce7; color: #16a34a; }
+.badgeClosed { background: #f3f4f6; color: #6b7280; }
+
+.priorityBadge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--font-size-xs); }
+.priorityLow { background: #f3f4f6; color: #6b7280; }
+.priorityMedium { background: #fef3c7; color: #d97706; }
+.priorityHigh { background: #fee2e2; color: #dc2626; }
+.priorityUrgent { background: #dc2626; color: white; }
+
+.link { color: var(--color-heading); text-decoration: none; font-size: var(--font-size-sm); }
+.link:hover { text-decoration: underline; }
+.empty { text-align: center; color: var(--color-text-muted); padding: var(--space-8) !important; }

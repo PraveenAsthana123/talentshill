@@ -1,0 +1,7 @@
+{
+  "surface": "frontend",
+  "ts": "2026-06-28T08:02:44Z",
+  "project": "/mnt/deepa/talentshill",
+  "status": "ok",
+  "body": {"checks": [{"name": "backend health", "url": "http://localhost:8000/api/health", "status": 200, "ok": true}, {"name": "openclaw", "url": "http://localhost:8000/api/v1/openclaw/status", "status": 200, "ok": true}, {"name": "bot health", "url": "http://localhost:8001/bot/health", "status": 404, "ok": false}], "passed": 2, "total": 3}
+}

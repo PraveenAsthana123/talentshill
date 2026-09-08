@@ -1,0 +1,35 @@
+.page { padding: var(--space-6); }
+
+.builderCard { background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-6); }
+
+.logicToggle { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
+.logicLabel { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.logicBtn { padding: var(--space-1) var(--space-3); background: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); cursor: pointer; }
+.logicBtn:hover { border-color: var(--color-heading); color: var(--color-heading); }
+.logicActive { background: var(--color-heading); border-color: var(--color-heading); color: #fff; }
+
+.conditionList { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4); }
+.conditionRow { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+
+.select { padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: var(--font-size-sm); min-width: 140px; }
+.input { flex: 1; min-width: 150px; padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: var(--font-size-sm); }
+.input::placeholder { color: var(--color-text-muted); }
+.removeBtn { background: none; border: none; color: #dc2626; font-size: var(--font-size-lg); cursor: pointer; padding: var(--space-1); }
+.removeBtn:disabled { opacity: 0.3; cursor: default; }
+
+.addBtn { background: none; border: none; color: var(--color-heading); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); cursor: pointer; padding: var(--space-2) 0; }
+.addBtn:hover { text-decoration: underline; }
+
+.previewBar { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.previewCount { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-heading); }
+
+.message { padding: var(--space-3) var(--space-4); background: rgba(5, 150, 105, 0.1); border: 1px solid rgba(5, 150, 105, 0.3); border-radius: var(--radius-md); color: #059669; font-size: var(--font-size-sm); margin-bottom: var(--space-4); }
+
+.saveBar { display: flex; gap: var(--space-3); align-items: center; }
+.nameInput { flex: 1; max-width: 400px; padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: var(--font-size-sm); }
+.nameInput::placeholder { color: var(--color-text-muted); }
+
+@media (max-width: 768px) {
+  .conditionRow { flex-direction: column; align-items: stretch; }
+  .select { min-width: 100%; }
+}

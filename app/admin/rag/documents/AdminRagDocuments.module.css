@@ -1,0 +1,64 @@
+.page { padding: var(--space-6); }
+
+/* ── Back Link ── */
+.backLink { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-heading); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); text-decoration: none; margin-bottom: var(--space-6); }
+.backLink:hover { text-decoration: underline; }
+
+/* ── Upload Card ── */
+.uploadCard { background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-6); }
+.uploadTitle { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-heading); margin-bottom: var(--space-4); }
+.uploadForm { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+
+/* ── Inputs ── */
+.input { flex: 1; min-width: 180px; padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: var(--font-size-sm); }
+.input::placeholder { color: var(--color-text-muted); }
+.select { padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: var(--font-size-sm); }
+
+/* ── Status Filter Tabs ── */
+.tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-6); flex-wrap: wrap; }
+.tab { padding: var(--space-2) var(--space-4); background: none; border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); cursor: pointer; text-transform: capitalize; transition: all 0.15s; }
+.tab:hover { border-color: var(--color-heading); color: var(--color-heading); }
+.tabActive { background: var(--color-heading); border-color: var(--color-heading); color: #fff; }
+
+/* ── Table ── */
+.tableWrap { overflow-x: auto; background: var(--color-surface-light); border: 1px solid var(--color-border); border-radius: var(--radius-xl); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.table th { text-align: left; padding: var(--space-4); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; }
+.table td { padding: var(--space-4); border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: rgba(30, 64, 175, 0.03); }
+
+.nameCell { font-weight: var(--font-weight-semibold); }
+.docLink { color: var(--color-heading); text-decoration: none; font-weight: var(--font-weight-semibold); }
+.docLink:hover { text-decoration: underline; }
+.sourceCell { text-transform: capitalize; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.sizeCell { font-size: var(--font-size-xs); color: var(--color-text-secondary); font-family: monospace; }
+.dateCell { font-size: var(--font-size-xs); color: var(--color-text-secondary); white-space: nowrap; }
+.actionsCell { display: flex; gap: var(--space-2); }
+
+/* ── Status Badges ── */
+.statusBadge { display: inline-block; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); text-transform: capitalize; }
+.statusPending { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.statusIngested { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.statusChunked { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.statusEmbedded { background: rgba(5, 150, 105, 0.1); color: #059669; }
+.statusFailed { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
+
+/* ── Action Buttons ── */
+.actionBtn { background: none; border: none; color: var(--color-heading); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); cursor: pointer; padding: var(--space-1) var(--space-2); border-radius: var(--radius-md); white-space: nowrap; }
+.actionBtn:hover { background: rgba(30, 64, 175, 0.06); }
+.actionDelete { color: #dc2626; }
+.actionDelete:hover { background: rgba(220, 38, 38, 0.06); }
+
+/* ── Pagination ── */
+.pagination { display: flex; align-items: center; justify-content: center; gap: var(--space-4); margin-top: var(--space-6); }
+.pageInfo { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: var(--space-12); color: var(--color-text-muted); }
+
+@media (max-width: 768px) {
+  .uploadForm { flex-direction: column; }
+  .input { min-width: 100%; }
+  .tabs { gap: var(--space-1); }
+}
