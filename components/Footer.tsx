@@ -72,6 +72,13 @@ export default function Footer() {
           <Link href="/solutions/genai">Generative AI</Link>
           <Link href="/solutions/robotics-ai">Robotics & AI</Link>
           <Link href="/solutions/quantum-ai">Quantum AI</Link>
+          <Link href="/solutions/digital-marketing">Digital Marketing</Link>
+          <Link href="/solutions/ads-management">Ads Management</Link>
+          <Link href="/solutions/market-research">Market Research</Link>
+          <Link href="/solutions/performance-marketing">Performance Marketing</Link>
+          <Link href="/solutions/seo-geo">SEO & GEO</Link>
+          <Link href="/solutions/ai-automation">AI Automation</Link>
+          <Link href="/solutions/ai-strategy">AI Strategy</Link>
           <Link href="/services">All Services</Link>
         </div>
 
