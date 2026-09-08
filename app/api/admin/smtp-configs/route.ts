@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllSmtpConfigs, createSmtpConfig } from '@/lib/db/email-profile-queries';
 import nodemailer from 'nodemailer';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync, checkPermission } from '@/lib/security/rbac';
 
 export const GET = withPermission('smtp_configs', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -14,12 +14,23 @@ export const GET = withPermission('smtp_configs', 'read')(async (_request: NextR
   }
 });
 
-export const POST = withPermission('smtp_configs', 'create')(async (request: NextRequest, _context: unknown) => {
+// Not wrapped in withPermission(...) at the top level -- create and
+// test-connection were bundled behind one 'create' gate, which meant a
+// user who should only be allowed to test a config (not create real ones)
+// had no way to get narrower access. Per-branch checks fix that without a
+// route split.
+export async function POST(request: NextRequest, context: unknown) {
+  const userId = await getSessionUserIdAsync(request);
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const body = await request.json();
 
     // Test connection if requested
     if (body.action === 'test') {
+      if (!checkPermission(userId, 'smtp_configs', 'manage')) {
+        return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+      }
       const { host, port, secure, username, password } = body;
       try {
         const transport = nodemailer.createTransport({
@@ -35,6 +46,9 @@ export const POST = withPermission('smtp_configs', 'create')(async (request: Nex
       }
     }
 
+    if (!checkPermission(userId, 'smtp_configs', 'create')) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    }
     const { name, host, port, secure, username, password } = body;
     if (!name || !host || !username || !password) {
       return NextResponse.json({ error: 'Required fields missing' }, { status: 400 });
@@ -45,4 +59,4 @@ export const POST = withPermission('smtp_configs', 'create')(async (request: Nex
   } catch {
     return NextResponse.json({ error: 'Failed to create config' }, { status: 500 });
   }
-});
+}
