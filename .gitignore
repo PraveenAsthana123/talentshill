@@ -40,3 +40,5 @@ tsconfig.tsbuildinfo
 
 # operational job-runner logs -- output, not source
 jobs/logs/
+.backups/
+.health-logs/

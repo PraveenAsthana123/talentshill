@@ -114,6 +114,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'System',
     items: [
       { href: '/admin/health', label: 'Health' },
+      { href: '/admin/module-registry', label: 'Module Registry' },
       { href: '/admin/roles', label: 'Roles & Users' },
       { href: '/admin/users', label: 'Users' },
       { href: '/admin/features', label: 'Features' },

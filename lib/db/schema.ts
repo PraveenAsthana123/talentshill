@@ -1156,3 +1156,28 @@ export const analysisAssessments = sqliteTable('analysis_assessments', {
   index('idx_assessments_project').on(table.projectName),
   index('idx_assessments_status').on(table.status),
 ]);
+
+// Module Understanding registry -- real, queryable backing for the mandatory
+// Module Understanding Standard policy. One row per real module (this app's
+// 39 RBAC resources, see lib/db/seed-rbac.ts's RESOURCES), matching the
+// pattern sohamyoga-frontend's own module_registry table already uses (that
+// one runs on Postgres; this is the SQLite/Drizzle equivalent, same shape).
+// A module with no row is "not yet cataloged" -- the UI must say so
+// honestly, never omit it or imply it's fine.
+export const moduleRegistry = sqliteTable('module_registry', {
+  id: text('id').primaryKey(),
+  moduleKey: text('module_key').notNull().unique(),
+  name: text('name').notNull(),
+  description: text('description').notNull().default(''),
+  builtStatus: text('built_status', { enum: ['real', 'partial', 'not_built', 'not_yet_cataloged'] }).notNull().default('not_yet_cataloged'),
+  apiRouteCount: integer('api_route_count').notNull().default(0),
+  hasAdminUi: integer('has_admin_ui', { mode: 'boolean' }).notNull().default(false),
+  missingItems: text('missing_items'),
+  sourceDoc: text('source_doc'),
+  lastVerifiedAt: integer('last_verified_at', { mode: 'timestamp' }),
+  verifiedBy: text('verified_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_module_registry_status').on(table.builtStatus),
+]);
