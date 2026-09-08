@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllIndustries, createIndustry } from '@/lib/db/admin-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('industries', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const industries = getAllIndustries();
     return NextResponse.json({ industries });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch industries' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('industries', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     if (!body.name) {
@@ -30,4 +31,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create industry' }, { status: 500 });
   }
-}
+});

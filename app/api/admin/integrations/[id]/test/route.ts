@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { registry } from '@/lib/integrations/registry';
 import { getIntegrationById } from '@/lib/db/integration-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withPermission('integrations', 'manage')(async (_request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   const { id } = await params;
   const integration = getIntegrationById(id);
   if (!integration) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -15,4 +14,4 @@ export async function POST(
 
   const result = await provider.testConnection(id);
   return NextResponse.json(result);
-}
+});

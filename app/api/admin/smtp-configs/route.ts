@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllSmtpConfigs, createSmtpConfig } from '@/lib/db/email-profile-queries';
 import nodemailer from 'nodemailer';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('smtp_configs', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const configs = getAllSmtpConfigs();
     // Mask passwords in response
@@ -11,9 +12,9 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch configs' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('smtp_configs', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
 
@@ -44,4 +45,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create config' }, { status: 500 });
   }
-}
+});

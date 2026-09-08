@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAssessments, getAssessmentCount, createAssessment } from '@/lib/db/analysis-assessment-queries';
 import { getFrameworkById } from '@/lib/db/analysis-framework-queries';
 import { CreateAssessmentSchema } from '@/lib/validation/content-schemas';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('analysis', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -21,9 +21,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch assessments' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('analysis', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     let body;
     try { body = await request.json(); } catch { body = {}; }
@@ -44,4 +44,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create assessment' }, { status: 500 });
   }
-}
+});

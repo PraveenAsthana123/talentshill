@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSurveyStats, getAllResponses } from '@/lib/db/survey-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: Request) {
+export const GET = withPermission('survey', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const { searchParams } = new URL(request.url);
     const stats = searchParams.get('stats') === 'true';
@@ -26,4 +27,4 @@ export async function GET(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch survey data' }, { status: 500 });
   }
-}
+});

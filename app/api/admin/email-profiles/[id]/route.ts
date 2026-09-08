@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProfileById, updateProfile, deleteProfile, setProfileSmtp, getSmtpForProfile } from '@/lib/db/email-profile-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('email_profiles', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const profile = getProfileById(id);
     if (!profile) {
@@ -16,13 +18,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('email_profiles', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
 
@@ -36,17 +39,18 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('email_profiles', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     deleteProfile(id);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete profile' }, { status: 500 });
   }
-}
+});

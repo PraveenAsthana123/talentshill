@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMediaList, getMediaCount, createMedia } from '@/lib/db/media-queries';
 import { handleUpload } from '@/lib/media/upload';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('media', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const { searchParams } = new URL(request.url);
     const folder = searchParams.get('folder') || undefined;
@@ -18,9 +18,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch media' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('media', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -44,4 +44,4 @@ export async function POST(request: NextRequest) {
     const message = err instanceof Error ? err.message : 'Upload failed';
     return NextResponse.json({ error: message }, { status: 400 });
   }
-}
+});

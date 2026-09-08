@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAllFrameworks } from '@/lib/db/analysis-framework-queries';
 import { getAssessmentCount } from '@/lib/db/analysis-assessment-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('analysis', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const frameworks = getAllFrameworks();
     const items = frameworks.map((fw) => ({
@@ -14,4 +15,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch frameworks' }, { status: 500 });
   }
-}
+});

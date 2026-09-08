@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllUsers, createUser } from '@/lib/db/admin-queries';
 import { getUserRoles, setUserRoles } from '@/lib/db/rbac-queries';
 import { hashPassword } from '@/lib/security/password';
+import { withPermission } from '@/lib/security/rbac';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export const GET = withPermission('users', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const usersList = getAllUsers();
     const usersWithRoles = usersList.map((user) => {
@@ -25,9 +26,9 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('users', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     if (!body.email || !body.password || !body.name) {
@@ -51,4 +52,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
-}
+});

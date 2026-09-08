@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContentList, getContentCount, createContent } from '@/lib/db/marketing-content-queries';
 import { CreateContentSchema } from '@/lib/validation/content-schemas';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('content', 'read')(async (
+  request: NextRequest,
+  _context: unknown
+) => {
   try {
     const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -17,9 +20,12 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('content', 'create')(async (
+  request: NextRequest,
+  _context: unknown
+) => {
   try {
     let body;
     try { body = await request.json(); } catch { body = {}; }
@@ -33,4 +39,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create content' }, { status: 500 });
   }
-}
+});

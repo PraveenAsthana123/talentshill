@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAssessmentById, updateItemScores, completeAssessment, deleteAssessment } from '@/lib/db/analysis-assessment-queries';
 import { UpdateItemScoresSchema } from '@/lib/validation/content-schemas';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('analysis', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const assessment = getAssessmentById(id);
@@ -16,12 +18,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch assessment' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('analysis', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -59,12 +62,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update assessment' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('analysis', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteAssessment(id);
@@ -72,4 +76,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete assessment' }, { status: 500 });
   }
-}
+});

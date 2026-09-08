@@ -7,12 +7,14 @@ import {
   cancelJob,
   retryJob,
 } from '@/lib/db/job-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('jobs', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const job = getJob(id);
     if (!job) {
@@ -24,13 +26,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch job' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('jobs', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
     const { action } = body;
@@ -53,4 +56,4 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update job' }, { status: 500 });
   }
-}
+});

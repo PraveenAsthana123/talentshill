@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServiceById, updateService, deleteService } from '@/lib/db/admin-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('services', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const service = getServiceById(id);
     if (!service) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -15,13 +17,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch service' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('services', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
     const service = updateService(id, body);
@@ -37,13 +40,14 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update service' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('services', 'delete')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const deleted = deleteService(id);
     if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -58,4 +62,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete service' }, { status: 500 });
   }
-}
+});

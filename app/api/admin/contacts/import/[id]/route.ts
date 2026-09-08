@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getImportJob } from '@/lib/db/import-job-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withPermission('contacts', 'read')(async (_request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const job = getImportJob(id);
@@ -20,4 +19,4 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to get import job' }, { status: 500 });
   }
-}
+});

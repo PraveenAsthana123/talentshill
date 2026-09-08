@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContentById, publishContent, updateContent } from '@/lib/db/marketing-content-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function POST(
+export const POST = withPermission('content', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const content = getContentById(id);
     if (!content) return NextResponse.json({ error: 'Content not found' }, { status: 404 });
@@ -19,4 +21,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to update publish status' }, { status: 500 });
   }
-}
+});

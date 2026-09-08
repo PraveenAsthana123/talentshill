@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getShareLinks, getShareLinkCount, createShareLink } from '@/lib/db/share-link-queries';
 import { CreateShareLinkSchema } from '@/lib/validation/content-schemas';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('links', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch share links' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('links', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const parsed = CreateShareLinkSchema.safeParse(body);
@@ -35,4 +35,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create share link' }, { status: 500 });
   }
-}
+});

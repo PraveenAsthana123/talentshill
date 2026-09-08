@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getVideoById, updateVideo, deleteVideo } from '@/lib/db/admin-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('videos', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const video = getVideoById(id);
@@ -15,12 +17,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch video' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('videos', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -37,12 +40,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update video' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('videos', 'delete')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const deleted = deleteVideo(id);
@@ -58,4 +62,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete video' }, { status: 500 });
   }
-}
+});

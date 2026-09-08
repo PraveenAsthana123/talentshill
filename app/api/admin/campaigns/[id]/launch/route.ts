@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCampaignById, updateCampaign } from '@/lib/db/campaign-queries';
 import { createJob } from '@/lib/db/job-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function POST(
+export const POST = withPermission('campaigns', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const campaign = getCampaignById(id);
@@ -36,4 +37,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to launch campaign' }, { status: 500 });
   }
-}
+});

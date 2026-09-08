@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRunById } from '@/lib/db/rag-run-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('rag', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const run = getRunById(id);
     if (!run) {
@@ -32,4 +34,4 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch run' }, { status: 500 });
   }
-}
+});

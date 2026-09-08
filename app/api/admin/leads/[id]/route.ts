@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSubmissionById, updateSubmissionStatus } from '@/lib/db/contact-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('leads', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const submission = getSubmissionById(id);
     if (!submission) {
@@ -17,13 +19,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch lead' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('leads', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const { status } = await request.json();
 
@@ -55,4 +58,4 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update lead' }, { status: 500 });
   }
-}
+});

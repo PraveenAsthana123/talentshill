@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJobs, getJobCount, createJob, getQueueStats } from '@/lib/db/job-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('jobs', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || undefined;
@@ -18,9 +18,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('jobs', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const { type, payload, priority, maxRetries, scheduledAt } = body;
@@ -43,4 +43,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create job' }, { status: 500 });
   }
-}
+});

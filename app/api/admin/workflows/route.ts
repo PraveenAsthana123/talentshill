@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWorkflows, getWorkflowCount, createWorkflow } from '@/lib/db/marketing-workflow-queries';
 import { CreateWorkflowSchema } from '@/lib/validation/content-schemas';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('workflows', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch workflows' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('workflows', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     let body;
     try { body = await request.json(); } catch { body = {}; }
@@ -31,4 +31,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create workflow' }, { status: 500 });
   }
-}
+});

@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAllIntegrations, getAccountsByIntegration } from '@/lib/db/integration-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('integrations', 'read')(async (_request: NextRequest, _context: unknown) => {
   const integrations = getAllIntegrations();
   const result = integrations.map(i => ({
     ...i,
@@ -9,4 +10,4 @@ export async function GET() {
     accounts: getAccountsByIntegration(i.id),
   }));
   return NextResponse.json(result);
-}
+});

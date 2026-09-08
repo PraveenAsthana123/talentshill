@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getListById, updateList, deleteList, getListMembers, addListMembers, removeListMembers } from '@/lib/db/list-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('lists', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const { searchParams } = new URL(request.url);
 
@@ -22,13 +24,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch list' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('lists', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
 
@@ -48,17 +51,18 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update list' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('lists', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     deleteList(id);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete list' }, { status: 500 });
   }
-}
+});

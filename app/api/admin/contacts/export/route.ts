@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getContacts } from '@/lib/db/contact-crm-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('contacts', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const allContacts = getContacts({ limit: 10000 });
 
@@ -30,4 +31,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to export contacts' }, { status: 500 });
   }
-}
+});

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllRuns, getRunCount } from '@/lib/db/run-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('runs', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const { searchParams } = request.nextUrl;
     const type = searchParams.get('type') || undefined;
@@ -17,4 +18,4 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch runs' }, { status: 500 });
   }
-}
+});

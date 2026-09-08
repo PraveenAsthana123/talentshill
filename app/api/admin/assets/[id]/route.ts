@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAssetById, updateAsset, updateAssetSlides, updateAssetStatus, deleteAsset } from '@/lib/db/content-asset-queries';
 import { UpdateAssetSchema, UpdateAssetSlidesSchema, UpdateAssetStatusSchema } from '@/lib/validation/content-schemas';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('assets', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const asset = getAssetById(id);
@@ -14,12 +16,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch asset' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('assets', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -45,12 +48,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update asset' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('assets', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteAsset(id);
@@ -58,4 +62,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete asset' }, { status: 500 });
   }
-}
+});

@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllOverrides, upsertOverride, deleteOverride, toggleOverride } from '@/lib/db/content-override-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('content_overrides', 'read')(async (
+  _request: NextRequest,
+  _context: unknown
+) => {
   try {
     const overrides = getAllOverrides();
     return NextResponse.json({ overrides });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch overrides' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withPermission('content_overrides', 'update')(async (
+  request: NextRequest,
+  _context: unknown
+) => {
   try {
     const body = await request.json();
     const userId = await getSessionUserIdAsync(request);
@@ -26,9 +32,12 @@ export async function PUT(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to upsert override' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withPermission('content_overrides', 'delete')(async (
+  request: NextRequest,
+  _context: unknown
+) => {
   try {
     const { id } = await request.json();
     deleteOverride(id);
@@ -36,9 +45,12 @@ export async function DELETE(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to delete override' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withPermission('content_overrides', 'update')(async (
+  request: NextRequest,
+  _context: unknown
+) => {
   try {
     const { id, isActive } = await request.json();
     toggleOverride(id, isActive);
@@ -46,4 +58,4 @@ export async function PATCH(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to toggle override' }, { status: 500 });
   }
-}
+});

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBanners, createBanner } from '@/lib/db/banner-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('banners', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const bannersList = getAllBanners();
     return NextResponse.json({ banners: bannersList });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch banners' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('banners', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const { title, content, placement, severity, ctaText, ctaUrl, mediaId, startDate, endDate, priority } = body;
@@ -39,4 +39,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create banner' }, { status: 500 });
   }
-}
+});

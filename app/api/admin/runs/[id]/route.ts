@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRun, updateRunStatus, getRunTimeline } from '@/lib/db/run-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('runs', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const run = getRun(id);
     if (!run) {
@@ -16,13 +18,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch run' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('runs', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
     if (body.status) {
@@ -32,4 +35,4 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update run' }, { status: 500 });
   }
-}
+});

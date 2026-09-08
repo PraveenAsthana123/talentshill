@@ -7,13 +7,11 @@ import {
   createFlagVersion,
   rollbackToVersion,
 } from '@/lib/db/feature-flag-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 import { bustCache } from '@/lib/feature-flags/cache';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withPermission('features', 'read')(async (_request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const flag = getFlagById(id);
@@ -25,12 +23,10 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch flag' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withPermission('features', 'update')(async (request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -60,12 +56,10 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update flag' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withPermission('features', 'delete')(async (_request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteFlag(id);
@@ -74,4 +68,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete flag' }, { status: 500 });
   }
-}
+});

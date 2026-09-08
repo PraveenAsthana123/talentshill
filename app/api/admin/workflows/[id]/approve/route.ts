@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWorkflowById, approveWorkflow } from '@/lib/db/marketing-workflow-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function POST(
+export const POST = withPermission('workflows', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const workflow = getWorkflowById(id);
@@ -16,4 +17,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to approve workflow' }, { status: 500 });
   }
-}
+});

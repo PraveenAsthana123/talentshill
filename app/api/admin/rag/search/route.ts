@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hybridRetrieve } from '@/lib/rag/retrieval';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('rag', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const userId = await getSessionUserIdAsync(request);
     if (!userId) {
@@ -35,4 +35,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to perform search' }, { status: 500 });
   }
-}
+});

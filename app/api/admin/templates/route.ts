@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllTemplates, createTemplate } from '@/lib/db/template-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('templates', 'read')(async (
+  _request: NextRequest,
+  _context: unknown
+) => {
   try {
     const templates = getAllTemplates();
     return NextResponse.json({ templates });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch templates' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('templates', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const { name, description, category, subject, htmlContent, textContent, variables } = body;
@@ -30,4 +33,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create template' }, { status: 500 });
   }
-}
+});

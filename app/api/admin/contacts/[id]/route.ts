@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContactById, updateContact, deleteContact, getContactEvents } from '@/lib/db/contact-crm-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withPermission('contacts', 'read')(async (_request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const contact = getContactById(id);
@@ -16,12 +15,10 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch contact' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withPermission('contacts', 'update')(async (request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -30,12 +27,10 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update contact' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withPermission('contacts', 'delete')(async (_request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteContact(id);
@@ -43,4 +38,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete contact' }, { status: 500 });
   }
-}
+});

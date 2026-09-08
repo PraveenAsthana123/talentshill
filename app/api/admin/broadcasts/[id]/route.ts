@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBroadcastById, updateBroadcast, deleteBroadcast, launchBroadcast } from '@/lib/db/broadcast-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('broadcasts', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const broadcast = getBroadcastById(id);
@@ -15,12 +17,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch broadcast' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('broadcasts', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -35,12 +38,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update broadcast' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('broadcasts', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteBroadcast(id);
@@ -48,4 +52,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete broadcast' }, { status: 500 });
   }
-}
+});

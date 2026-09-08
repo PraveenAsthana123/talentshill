@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBannerById, updateBanner, deleteBanner } from '@/lib/db/banner-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('banners', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const banner = getBannerById(id);
@@ -15,12 +17,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch banner' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('banners', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -34,12 +37,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update banner' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('banners', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteBanner(id);
@@ -47,4 +51,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete banner' }, { status: 500 });
   }
-}
+});

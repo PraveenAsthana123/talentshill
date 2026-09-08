@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAssessmentById } from '@/lib/db/analysis-assessment-queries';
 import { getFrameworkById } from '@/lib/db/analysis-framework-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('analysis', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const assessment = getAssessmentById(id);
@@ -30,4 +32,4 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to export assessment' }, { status: 500 });
   }
-}
+});

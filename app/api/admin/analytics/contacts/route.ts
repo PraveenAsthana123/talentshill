@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/lib/db/index';
 import { sql, eq } from 'drizzle-orm';
+import { withPermission } from '@/lib/security/rbac';
 
 const { contacts } = schema;
 
-export async function GET() {
+export const GET = withPermission('analytics', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const totalContacts = db.select({ count: sql<number>`count(*)` }).from(contacts).get()?.count || 0;
 
@@ -42,4 +43,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch contact analytics' }, { status: 500 });
   }
-}
+});

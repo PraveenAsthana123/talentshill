@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSmtpConfigById, updateSmtpConfig, deleteSmtpConfig } from '@/lib/db/email-profile-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('smtp_configs', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const config = getSmtpConfigById(id);
     if (!config) {
@@ -15,13 +17,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch config' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('smtp_configs', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
     const { name, host, port, secure, username, password, isActive } = body;
@@ -30,17 +33,18 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update config' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('smtp_configs', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     deleteSmtpConfig(id);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete config' }, { status: 500 });
   }
-}
+});

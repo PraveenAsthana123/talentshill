@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllRoles, createRole, getAllPermissions } from '@/lib/db/rbac-queries';
+import { withPermission } from '@/lib/security/rbac';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('roles', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const url = new URL(request.url);
     if (url.searchParams.get('permissions') === 'true') {
@@ -16,9 +17,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch roles' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('roles', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     if (!body.name) {
@@ -34,4 +35,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create role' }, { status: 500 });
   }
-}
+});

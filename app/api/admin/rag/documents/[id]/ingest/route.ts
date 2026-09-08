@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentById } from '@/lib/db/rag-document-queries';
 import { createJob } from '@/lib/db/job-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function POST(
+export const POST = withPermission('rag', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
     const userId = await getSessionUserIdAsync(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const document = getDocumentById(id);
     if (!document) {
@@ -38,4 +39,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to trigger ingestion' }, { status: 500 });
   }
-}
+});

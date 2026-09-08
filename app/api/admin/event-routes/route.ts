@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEventRoutes, upsertEventRoute, deleteEventRoute } from '@/lib/db/email-profile-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('event_routes', 'read')(async (
+  _request: NextRequest,
+  _context: unknown
+) => {
   try {
     const routes = getAllEventRoutes();
     return NextResponse.json({ routes });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch routes' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withPermission('event_routes', 'update')(async (
+  request: NextRequest,
+  _context: unknown
+) => {
   try {
     const body = await request.json();
     const { routes } = body;
@@ -29,9 +36,12 @@ export async function PUT(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to update routes' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withPermission('event_routes', 'delete')(async (
+  request: NextRequest,
+  _context: unknown
+) => {
   try {
     const body = await request.json();
     if (body.id) {
@@ -41,4 +51,4 @@ export async function DELETE(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to delete route' }, { status: 500 });
   }
-}
+});

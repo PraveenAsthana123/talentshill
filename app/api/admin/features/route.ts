@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllFlags, toggleFlag, createFlag } from '@/lib/db/feature-flag-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 import { bustCache } from '@/lib/feature-flags/cache';
 
-export async function GET() {
+export const GET = withPermission('features', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const flags = getAllFlags();
     return NextResponse.json({ flags });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch flags' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('features', 'manage')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const { action, id, key, label, description, module, isEnabled } = body;
@@ -37,4 +37,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
   }
-}
+});

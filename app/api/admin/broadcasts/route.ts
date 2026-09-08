@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBroadcasts, createBroadcast } from '@/lib/db/broadcast-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('broadcasts', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const broadcasts = getAllBroadcasts();
     return NextResponse.json({ broadcasts });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch broadcasts' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('broadcasts', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const userId = await getSessionUserIdAsync(request);
@@ -23,4 +23,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create broadcast' }, { status: 500 });
   }
-}
+});

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContacts, getContactCount, createContact, bulkDeleteContacts, bulkUpdateTags } from '@/lib/db/contact-crm-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('contacts', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || undefined;
@@ -16,9 +17,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('contacts', 'manage')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
 
@@ -43,4 +44,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create contact' }, { status: 500 });
   }
-}
+});

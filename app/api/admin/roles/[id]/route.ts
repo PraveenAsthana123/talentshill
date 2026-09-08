@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRoleById, updateRole, deleteRole, setRolePermissions } from '@/lib/db/rbac-queries';
+import { withPermission } from '@/lib/security/rbac';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
+export const GET = withPermission('roles', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const role = getRoleById(id);
     if (!role) {
@@ -17,13 +19,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch role' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('roles', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
 
@@ -45,13 +48,14 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update role' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('roles', 'delete')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const success = deleteRole(id);
     if (!success) {
@@ -61,4 +65,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete role' }, { status: 500 });
   }
-}
+});

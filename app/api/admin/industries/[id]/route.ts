@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getIndustryById, updateIndustry, deleteIndustry } from '@/lib/db/admin-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withPermission('industries', 'read')(async (request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const industry = getIndustryById(id);
@@ -15,12 +14,10 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch industry' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withPermission('industries', 'update')(async (request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -37,12 +34,10 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update industry' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withPermission('industries', 'delete')(async (request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const deleted = deleteIndustry(id);
@@ -58,4 +53,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete industry' }, { status: 500 });
   }
-}
+});

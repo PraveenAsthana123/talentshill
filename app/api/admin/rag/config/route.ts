@@ -5,9 +5,9 @@ import {
   activateConfig,
   getConfigHistory,
 } from '@/lib/db/rag-run-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('rag', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const active = getActiveConfig();
     const history = getConfigHistory();
@@ -16,9 +16,9 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch config' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('rag', 'update')(async (request: NextRequest, _context: unknown) => {
   try {
     const userId = await getSessionUserIdAsync(request);
     if (!userId) {
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create config' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withPermission('rag', 'update')(async (request: NextRequest, _context: unknown) => {
   try {
     const userId = await getSessionUserIdAsync(request);
     if (!userId) {
@@ -81,4 +81,4 @@ export async function PATCH(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to activate config' }, { status: 500 });
   }
-}
+});

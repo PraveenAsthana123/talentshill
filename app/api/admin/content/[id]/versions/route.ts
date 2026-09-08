@@ -1,26 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getVersions, createVersion, getVersionById } from '@/lib/db/content-version-queries';
 import { getContentById, updateContent } from '@/lib/db/marketing-content-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('content', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const versions = getVersions(id);
     return NextResponse.json({ versions });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch versions' }, { status: 500 });
   }
-}
+});
 
-export async function POST(
+export const POST = withPermission('content', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
     const userId = await getSessionUserIdAsync(request);
@@ -39,4 +41,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to manage versions' }, { status: 500 });
   }
-}
+});

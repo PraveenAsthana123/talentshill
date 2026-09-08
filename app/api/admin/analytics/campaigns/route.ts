@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/lib/db/index';
 import { desc } from 'drizzle-orm';
+import { withPermission } from '@/lib/security/rbac';
 
 const { campaigns } = schema;
 
-export async function GET() {
+export const GET = withPermission('analytics', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const allCampaigns = db.select().from(campaigns).orderBy(desc(campaigns.createdAt)).all();
 
@@ -54,4 +55,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch campaign analytics' }, { status: 500 });
   }
-}
+});

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseCsvText, importContacts } from '@/lib/crm/csv-import';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('contacts', 'manage')(async (request: NextRequest, _context: unknown) => {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -23,4 +24,4 @@ export async function POST(request: NextRequest) {
     const message = err instanceof Error ? err.message : 'Import failed';
     return NextResponse.json({ error: message }, { status: 400 });
   }
-}
+});

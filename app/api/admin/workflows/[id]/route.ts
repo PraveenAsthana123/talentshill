@@ -3,11 +3,13 @@ import {
   getWorkflowById, updateWorkflowStep, updateWorkflowStatus, deleteWorkflow, getComments,
 } from '@/lib/db/marketing-workflow-queries';
 import { UpdateWorkflowStepSchema, UpdateWorkflowStatusSchema } from '@/lib/validation/content-schemas';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('workflows', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const workflow = getWorkflowById(id);
@@ -17,12 +19,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch workflow' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('workflows', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -46,12 +49,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update workflow' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('workflows', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteWorkflow(id);
@@ -59,4 +63,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete workflow' }, { status: 500 });
   }
-}
+});

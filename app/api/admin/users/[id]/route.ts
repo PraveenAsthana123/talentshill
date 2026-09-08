@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserById, updateUser } from '@/lib/db/admin-queries';
 import { getUserRoles, setUserRoles, getUserPermissions } from '@/lib/db/rbac-queries';
+import { withPermission } from '@/lib/security/rbac';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
+export const GET = withPermission('users', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const user = getUserById(id);
@@ -33,12 +35,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('users', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -63,12 +66,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('users', 'delete')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const user = updateUser(id, { isActive: false });
@@ -79,4 +83,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to deactivate user' }, { status: 500 });
   }
-}
+});

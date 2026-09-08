@@ -10,13 +10,14 @@ import {
   deleteEmbeddingsByDocument,
 } from '@/lib/db/rag-embedding-queries';
 import { deleteChunksByDocument } from '@/lib/db/rag-chunk-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('rag', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const document = getDocumentById(id);
     if (!document) {
@@ -38,18 +39,19 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch document' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('rag', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
     const userId = await getSessionUserIdAsync(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const document = getDocumentById(id);
     if (!document) {
@@ -75,18 +77,19 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update document' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('rag', 'delete')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
     const userId = await getSessionUserIdAsync(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const document = getDocumentById(id);
     if (!document) {
@@ -102,4 +105,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 });
   }
-}
+});

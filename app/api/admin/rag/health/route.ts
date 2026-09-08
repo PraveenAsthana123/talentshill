@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentStats } from '@/lib/db/rag-document-queries';
 import { getAllEmbeddings } from '@/lib/db/rag-embedding-queries';
 import { getCacheStats } from '@/lib/db/rag-cache-queries';
 import { getAllRuns } from '@/lib/db/rag-run-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('rag', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     // Document counts by status
     const documentStats = getDocumentStats();
@@ -39,4 +40,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch health data' }, { status: 500 });
   }
-}
+});

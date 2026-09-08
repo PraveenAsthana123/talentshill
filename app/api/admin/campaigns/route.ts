@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllCampaigns, createCampaign } from '@/lib/db/campaign-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('campaigns', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const campaignsList = getAllCampaigns();
     return NextResponse.json({ campaigns: campaignsList });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch campaigns' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('campaigns', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const { name, type, audienceType, audienceId, emailProfileId, templateId, subject, throttlePerMinute } = body;
@@ -30,4 +30,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create campaign' }, { status: 500 });
   }
-}
+});

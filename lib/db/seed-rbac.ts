@@ -9,6 +9,18 @@ const RESOURCES = [
   'users', 'roles', 'media', 'banners', 'templates', 'broadcasts',
   'jobs', 'features', 'analytics', 'health', 'videos', 'services',
   'industries', 'appointments',
+  // Added: resources for admin API route segments that previously had no
+  // RBAC coverage at all (withPermission was defined but never called).
+  'analysis', 'chat', 'content', 'content_overrides', 'dashboard',
+  'email_compose', 'event_routes', 'integrations', 'links', 'maintenance',
+  'rag', 'runs', 'smtp_configs', 'workflows', 'activity', 'webhooks', 'assets',
+  // Added beyond the originally requested list: needed for correctness.
+  // 'lists' was already referenced by the Marketing role's resource array
+  // below (a pre-existing latent bug -- those grants silently no-op without
+  // a matching permission row) and 'email_profiles' is a distinct route
+  // segment (SMTP sender identities) from 'smtp_configs' (SMTP server
+  // configs) so it needs its own resource rather than being folded in.
+  'lists', 'email_profiles',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];

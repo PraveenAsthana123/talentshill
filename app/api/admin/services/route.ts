@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllServices, createService } from '@/lib/db/admin-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('services', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const services = getAllServices();
     return NextResponse.json({ services });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('services', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     if (!body.name || !body.category) {
@@ -30,4 +31,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create service' }, { status: 500 });
   }
-}
+});

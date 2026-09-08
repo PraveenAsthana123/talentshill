@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMediaById, updateMedia, deleteMedia } from '@/lib/db/media-queries';
 import { deleteFile } from '@/lib/media/upload';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('media', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const item = getMediaById(id);
     if (!item) {
@@ -16,13 +18,14 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch media' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('media', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const body = await request.json();
     updateMedia(id, body);
@@ -30,13 +33,14 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update media' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('media', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const item = getMediaById(id);
     if (item) {
@@ -47,4 +51,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete media' }, { status: 500 });
   }
-}
+});

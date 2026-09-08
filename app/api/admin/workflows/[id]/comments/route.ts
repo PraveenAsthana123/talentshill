@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getComments, addComment } from '@/lib/db/marketing-workflow-queries';
 import { WorkflowCommentSchema } from '@/lib/validation/content-schemas';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('workflows', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const comments = getComments(id);
@@ -14,12 +15,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 });
   }
-}
+});
 
-export async function POST(
+export const POST = withPermission('workflows', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -31,4 +33,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to add comment' }, { status: 500 });
   }
-}
+});

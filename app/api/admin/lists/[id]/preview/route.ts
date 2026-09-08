@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { evaluateSegmentRules } from '@/lib/crm/segment-evaluator';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function POST(
+export const POST = withPermission('lists', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     await params; // ensure params resolved
     const body = await request.json();
     const rules = body.rules;
@@ -17,4 +19,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to evaluate segment' }, { status: 500 });
   }
-}
+});

@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTemplateById, renderTemplate } from '@/lib/db/template-queries';
 import { sendEmail } from '@/lib/email/mailer';
 import { TestSendSchema } from '@/lib/validation/marketing-schemas';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function POST(
+export const POST = withPermission('templates', 'manage')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -34,4 +36,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to send test email' }, { status: 500 });
   }
-}
+});

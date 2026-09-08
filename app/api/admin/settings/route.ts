@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllSettings, upsertSetting, logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('settings', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const settings = getAllSettings();
     return NextResponse.json({ settings });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withPermission('settings', 'update')(async (request: NextRequest, _context: unknown) => {
   try {
     const { key, value } = await request.json();
     if (!key) {
@@ -40,4 +41,4 @@ export async function PUT(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to update setting' }, { status: 500 });
   }
-}
+});

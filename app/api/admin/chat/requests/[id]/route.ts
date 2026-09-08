@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRequest, updateRequestStatus, assignRequest } from '@/lib/db/chat-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withPermission('chat', 'read')(async (_request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   const { id } = await params;
   const req = getRequest(id);
   if (!req) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
   return NextResponse.json(req);
-}
+});
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withPermission('chat', 'update')(async (request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   const { id } = await params;
   const body = await request.json();
 
@@ -23,4 +20,4 @@ export async function PATCH(
 
   const updated = getRequest(id);
   return NextResponse.json(updated);
-}
+});

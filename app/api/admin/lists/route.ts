@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllLists, createList } from '@/lib/db/list-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+export const GET = withPermission('lists', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     const listsList = getAllLists();
     return NextResponse.json({ lists: listsList });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch lists' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('lists', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
     const { name, description, type, segmentRules } = body;
@@ -33,4 +33,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create list' }, { status: 500 });
   }
-}
+});

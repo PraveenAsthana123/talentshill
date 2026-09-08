@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentById } from '@/lib/db/rag-document-queries';
 import { getChunksByDocument, getChunkCount } from '@/lib/db/rag-chunk-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('rag', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
   try {
+    const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
     const document = getDocumentById(id);
     if (!document) {
@@ -37,4 +39,4 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch chunks' }, { status: 500 });
   }
-}
+});

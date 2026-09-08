@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRequest, createMessage } from '@/lib/db/chat-queries';
 import { getSessionById } from '@/lib/db/chat-queries';
 import { sendEmail } from '@/lib/email/mailer';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withPermission('chat', 'manage')(async (request: NextRequest, context: unknown) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const { content } = await request.json();
@@ -37,4 +36,4 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: 'Failed to send response' }, { status: 500 });
   }
-}
+});

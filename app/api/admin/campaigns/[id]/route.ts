@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCampaignById, updateCampaign, deleteCampaign, getCampaignVariants } from '@/lib/db/campaign-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('campaigns', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const campaign = getCampaignById(id);
@@ -16,12 +18,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch campaign' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('campaigns', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -37,12 +40,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update campaign' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('campaigns', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteCampaign(id);
@@ -50,4 +54,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete campaign' }, { status: 500 });
   }
-}
+});

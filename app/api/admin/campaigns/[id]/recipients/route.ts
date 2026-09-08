@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCampaignRecipients, getCampaignRecipientCount } from '@/lib/db/campaign-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('campaigns', 'read')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
@@ -18,4 +20,4 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch recipients' }, { status: 500 });
   }
-}
+});

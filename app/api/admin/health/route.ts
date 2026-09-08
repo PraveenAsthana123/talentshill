@@ -1,16 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/lib/db/index';
 import { sql, eq } from 'drizzle-orm';
 import { getQueueStats } from '@/lib/db/job-queries';
 import { initJobRunner } from '@/lib/jobs/init';
 import { isJobRunnerRunning } from '@/lib/jobs/runner';
+import { withPermission } from '@/lib/security/rbac';
 import * as fs from 'fs';
 import * as path from 'path';
 
 // Auto-start job runner when health endpoint is first hit
 initJobRunner();
 
-export async function GET() {
+export const GET = withPermission('health', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
     // DB file size
     const dbPath = path.join(process.cwd(), 'data', 'talentshill.db');
@@ -62,4 +63,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Health check failed', status: 'unhealthy' }, { status: 500 });
   }
-}
+});

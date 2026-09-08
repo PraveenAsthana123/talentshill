@@ -3,12 +3,13 @@ import {
   getTemplateById, updateTemplate, deleteTemplate,
   getTemplateVersions, createTemplateVersion, renderTemplate,
 } from '@/lib/db/template-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('templates', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const template = getTemplateById(id);
@@ -20,12 +21,13 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch template' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
+export const PATCH = withPermission('templates', 'update')(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     const body = await request.json();
@@ -53,12 +55,13 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Failed to update template' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withPermission('templates', 'delete')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteTemplate(id);
@@ -66,4 +69,4 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: 'Failed to delete template' }, { status: 500 });
   }
-}
+});

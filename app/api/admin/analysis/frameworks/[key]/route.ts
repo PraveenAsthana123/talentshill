@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFrameworkByKey } from '@/lib/db/analysis-framework-queries';
 import { getAssessmentsByFramework } from '@/lib/db/analysis-assessment-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(
+export const GET = withPermission('analysis', 'read')(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
-) {
+  context: unknown
+) => {
+  const { params } = context as { params: Promise<{ key: string }> };
   try {
     const { key } = await params;
     const framework = getFrameworkByKey(key);
@@ -18,4 +20,4 @@ export async function GET(
   } catch {
     return NextResponse.json({ error: 'Failed to fetch framework' }, { status: 500 });
   }
-}
+});

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hybridRetrieve } from '@/lib/rag/retrieval';
 import { evaluateRetrieval } from '@/lib/rag/evaluation';
 import { getActiveConfig } from '@/lib/db/rag-run-queries';
-import { getSessionUserIdAsync } from '@/lib/security/rbac';
+import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('rag', 'manage')(async (request: NextRequest, _context: unknown) => {
   try {
     const userId = await getSessionUserIdAsync(request);
     if (!userId) {
@@ -61,4 +61,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to run evaluation' }, { status: 500 });
   }
-}
+});

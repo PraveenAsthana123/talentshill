@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllSubmissions, getContactStats } from '@/lib/db/contact-queries';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission('leads', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
     const { searchParams } = new URL(request.url);
     const stats = searchParams.get('stats') === 'true';
@@ -34,4 +35,4 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 });
   }
-}
+});
