@@ -27,7 +27,7 @@ const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];
 
 const ROLE_DEFS: { name: string; description: string; resources: string[] | '*'; actions: string[] | '*' }[] = [
   { name: 'SuperAdmin', description: 'Full system access', resources: '*', actions: '*' },
-  { name: 'Admin', description: 'Full access except role management', resources: '*', actions: ['read', 'create', 'update', 'delete'] },
+  { name: 'Admin', description: 'Full access except role management', resources: '*', actions: ['read', 'create', 'update', 'delete', 'manage'] },
   { name: 'Marketing', description: 'Marketing and campaign management', resources: ['campaigns', 'contacts', 'templates', 'broadcasts', 'analytics', 'leads', 'lists', 'media'], actions: '*' },
   { name: 'HR', description: 'HR and recruitment', resources: ['blog', 'leads', 'analytics'], actions: ['read', 'create', 'update'] },
   { name: 'Support', description: 'Customer support', resources: ['leads', 'contacts', 'appointments', 'survey', 'analytics'], actions: ['read', 'update'] },
