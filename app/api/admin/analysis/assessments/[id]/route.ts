@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAssessmentById, updateItemScores, completeAssessment, deleteAssessment } from '@/lib/db/analysis-assessment-queries';
 import { UpdateItemScoresSchema } from '@/lib/validation/content-schemas';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('analysis', 'read')(async (
   _request: NextRequest,
@@ -28,6 +29,7 @@ export const PATCH = withPermission('analysis', 'update')(async (
   try {
     const { id } = await params;
     const body = await request.json();
+    const userId = await getSessionUserIdAsync(request);
 
     if (body.action === 'complete') {
       const assessment = getAssessmentById(id);
@@ -35,7 +37,9 @@ export const PATCH = withPermission('analysis', 'update')(async (
       const scores = JSON.parse(assessment.itemScores as string) as { score: number | null }[];
       const scored = scores.filter((s) => s.score !== null && s.score !== undefined);
       const avg = scored.length > 0 ? scored.reduce((sum, s) => sum + (s.score ?? 0), 0) / scored.length : 0;
-      completeAssessment(id, Math.round(avg * 100) / 100);
+      const overallScore = Math.round(avg * 100) / 100;
+      completeAssessment(id, overallScore);
+      logOperationRun({ moduleKey: 'analysis', operationName: 'manual_complete_assessment', executionMode: 'manual', status: 'completed', inputPayload: { id }, outputPayload: { overallScore }, triggeredBy: userId });
       return NextResponse.json({ success: true });
     }
 
@@ -58,6 +62,7 @@ export const PATCH = withPermission('analysis', 'update')(async (
     const scored = merged.filter((s: any) => s.score !== null && s.score !== undefined);
     const overallScore = scored.length > 0 ? Math.round(scored.reduce((sum: number, s: any) => sum + (s.score ?? 0), 0) / scored.length * 100) / 100 : null;
     updateItemScores(id, merged, completedItems, overallScore);
+    logOperationRun({ moduleKey: 'analysis', operationName: 'manual_update_item_scores', executionMode: 'manual', status: 'completed', inputPayload: { id, itemCount: parsed.data.itemScores.length }, outputPayload: { completedItems, overallScore }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to update assessment' }, { status: 500 });
@@ -65,13 +70,15 @@ export const PATCH = withPermission('analysis', 'update')(async (
 });
 
 export const DELETE = withPermission('analysis', 'delete')(async (
-  _request: NextRequest,
+  request: NextRequest,
   context: unknown
 ) => {
   const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
+    const userId = await getSessionUserIdAsync(request);
     deleteAssessment(id);
+    logOperationRun({ moduleKey: 'analysis', operationName: 'manual_delete_assessment', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete assessment' }, { status: 500 });

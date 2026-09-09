@@ -1158,6 +1158,7 @@ export const analysisAssessments = sqliteTable('analysis_assessments', {
   totalItems: integer('total_items').notNull(),
   itemScores: text('item_scores').notNull(), // JSON array
   metadata: text('metadata'), // JSON
+  healthScore: integer('health_score'), // pipeline-computed: completion % + recency, not a quality judgment on overallScore
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [

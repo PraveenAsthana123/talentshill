@@ -3,6 +3,7 @@ import { getAssessments, getAssessmentCount, createAssessment } from '@/lib/db/a
 import { getFrameworkById } from '@/lib/db/analysis-framework-queries';
 import { CreateAssessmentSchema } from '@/lib/validation/content-schemas';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('analysis', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
@@ -40,6 +41,7 @@ export const POST = withPermission('analysis', 'create')(async (request: NextReq
       assessorId: userId ?? undefined,
       totalItems: framework.totalItems,
     });
+    logOperationRun({ moduleKey: 'analysis', operationName: 'manual_create_assessment', executionMode: 'manual', status: 'completed', inputPayload: { frameworkId: parsed.data.frameworkId, projectName: parsed.data.projectName }, outputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ id }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create assessment' }, { status: 500 });
