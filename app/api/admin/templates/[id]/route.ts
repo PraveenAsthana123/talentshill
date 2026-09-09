@@ -4,6 +4,7 @@ import {
   getTemplateVersions, createTemplateVersion, renderTemplate,
 } from '@/lib/db/template-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('templates', 'read')(async (
   _request: NextRequest,
@@ -51,6 +52,13 @@ export const PATCH = withPermission('templates', 'update')(async (
     }
 
     updateTemplate(id, body);
+
+    const userId = await getSessionUserIdAsync(request);
+    logOperationRun({
+      moduleKey: 'templates', operationName: 'update_template', executionMode: 'manual', status: 'completed',
+      inputPayload: { id, fields: Object.keys(body) }, outputPayload: { id }, triggeredBy: userId,
+    });
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to update template' }, { status: 500 });
@@ -58,13 +66,20 @@ export const PATCH = withPermission('templates', 'update')(async (
 });
 
 export const DELETE = withPermission('templates', 'delete')(async (
-  _request: NextRequest,
+  request: NextRequest,
   context: unknown
 ) => {
   const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
     deleteTemplate(id);
+
+    const userId = await getSessionUserIdAsync(request);
+    logOperationRun({
+      moduleKey: 'templates', operationName: 'delete_template', executionMode: 'manual', status: 'completed',
+      inputPayload: { id }, outputPayload: { id }, triggeredBy: userId,
+    });
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete template' }, { status: 500 });

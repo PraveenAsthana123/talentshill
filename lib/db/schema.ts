@@ -531,6 +531,7 @@ export const emailTemplates = sqliteTable('email_templates', {
   textContent: text('text_content'),
   variables: text('variables'), // JSON array of variable names
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  readinessScore: integer('readiness_score'),
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),

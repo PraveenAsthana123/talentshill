@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllTemplates, createTemplate } from '@/lib/db/template-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('templates', 'read')(async (
   _request: NextRequest,
@@ -27,6 +28,11 @@ export const POST = withPermission('templates', 'create')(async (request: NextRe
     const id = createTemplate({
       name, description, category, subject, htmlContent, textContent, variables,
       createdBy: userId ?? undefined,
+    });
+
+    logOperationRun({
+      moduleKey: 'templates', operationName: 'create_template', executionMode: 'manual', status: 'completed',
+      inputPayload: { name }, outputPayload: { id }, triggeredBy: userId,
     });
 
     return NextResponse.json({ id }, { status: 201 });
