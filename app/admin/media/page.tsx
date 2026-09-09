@@ -1,127 +1,42 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Button from '@/components/ui/Button';
-import { SectionHeader } from '@/components/ui';
+import { SectionHeader, Tabs } from '@/components/ui';
+import ManualTab from './ManualTab';
+import PipelineTab from './PipelineTab';
+import AgenticTab from './AgenticTab';
+import MonitoringTab from './MonitoringTab';
+import DashboardTab from './DashboardTab';
+import ReportTab from './ReportTab';
+import GovernanceTab from './GovernanceTab';
+import UserStoryTab from './UserStoryTab';
+import TestingTab from './TestingTab';
+import LogTrackingTab from './LogTrackingTab';
 import styles from './AdminMedia.module.css';
 
-interface MediaItem {
-  id: string;
-  filename: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-  url: string;
-  alt: string | null;
-  folder: string | null;
-  createdAt: string;
-}
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
-
+// Module 29 on the Operational Portal 10-tab standard. Manual tab wraps
+// the pre-existing upload/browse/delete page (unchanged logic), now
+// with real operation_run transactional history added. Pipeline scores
+// real file-integrity (exists on disk, size matches, alt text,
+// active); Agentic reuses it as the "search" step for a local-LLM
+// advisory recommendation.
 export default function AdminMediaPage() {
-  const [items, setItems] = useState<MediaItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const fetchMedia = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      const res = await fetch(`/api/admin/media?${params}`);
-      const data = await res.json();
-      setItems(data.media || []);
-    } catch { /* empty */ }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchMedia(); }, [search]);
-
-  const handleUpload = async (files: FileList) => {
-    setUploading(true);
-    for (const file of Array.from(files)) {
-      const formData = new FormData();
-      formData.append('file', file);
-      await fetch('/api/admin/media', { method: 'POST', body: formData });
-    }
-    setUploading(false);
-    fetchMedia();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this file?')) return;
-    await fetch(`/api/admin/media/${id}`, { method: 'DELETE' });
-    fetchMedia();
-  };
-
-  const isImage = (mimeType: string) => mimeType.startsWith('image/');
-
   return (
     <div className={styles.page}>
-      <SectionHeader label="Operations" title="Media Manager" subtitle="Upload and manage files and images." />
-
-      <div className={styles.toolbar}>
-        <input
-          className={styles.searchInput}
-          placeholder="Search files..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        <Button size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
-          {uploading ? 'Uploading...' : 'Upload File'}
-        </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          multiple
-          style={{ display: 'none' }}
-          onChange={e => e.target.files && handleUpload(e.target.files)}
-        />
-      </div>
-
-      <div
-        className={styles.uploadZone}
-        onDragOver={e => { e.preventDefault(); }}
-        onDrop={e => { e.preventDefault(); if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files); }}
-        onClick={() => fileRef.current?.click()}
-      >
-        <div className={styles.uploadText}>Drag & drop files here or click to browse</div>
-        <div className={styles.uploadHint}>Max 10MB per file. Images, PDFs, docs supported.</div>
-      </div>
-
-      {loading ? (
-        <div className={styles.empty}>Loading...</div>
-      ) : items.length === 0 ? (
-        <div className={styles.empty}>No files uploaded yet.</div>
-      ) : (
-        <div className={styles.grid}>
-          {items.map(item => (
-            <div key={item.id} className={styles.mediaCard}>
-              <div className={styles.preview}>
-                {isImage(item.mimeType) ? (
-                  <img src={item.url} alt={item.alt || item.originalName} />
-                ) : (
-                  <span className={styles.filePlaceholder}>{item.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</span>
-                )}
-              </div>
-              <div className={styles.cardInfo}>
-                <div className={styles.cardName}>{item.originalName}</div>
-                <div className={styles.cardMeta}>
-                  {formatBytes(item.size)}
-                  <button style={{ marginLeft: 'var(--space-2)', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 'var(--font-size-xs)' }} onClick={() => handleDelete(item.id)}>Delete</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <SectionHeader label="Operations" title="Media Manager" subtitle="Upload and manage files and images, via Manual, Pipeline (deterministic integrity scoring), or Agentic (local LLM) execution modes." />
+      <Tabs
+        tabs={[
+          { id: 'manual', label: 'Manual', content: <ManualTab /> },
+          { id: 'pipeline', label: 'Pipeline', content: <PipelineTab /> },
+          { id: 'agentic', label: 'Agentic', content: <AgenticTab /> },
+          { id: 'monitoring', label: 'Monitoring', content: <MonitoringTab /> },
+          { id: 'dashboard', label: 'Dashboard', content: <DashboardTab /> },
+          { id: 'report', label: 'Report', content: <ReportTab /> },
+          { id: 'governance', label: 'Governance', content: <GovernanceTab /> },
+          { id: 'user-story', label: 'User Story', content: <UserStoryTab /> },
+          { id: 'testing', label: 'Testing', content: <TestingTab /> },
+          { id: 'log-tracking', label: 'Log & Tracking', content: <LogTrackingTab /> },
+        ]}
+      />
     </div>
   );
 }
