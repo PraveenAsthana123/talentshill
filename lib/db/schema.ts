@@ -1325,3 +1325,22 @@ export const competitorAnalysis = sqliteTable('competitor_analysis', {
   index('idx_competitor_analysis_service').on(table.serviceId),
   index('idx_competitor_analysis_status').on(table.status),
 ]);
+
+// ── Email Compose Log ──
+// Compose has no persisted draft entity -- it's a one-shot send action.
+// This table gives it a real, queryable audit trail: every send
+// attempt, its pre-send readiness score, and whether it actually sent.
+export const emailComposeLog = sqliteTable('email_compose_log', {
+  id: text('id').primaryKey(),
+  to: text('to').notNull(),
+  subject: text('subject').notNull(),
+  htmlLength: integer('html_length').notNull(),
+  profileId: text('profile_id'),
+  readinessScore: integer('readiness_score'),
+  sent: integer('sent', { mode: 'boolean' }).notNull().default(false),
+  errorMessage: text('error_message'),
+  triggeredBy: text('triggered_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_email_compose_log_created').on(table.createdAt),
+]);

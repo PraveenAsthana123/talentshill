@@ -1,16 +1,25 @@
 import nodemailer from 'nodemailer';
-import { getProfileForEvent, getDefaultProfile, getSmtpForProfile } from '@/lib/db/email-profile-queries';
+import { getProfileForEvent, getProfileById, getDefaultProfile, getSmtpForProfile } from '@/lib/db/email-profile-queries';
 
 /**
- * Send email using a profile resolved from an event type.
- * Falls back to default profile, then to env vars.
+ * Send email using a profile resolved from an explicit profileId (if
+ * given), else from an event type, else the default profile, else env
+ * vars. options.profileId used to be silently accepted by callers (the
+ * email-compose route) and dropped -- an admin's explicit sender-profile
+ * choice in the Compose UI was always ignored in favor of the
+ * eventType-based route. Fixed here so an explicit profileId wins.
  */
 export async function sendWithProfile(
   eventType: string,
-  options: { to: string; subject: string; html: string }
+  options: { to: string; subject: string; html: string; profileId?: string }
 ): Promise<{ success: boolean; messageId?: string }> {
+  // An explicit profileId always wins over event-route resolution.
+  let profile = options.profileId ? getProfileById(options.profileId) : undefined;
+
   // Try to resolve profile from event route
-  let profile = getProfileForEvent(eventType);
+  if (!profile) {
+    profile = getProfileForEvent(eventType);
+  }
 
   // Fall back to default profile
   if (!profile) {
