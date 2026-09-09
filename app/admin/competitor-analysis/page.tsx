@@ -3,6 +3,7 @@
 import { SectionHeader, Tabs } from '@/components/ui';
 import ManualTab from './ManualTab';
 import PipelineTab from './PipelineTab';
+import AgenticTab from './AgenticTab';
 import NotYetBuiltTab from './NotYetBuiltTab';
 import styles from './AdminCompetitorAnalysis.module.css';
 
@@ -20,7 +21,7 @@ export default function CompetitorAnalysisPage() {
         tabs={[
           { id: 'manual', label: 'Manual', content: <ManualTab /> },
           { id: 'pipeline', label: 'Pipeline', content: <PipelineTab /> },
-          { id: 'agentic', label: 'Agentic', content: <NotYetBuiltTab tabName="Agentic" /> },
+          { id: 'agentic', label: 'Agentic', content: <AgenticTab /> },
           { id: 'monitoring', label: 'Monitoring', content: <NotYetBuiltTab tabName="Monitoring" /> },
           { id: 'dashboard', label: 'Dashboard', content: <NotYetBuiltTab tabName="Dashboard" /> },
           { id: 'report', label: 'Report', content: <NotYetBuiltTab tabName="Report" /> },
