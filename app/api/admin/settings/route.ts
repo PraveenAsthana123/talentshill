@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllSettings, upsertSetting, logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
 import { withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('settings', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -36,6 +37,8 @@ export const PUT = withPermission('settings', 'update')(async (request: NextRequ
       userId,
       metadata: { key, value },
     });
+
+    logOperationRun({ moduleKey: 'settings', operationName: 'manual_update_setting', executionMode: 'manual', status: 'completed', inputPayload: { key, value }, triggeredBy: userId });
 
     return NextResponse.json({ success: true });
   } catch {

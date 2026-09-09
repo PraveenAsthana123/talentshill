@@ -162,6 +162,7 @@ export const siteSettings = sqliteTable('site_settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(), // JSON string
   updatedBy: text('updated_by'),
+  qualityScore: integer('quality_score'),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 

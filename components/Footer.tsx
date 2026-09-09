@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { SOCIAL_LINKS } from '@/lib/constants';
+import { SOCIAL_LINKS as ENV_SOCIAL_LINKS } from '@/lib/constants';
 import Button from '@/components/ui/Button';
 import styles from './Footer.module.css';
 
@@ -10,6 +10,30 @@ export default function Footer() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  // Real fix: the admin Settings page's Social Links group had zero
+  // real readers -- this footer previously always used build-time
+  // NEXT_PUBLIC_* env vars regardless of what an admin saved. DB
+  // values (when set) now override the env-var defaults.
+  const [SOCIAL_LINKS, setSocialLinks] = useState(ENV_SOCIAL_LINKS);
+
+  useEffect(() => {
+    // '#' is the seed placeholder (see lib/db/seed-admin.ts) meaning
+    // "not set" -- must NOT override a working env-var link with it,
+    // or a real link silently disappears the moment this fetch resolves.
+    const isRealOverride = (v: unknown): v is string => typeof v === 'string' && v.length > 0 && v !== '#';
+    fetch('/api/settings/public')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const s = data?.settings;
+        if (!s) return;
+        setSocialLinks((prev) => ({
+          whatsapp: isRealOverride(s.social_whatsapp) ? s.social_whatsapp : prev.whatsapp,
+          linkedin: isRealOverride(s.social_linkedin) ? s.social_linkedin : prev.linkedin,
+          facebook: isRealOverride(s.social_facebook) ? s.social_facebook : prev.facebook,
+        }));
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
