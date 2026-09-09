@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/lib/db/index';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 // Real, queryable module status -- see lib/db/seed-module-registry.ts for
 // how built_status is classified (from actually reading the code this
@@ -33,6 +34,7 @@ export const PATCH = withPermission('health', 'manage')(async (request: NextRequ
   if (!body?.id) return NextResponse.json({ error: 'id is required.' }, { status: 400 });
 
   const { eq } = await import('drizzle-orm');
+  const userId = await getSessionUserIdAsync(request);
   const now = new Date();
   const updated = db.update(schema.moduleRegistry)
     .set({ lastVerifiedAt: now, verifiedBy: body.verifiedBy || 'admin', updatedAt: now })
@@ -41,5 +43,6 @@ export const PATCH = withPermission('health', 'manage')(async (request: NextRequ
     .get();
 
   if (!updated) return NextResponse.json({ error: 'Module not found.' }, { status: 404 });
+  logOperationRun({ moduleKey: 'module-registry', operationName: 'manual_verify_module', executionMode: 'manual', status: 'completed', inputPayload: { id: body.id }, triggeredBy: userId });
   return NextResponse.json({ module: updated });
 });

@@ -1216,6 +1216,7 @@ export const moduleRegistry = sqliteTable('module_registry', {
   sourceDoc: text('source_doc'),
   lastVerifiedAt: integer('last_verified_at', { mode: 'timestamp' }),
   verifiedBy: text('verified_by'),
+  driftScore: integer('drift_score'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
