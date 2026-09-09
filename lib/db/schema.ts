@@ -1182,6 +1182,64 @@ export const moduleRegistry = sqliteTable('module_registry', {
   index('idx_module_registry_status').on(table.builtStatus),
 ]);
 
+// Operation Run -- generic, reusable run-tracking for the Operational
+// Portal Page & Tab Standard's 3 execution modes (Manual/Pipeline/
+// Agentic), pilot module: competitor_analysis. Named generically
+// (moduleKey-scoped, not competitor-analysis-specific) so other modules
+// can reuse this same table when they adopt the 10-tab standard, instead
+// of each module growing its own bespoke run table.
+export const operationRun = sqliteTable('operation_run', {
+  id: text('id').primaryKey(),
+  moduleKey: text('module_key').notNull(), // e.g. 'competitor_analysis', ties to module_registry.moduleKey
+  operationName: text('operation_name').notNull(), // e.g. 'research_competitor'
+  executionMode: text('execution_mode', { enum: ['manual', 'pipeline', 'agentic'] }).notNull(),
+  status: text('status', { enum: ['pending', 'running', 'completed', 'failed'] }).notNull().default('pending'),
+  inputPayload: text('input_payload'), // JSON
+  outputPayload: text('output_payload'), // JSON
+  errorMessage: text('error_message'),
+  tokensUsed: integer('tokens_used'),
+  triggeredBy: text('triggered_by'), // userId, or 'system' for scheduled pipeline runs
+  startedAt: integer('started_at', { mode: 'timestamp' }),
+  completedAt: integer('completed_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_operation_run_module').on(table.moduleKey),
+  index('idx_operation_run_status').on(table.status),
+  index('idx_operation_run_mode').on(table.executionMode),
+]);
+
+// Status history for operation_run -- section 3 of the Operational Portal
+// standard requires a status history, not just a current-value field.
+export const operationRunStatusHistory = sqliteTable('operation_run_status_history', {
+  id: text('id').primaryKey(),
+  runId: text('run_id').notNull().references(() => operationRun.id, { onDelete: 'cascade' }),
+  status: text('status').notNull(),
+  changedAt: integer('changed_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_run_status_history_run').on(table.runId),
+]);
+
+// Agent execution steps -- the real plan/search/act/execute/complete loop
+// for agentic-mode operation_run rows. Each row is one real step an agent
+// took, not a summary -- this IS the "not a black box" requirement from
+// the Operational Portal standard's Agentic tab.
+export const agentExecutionStep = sqliteTable('agent_execution_step', {
+  id: text('id').primaryKey(),
+  runId: text('run_id').notNull().references(() => operationRun.id, { onDelete: 'cascade' }),
+  stepIndex: integer('step_index').notNull(),
+  phase: text('phase', { enum: ['plan', 'search', 'act', 'execute', 'complete'] }).notNull(),
+  agentRole: text('agent_role').notNull(), // e.g. 'researcher', 'analyst'
+  input: text('input'),
+  output: text('output'),
+  tokensUsed: integer('tokens_used'),
+  startedAt: integer('started_at', { mode: 'timestamp' }),
+  completedAt: integer('completed_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_agent_step_run').on(table.runId),
+  index('idx_agent_step_phase').on(table.phase),
+]);
+
 // Competitor Analysis -- admin-only market-research intelligence, per
 // service. NOT exposed on any public route. Tracks who else is offering a
 // comparable service, how they position it, and what TalentsHill would

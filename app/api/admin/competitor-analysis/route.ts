@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { db, schema } from '@/lib/db/index';
 import { eq, desc } from 'drizzle-orm';
 import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 // Admin-only market-research intelligence. Never referenced from any
 // public route -- see lib/db/schema.ts's comment on competitorAnalysis
@@ -57,6 +58,16 @@ export const POST = withPermission('competitor_analysis', 'create')(async (reque
     createdAt: now,
     updatedAt: now,
   }).returning().get();
+
+  logOperationRun({
+    moduleKey: 'competitor_analysis',
+    operationName: 'create_entry',
+    executionMode: 'manual',
+    status: 'completed',
+    inputPayload: { serviceId: body.serviceId, competitorName: body.competitorName },
+    outputPayload: { id: row.id },
+    triggeredBy: userId,
+  });
 
   return NextResponse.json({ entry: row }, { status: 201 });
 });

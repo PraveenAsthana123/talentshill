@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, schema } from '@/lib/db/index';
 import { eq } from 'drizzle-orm';
 import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('competitor_analysis', 'read')(async (_request: NextRequest, context: unknown) => {
   const { params } = context as { params: Promise<{ id: string }> };
@@ -35,14 +36,37 @@ export const PATCH = withPermission('competitor_analysis', 'update')(async (requ
   }
 
   const row = db.update(schema.competitorAnalysis).set(updates).where(eq(schema.competitorAnalysis.id, id)).returning().get();
+
+  logOperationRun({
+    moduleKey: 'competitor_analysis',
+    operationName: 'update_entry',
+    executionMode: 'manual',
+    status: 'completed',
+    inputPayload: { id, fields: Object.keys(updates) },
+    outputPayload: { id: row.id, status: row.status },
+    triggeredBy: userId,
+  });
+
   return NextResponse.json({ entry: row });
 });
 
-export const DELETE = withPermission('competitor_analysis', 'delete')(async (_request: NextRequest, context: unknown) => {
+export const DELETE = withPermission('competitor_analysis', 'delete')(async (request: NextRequest, context: unknown) => {
   const { params } = context as { params: Promise<{ id: string }> };
   const { id } = await params;
   const existing = db.select().from(schema.competitorAnalysis).where(eq(schema.competitorAnalysis.id, id)).get();
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const userId = await getSessionUserIdAsync(request);
   db.delete(schema.competitorAnalysis).where(eq(schema.competitorAnalysis.id, id)).run();
+
+  logOperationRun({
+    moduleKey: 'competitor_analysis',
+    operationName: 'delete_entry',
+    executionMode: 'manual',
+    status: 'completed',
+    inputPayload: { id },
+    outputPayload: { deletedCompetitorName: existing.competitorName },
+    triggeredBy: userId,
+  });
+
   return NextResponse.json({ success: true });
 });
