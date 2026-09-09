@@ -1240,6 +1240,30 @@ export const agentExecutionStep = sqliteTable('agent_execution_step', {
   index('idx_agent_step_phase').on(table.phase),
 ]);
 
+// Real, persisted test-tracking for the Operational Portal 10-tab
+// standard's Testing tab -- replaces per-module hardcoded arrays with a
+// real, queryable record. Every row is a real verification that actually
+// happened (test data used, raw log/evidence captured, actual result),
+// not a planned/hypothetical test case.
+export const testExecution = sqliteTable('test_execution', {
+  id: text('id').primaryKey(),
+  moduleKey: text('module_key').notNull(),
+  executionMode: text('execution_mode', { enum: ['manual', 'pipeline', 'agentic', 'cross-module'] }),
+  caseName: text('case_name').notNull(),
+  description: text('description'),
+  expectedResult: text('expected_result').notNull(),
+  actualResult: text('actual_result').notNull(),
+  status: text('status', { enum: ['pass', 'fail'] }).notNull(),
+  testData: text('test_data'), // JSON -- the real input/fixture used
+  logOutput: text('log_output'), // raw captured evidence (curl output, DB query result, etc.)
+  executedAt: integer('executed_at', { mode: 'timestamp' }).notNull(),
+  executedBy: text('executed_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_test_execution_module').on(table.moduleKey),
+  index('idx_test_execution_status').on(table.status),
+]);
+
 // Competitor Analysis -- admin-only market-research intelligence, per
 // service. NOT exposed on any public route. Tracks who else is offering a
 // comparable service, how they position it, and what TalentsHill would
