@@ -9,6 +9,7 @@ import {
 } from '@/lib/db/feature-flag-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 import { bustCache } from '@/lib/feature-flags/cache';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('features', 'read')(async (_request: NextRequest, context: unknown) => {
   const { params } = context as { params: Promise<{ id: string }> };
@@ -38,6 +39,7 @@ export const PATCH = withPermission('features', 'update')(async (request: NextRe
       if (!result) {
         return NextResponse.json({ error: 'Version not found' }, { status: 404 });
       }
+      logOperationRun({ moduleKey: 'features', operationName: 'manual_rollback_flag', executionMode: 'manual', status: 'completed', inputPayload: { id, versionId: body.versionId }, triggeredBy: userId });
       return NextResponse.json({ version: result });
     }
 
@@ -45,6 +47,7 @@ export const PATCH = withPermission('features', 'update')(async (request: NextRe
       const userId = await getSessionUserIdAsync(request);
       const versionId = createFlagVersion(id, body.config, userId ?? undefined);
       bustCache();
+      logOperationRun({ moduleKey: 'features', operationName: 'manual_create_version', executionMode: 'manual', status: 'completed', inputPayload: { id }, outputPayload: { versionId }, triggeredBy: userId });
       return NextResponse.json({ versionId });
     }
 
@@ -52,18 +55,22 @@ export const PATCH = withPermission('features', 'update')(async (request: NextRe
     const { label, description, module, sortOrder } = body;
     updateFlag(id, { label, description, module, sortOrder });
     bustCache();
+    const userId = await getSessionUserIdAsync(request);
+    logOperationRun({ moduleKey: 'features', operationName: 'manual_update_flag', executionMode: 'manual', status: 'completed', inputPayload: { id, fields: Object.keys(body) }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to update flag' }, { status: 500 });
   }
 });
 
-export const DELETE = withPermission('features', 'delete')(async (_request: NextRequest, context: unknown) => {
+export const DELETE = withPermission('features', 'delete')(async (request: NextRequest, context: unknown) => {
   const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
+    const userId = await getSessionUserIdAsync(request);
     deleteFlag(id);
     bustCache();
+    logOperationRun({ moduleKey: 'features', operationName: 'manual_delete_flag', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete flag' }, { status: 500 });

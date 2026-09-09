@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllFlags, toggleFlag, createFlag } from '@/lib/db/feature-flag-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 import { bustCache } from '@/lib/feature-flags/cache';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('features', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -24,12 +25,15 @@ export const POST = withPermission('features', 'manage')(async (request: NextReq
       if (!result) {
         return NextResponse.json({ error: 'Flag not found' }, { status: 404 });
       }
+      logOperationRun({ moduleKey: 'features', operationName: 'manual_toggle_flag', executionMode: 'manual', status: 'completed', inputPayload: { id, isEnabled }, triggeredBy: userId });
       return NextResponse.json({ flag: result });
     }
 
     if (action === 'create' && key && label) {
       const flagId = createFlag({ key, label, description, module });
       bustCache();
+      const userId = await getSessionUserIdAsync(request);
+      logOperationRun({ moduleKey: 'features', operationName: 'manual_create_flag', executionMode: 'manual', status: 'completed', inputPayload: { key, label, module }, outputPayload: { id: flagId }, triggeredBy: userId });
       return NextResponse.json({ id: flagId }, { status: 201 });
     }
 

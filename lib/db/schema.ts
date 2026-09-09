@@ -307,6 +307,7 @@ export const featureFlags = sqliteTable('feature_flags', {
   module: text('module'),
   isEnabled: integer('is_enabled', { mode: 'boolean' }).notNull().default(true),
   sortOrder: integer('sort_order').default(0),
+  readinessScore: integer('readiness_score'), // real governance-completeness score -- createFlag() writes no initial version, so a never-toggled flag has empty history
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
