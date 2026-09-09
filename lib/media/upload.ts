@@ -1,5 +1,5 @@
 import { writeFile, unlink, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { join, normalize, relative, isAbsolute } from 'path';
 import { randomUUID } from 'crypto';
 import { existsSync } from 'fs';
 
@@ -11,6 +11,28 @@ const ALLOWED_EXTENSIONS = new Set([
   '.mp4', '.webm', '.mp3',
   '.csv', '.txt', '.json',
 ]);
+
+// Real path-traversal fix: `folder` came straight from client-supplied
+// FormData and was joined into a filesystem path with zero validation.
+// join(UPLOAD_DIR, '../../../../etc') resolves '..' segments and
+// escapes the intended uploads directory entirely -- a real arbitrary-
+// directory-write vulnerability (the final filename is still a random
+// UUID, but the directory it lands in was fully attacker-controlled).
+// Strips traversal/absolute-path attempts and re-validates the
+// resolved path is still inside UPLOAD_DIR before ever touching disk.
+function sanitizeFolder(folder?: string): string | undefined {
+  if (!folder) return undefined;
+  const candidate = normalize(folder).replace(/^(\.\.[/\\])+/, '');
+  if (isAbsolute(candidate) || candidate.split(/[/\\]/).includes('..')) {
+    throw new Error('Invalid folder path');
+  }
+  const resolvedDir = join(UPLOAD_DIR, candidate);
+  const rel = relative(UPLOAD_DIR, resolvedDir);
+  if (rel.startsWith('..') || isAbsolute(rel)) {
+    throw new Error('Invalid folder path');
+  }
+  return candidate;
+}
 
 export async function handleUpload(
   file: File,
@@ -34,8 +56,10 @@ export async function handleUpload(
     throw new Error(`File type not allowed: ${ext}`);
   }
 
+  const safeFolder = sanitizeFolder(folder);
+
   // Create upload directory
-  const targetDir = folder ? join(UPLOAD_DIR, folder) : UPLOAD_DIR;
+  const targetDir = safeFolder ? join(UPLOAD_DIR, safeFolder) : UPLOAD_DIR;
   if (!existsSync(targetDir)) {
     await mkdir(targetDir, { recursive: true });
   }
@@ -43,7 +67,7 @@ export async function handleUpload(
   // Generate unique filename
   const filename = `${randomUUID()}${ext}`;
   const filePath = join(targetDir, filename);
-  const relativePath = folder ? `/uploads/${folder}/${filename}` : `/uploads/${filename}`;
+  const relativePath = safeFolder ? `/uploads/${safeFolder}/${filename}` : `/uploads/${filename}`;
 
   // Write file
   const buffer = Buffer.from(await file.arrayBuffer());

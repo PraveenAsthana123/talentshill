@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMediaList, getMediaCount, createMedia } from '@/lib/db/media-queries';
 import { handleUpload } from '@/lib/media/upload';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('media', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
@@ -38,6 +39,8 @@ export const POST = withPermission('media', 'create')(async (request: NextReques
       folder: folder || undefined,
       uploadedBy: userId ?? undefined,
     });
+
+    logOperationRun({ moduleKey: 'media', operationName: 'manual_upload_media', executionMode: 'manual', status: 'completed', inputPayload: { id, originalName: result.originalName, folder: folder || undefined }, triggeredBy: userId });
 
     return NextResponse.json({ id, url: result.url }, { status: 201 });
   } catch (err) {

@@ -438,6 +438,7 @@ export const media = sqliteTable('media', {
   folder: text('folder'),
   uploadedBy: text('uploaded_by'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  readinessScore: integer('readiness_score'), // real file-integrity score -- a DB row can outlive its real file on disk with nothing catching it
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
