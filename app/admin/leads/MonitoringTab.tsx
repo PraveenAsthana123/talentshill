@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui';
+import OperationHealthCheck from '@/components/admin/OperationHealthCheck';
 import styles from './LeadsShared.module.css';
 
 interface RunEntry { id: string; operationName: string; executionMode: string; status: string; tokensUsed: number | null; createdAt: string }
@@ -25,6 +26,7 @@ export default function MonitoringTab() {
 
   return (
     <div>
+      <OperationHealthCheck moduleKey="leads" />
       <div className={styles.subSection}>
         <h4>Live status</h4>
         <div className={styles.vizRow}>

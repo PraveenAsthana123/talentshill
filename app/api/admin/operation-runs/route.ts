@@ -4,11 +4,12 @@ import { eq, desc, and } from 'drizzle-orm';
 import { withPermission } from '@/lib/security/rbac';
 
 // Shared operation-run history for any module adopting the Operational
-// Portal Page & Tab Standard. Gated on the querying module's own RBAC
-// resource via the moduleKey param -- competitor_analysis today, more
-// later. Falls back to competitor_analysis's permission if no moduleKey
-// given (this route currently only has one real consumer).
-export const GET = withPermission('competitor_analysis', 'read')(async (request: NextRequest, _context: unknown) => {
+// Portal Page & Tab Standard (competitor_analysis, leads, more to come).
+// Gated on the generic 'health' resource, not any one module's resource
+// -- gating this on competitor_analysis:read was a real bug (fixed here):
+// a role with only leads:read would incorrectly get 403 on its own
+// module's operation history via this shared endpoint.
+export const GET = withPermission('health', 'read')(async (request: NextRequest, _context: unknown) => {
   const { searchParams } = new URL(request.url);
   const moduleKey = searchParams.get('moduleKey');
   const executionMode = searchParams.get('executionMode');

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui';
+import OperationHealthCheck from '@/components/admin/OperationHealthCheck';
 import styles from './AdminCompetitorAnalysis.module.css';
 
 interface RunEntry {
@@ -52,6 +53,7 @@ export default function MonitoringTab() {
 
   return (
     <div>
+      <OperationHealthCheck moduleKey="competitor_analysis" />
       <div className={styles.subSection}>
         <h4>Live status</h4>
         <div className={styles.vizRow}>
