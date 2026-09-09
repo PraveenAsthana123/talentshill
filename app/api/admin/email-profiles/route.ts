@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllProfiles, createProfile } from '@/lib/db/email-profile-queries';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('email_profiles', 'read')(async (
   _request: NextRequest,
@@ -27,6 +28,8 @@ export const POST = withPermission('email_profiles', 'create')(async (
     }
 
     const id = createProfile({ name, fromName, fromEmail, replyTo, signature, isDefault });
+    const userId = await getSessionUserIdAsync(request);
+    logOperationRun({ moduleKey: 'email_profiles', operationName: 'manual_create_profile', executionMode: 'manual', status: 'completed', inputPayload: { name, fromEmail }, outputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ id }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 });

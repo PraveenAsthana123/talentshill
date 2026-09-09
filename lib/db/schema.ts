@@ -389,6 +389,7 @@ export const emailProfiles = sqliteTable('email_profiles', {
   signature: text('signature'), // HTML
   isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  readinessScore: integer('readiness_score'), // real send-readiness score -- a profile with no linked SMTP config silently falls back to env vars (confirmed live in the Compose module)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
