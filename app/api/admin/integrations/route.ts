@@ -7,7 +7,10 @@ export const GET = withPermission('integrations', 'read')(async (_request: NextR
   const result = integrations.map(i => ({
     ...i,
     configSchema: i.configSchema ? JSON.parse(i.configSchema) : null,
-    accounts: getAccountsByIntegration(i.id),
+    // Never send raw credentials to the client -- the account row's
+    // `credentials` field previously went out verbatim (plaintext
+    // API keys/secrets) in this list response.
+    accounts: getAccountsByIntegration(i.id).map(({ credentials, ...a }) => ({ ...a, hasCredentials: !!credentials })),
   }));
   return NextResponse.json(result);
 });

@@ -871,6 +871,7 @@ export const integrationAccounts = sqliteTable('integration_accounts', {
   connectedAt: integer('connected_at', { mode: 'timestamp' }),
   lastSyncAt: integer('last_sync_at', { mode: 'timestamp' }),
   errorMessage: text('error_message'),
+  readinessScore: integer('readiness_score'), // real connection-readiness score
 }, (table) => [
   index('idx_int_accounts_integration').on(table.integrationId),
   index('idx_int_accounts_status').on(table.status),

@@ -2,7 +2,7 @@ import { db, schema } from './index';
 import { eq, desc, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
-const { integrations, integrationAccounts } = schema;
+const { integrations, integrationAccounts, integrationLogs, integrationCredentials } = schema;
 
 export function createIntegration(data: {
   providerKey: string;
@@ -81,5 +81,12 @@ export function updateAccountStatus(id: string, status: string, errorMessage?: s
 }
 
 export function deleteAccount(id: string) {
+  // integration_logs.account_id and integration_credentials.account_id
+  // both reference this row with no cascade -- deleting an account that
+  // has ever been tested (i.e. has any log rows, which addLog() now
+  // actually writes) previously threw an unhandled SQLITE_CONSTRAINT_
+  // FOREIGNKEY 500. Clean up dependents first.
+  db.delete(integrationLogs).where(eq(integrationLogs.accountId, id)).run();
+  db.delete(integrationCredentials).where(eq(integrationCredentials.accountId, id)).run();
   db.delete(integrationAccounts).where(eq(integrationAccounts.id, id)).run();
 }
