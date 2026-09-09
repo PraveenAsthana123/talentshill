@@ -1346,3 +1346,22 @@ export const emailComposeLog = sqliteTable('email_compose_log', {
 }, (table) => [
   index('idx_email_compose_log_created').on(table.createdAt),
 ]);
+
+// ── System Health Snapshots ──
+// Health has no persisted entity of its own (it's a live status
+// rollup). Each Pipeline run inserts a new timestamped row so overall
+// system health can be tracked over time, same pattern as
+// analytics_snapshots.
+export const healthSnapshots = sqliteTable('health_snapshots', {
+  id: text('id').primaryKey(),
+  healthScore: integer('health_score').notNull(),
+  jobRunnerScore: integer('job_runner_score').notNull(),
+  recentErrorsScore: integer('recent_errors_score').notNull(),
+  jobFailureRateScore: integer('job_failure_rate_score').notNull(),
+  dbSizeScore: integer('db_size_score').notNull(),
+  inputSnapshot: text('input_snapshot').notNull(), // JSON: raw metrics used
+  triggeredBy: text('triggered_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_health_snapshots_created').on(table.createdAt),
+]);

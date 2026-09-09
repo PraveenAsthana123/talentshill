@@ -30,7 +30,10 @@ export const GET = withPermission('health', 'read')(async (_request: NextRequest
     ];
     for (const table of tableNames) {
       try {
-        const result = db.run(sql.raw(`SELECT count(*) as count FROM ${table}`));
+        // db.run() executes but discards SELECT result rows (it returns
+        // a RunResult, not query rows) -- every count here was silently
+        // 0 regardless of real table size. .get() actually returns the row.
+        const result = db.get(sql.raw(`SELECT count(*) as count FROM ${table}`));
         tables[table] = (result as unknown as { count: number })?.count || 0;
       } catch {
         tables[table] = 0;
