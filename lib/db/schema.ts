@@ -1167,6 +1167,26 @@ export const analysisAssessments = sqliteTable('analysis_assessments', {
   index('idx_assessments_status').on(table.status),
 ]);
 
+// ── Analytics Program Health Snapshots ──
+// Unlike other modules' pipelines (which score one mutable entity),
+// analytics has no single entity of its own -- it's a rollup over
+// campaigns + contacts. Each pipeline run inserts a new timestamped
+// snapshot row instead of updating a record in place, so program health
+// can be tracked over time.
+export const analyticsSnapshots = sqliteTable('analytics_snapshots', {
+  id: text('id').primaryKey(),
+  healthScore: integer('health_score').notNull(),
+  openRateScore: integer('open_rate_score').notNull(),
+  clickRateScore: integer('click_rate_score').notNull(),
+  bounceRateScore: integer('bounce_rate_score').notNull(),
+  contactHealthScore: integer('contact_health_score').notNull(),
+  inputSnapshot: text('input_snapshot').notNull(), // JSON: raw rates/counts used
+  triggeredBy: text('triggered_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_analytics_snapshots_created').on(table.createdAt),
+]);
+
 // Module Understanding registry -- real, queryable backing for the mandatory
 // Module Understanding Standard policy. One row per real module (this app's
 // 39 RBAC resources, see lib/db/seed-rbac.ts's RESOURCES), matching the
