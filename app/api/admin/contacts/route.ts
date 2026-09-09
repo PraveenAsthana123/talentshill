@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContacts, getContactCount, createContact, bulkDeleteContacts, bulkUpdateTags } from '@/lib/db/contact-crm-queries';
 import { withPermission, getSessionUserIdAsync, checkPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('contacts', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
@@ -60,6 +61,12 @@ export async function POST(request: NextRequest, context: unknown) {
     }
 
     const id = createContact({ email, firstName, lastName, company, phone, source, tags });
+
+    logOperationRun({
+      moduleKey: 'contacts', operationName: 'create_contact', executionMode: 'manual', status: 'completed',
+      inputPayload: { email, source }, outputPayload: { id }, triggeredBy: userId,
+    });
+
     return NextResponse.json({ id }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create contact' }, { status: 500 });
