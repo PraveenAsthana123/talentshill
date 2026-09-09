@@ -7,6 +7,9 @@ import AgenticTab from './AgenticTab';
 import MonitoringTab from './MonitoringTab';
 import DashboardTab from './DashboardTab';
 import ReportTab from './ReportTab';
+import UserStoryTab from './UserStoryTab';
+import TestingTab from './TestingTab';
+import LogTrackingTab from './LogTrackingTab';
 import NotYetBuiltTab from './NotYetBuiltTab';
 import styles from './AdminCompetitorAnalysis.module.css';
 
@@ -29,9 +32,9 @@ export default function CompetitorAnalysisPage() {
           { id: 'dashboard', label: 'Dashboard', content: <DashboardTab /> },
           { id: 'report', label: 'Report', content: <ReportTab /> },
           { id: 'governance', label: 'Governance', content: <NotYetBuiltTab tabName="Governance" /> },
-          { id: 'user-story', label: 'User Story', content: <NotYetBuiltTab tabName="User Story" /> },
-          { id: 'testing', label: 'Testing', content: <NotYetBuiltTab tabName="Testing" /> },
-          { id: 'log-tracking', label: 'Log & Tracking', content: <NotYetBuiltTab tabName="Log & Tracking" /> },
+          { id: 'user-story', label: 'User Story', content: <UserStoryTab /> },
+          { id: 'testing', label: 'Testing', content: <TestingTab /> },
+          { id: 'log-tracking', label: 'Log & Tracking', content: <LogTrackingTab /> },
         ]}
       />
     </div>
