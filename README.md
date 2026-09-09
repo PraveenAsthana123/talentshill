@@ -8,15 +8,17 @@ A full-stack Next.js platform powering the digital operations of an enterprise A
 
 | Metric | Count |
 |--------|-------|
-| Database tables | 79 |
-| API routes | 124 |
-| Admin pages | 62 |
-| Public pages | 17 |
+| Database tables | 80 (verified via `sqlite_master`, 2026-09-09) |
+| Admin API routes | 96, all RBAC-gated (verified 2026-09-09, see [Testing & Evidence](#testing--evidence)) |
+| Admin pages | 64 |
+| Public pages | 27 (17 original + 10 new solutions pages, 2026-09-09) |
 | Query files | 38 |
 | Reusable UI components | 9 |
 | Zustand stores | 7 |
 | AI analysis frameworks | 35 |
 | Integration providers | 11 |
+| Solutions pages | 13 (genai, robotics-ai, quantum-ai + 10 digital-marketing/AI pages) |
+| Blog posts | 7 (3 original + 4 added 2026-09-09) |
 
 ---
 
@@ -35,7 +37,7 @@ A full-stack Next.js platform powering the digital operations of an enterprise A
 | Forms | react-hook-form + Zod 4 validation |
 | Auth | JWT sessions (jose), bcryptjs, RBAC |
 | Email | Nodemailer (multi-profile SMTP) |
-| Blog engine | gray-matter + remark (Markdown to HTML) |
+| Blog engine | Database-backed (`blog_posts` table). `gray-matter` + the `data/blog/*.md` files were the original one-time seed source (`lib/db/seed.ts`) -- the running app reads exclusively from the DB, not from those files, on every request (`lib/blog.ts` → `lib/db/blog-queries.ts`). Content itself is Markdown, rendered to HTML via `remark` at request time. |
 | RSS | feed package |
 | RAG pipeline | Custom chunking, embedding, retrieval |
 | Testing | Vitest |
@@ -462,6 +464,16 @@ Service Layer
 | `/solutions/robotics-ai` | Robotics & AI solutions |
 | `/solutions/genai` | Generative AI solutions |
 | `/solutions/quantum-ai` | Quantum AI solutions |
+| `/solutions/digital-marketing` | Digital marketing overview |
+| `/solutions/ads-management` | Paid search/social/programmatic ads |
+| `/solutions/market-research` | Competitive intelligence & audience research |
+| `/solutions/performance-marketing` | Conversion/CAC/LTV optimization |
+| `/solutions/seo-geo` | SEO + generative engine optimization |
+| `/solutions/ai-automation` | AI-driven marketing ops automation |
+| `/solutions/ai-strategy` | AI readiness, roadmap, governance advisory |
+| `/solutions/agentic-ai` | Multi-agent systems & workflow automation |
+| `/solutions/enterprise-rag` | Enterprise RAG (added 2026-09-09) |
+| `/solutions/creator-video-marketing` | Influencer, video & viral growth |
 | `/blog` | Blog listing |
 | `/blog/[slug]` | Blog post detail |
 | `/careers` | Job openings |
@@ -490,28 +502,138 @@ Service Layer
 | **RAG Pipeline** | Dashboard, Documents, Runs, Config, Search |
 | **AI Analysis** | Hub (35 frameworks), Projects (assessments) |
 | **Analytics** | Leads, Survey, Campaign Analytics |
-| **System** | Health, Roles & Users, Users, Features, Email Profiles, Appointments, Settings |
+| **System** | Health, Module Registry, Roles & Users, Users, Features, Email Profiles, Appointments, Settings |
+| **Market Research** (under Marketing) | Competitor Analysis -- admin-only, never on any public route (see [Known Issues & Deliberate Gaps](#known-issues--deliberate-gaps)) |
 
 ---
 
 ## Adding Blog Posts
 
-Create a Markdown file in `data/blog/`:
+**The `data/blog/*.md` files are NOT read by the running app** -- this was true even before
+2026-09-09, but the README previously said otherwise. Verified by tracing `app/blog/page.tsx` →
+`lib/blog.ts` → `lib/db/blog-queries.ts`: every blog read goes straight to the `blog_posts` SQLite
+table. `gray-matter` (frontmatter parsing) is only used by `lib/db/seed.ts`, a one-time import
+script -- the markdown files were the original seed source, already imported once, and adding a
+new one today does nothing until it's separately imported.
 
-```markdown
----
-title: "Your Post Title"
-date: "2025-01-15"
-author: "Author Name"
-summary: "Short description"
-tags: ["AI", "GenAI"]
-icon: "robot"
----
+To add a post today, either:
+1. **Write a seed script** (see `lib/db/seed-marketing-blog.ts` for a real, working example --
+   idempotent, creates the category/tags/author links correctly), or
+2. **Use `lib/db/blog-queries.ts`'s `createPost()`** directly from a one-off script or (once built)
+   an admin UI form.
 
-Your content here in Markdown.
+```ts
+import { createPost } from '@/lib/db/blog-queries';
+createPost({
+  title: 'Your Post Title',
+  content: 'Your content here, in Markdown -- rendered to HTML at request time.',
+  summary: 'Short description',
+  status: 'published',
+  categoryIds: [/* real category id from blog_categories */],
+  tags: ['AI', 'GenAI'],
+});
 ```
 
-The blog system auto-discovers all `.md` files in `data/blog/`.
+---
+
+## AI Agents, Skills & Automation
+
+TalentsHill's own product surface sells "Agentic AI" as a service (`/solutions/agentic-ai`) --
+this section is about the agents used to *build* this codebase, which is a different thing and
+should not be confused with a claim that the running app itself has agent infrastructure.
+
+- This codebase was built and is maintained across sessions using Claude Code, including
+  background sub-agents for large mechanical fan-out work (e.g., wiring RBAC into all 96 admin
+  routes was split across 9 parallel batch agents, each independently verified, then a lead agent
+  re-derived the final resource/action mapping from the actual code rather than trusting agent
+  prose -- see `git log` for the commit that documents this).
+- No agent runs unsupervised against production data. Every schema change, permission change, or
+  bulk edit in this repo's history was followed by a live verification step (a real curl test, a
+  real `tsc` run, a real temp-user creation/deletion cycle) before being committed -- not asserted
+  as working.
+- There is currently no in-app agent runtime (no LangChain/agent-framework dependency in
+  `package.json`, no `lib/agents/` directory). The `/solutions/agentic-ai` and
+  `/solutions/enterprise-rag` pages describe consulting/service offerings TalentsHill would deliver
+  *for a client*, not a capability already running inside this app.
+
+## Tool, API & MCP Integration Status
+
+Honest status, not aspirational -- checked via `grep -rli mcp` across `lib/` and `app/` on
+2026-09-09:
+
+| Claimed/discussed | Real status |
+|---|---|
+| MCP (Model Context Protocol) integration | **Not implemented.** Only referenced in the `agentic-ai` solutions page's marketing copy as a service TalentsHill would build for a client. No MCP server, client, or gateway code exists in this repo. |
+| RAG pipeline (`lib/rag/`, `rag_*` tables) | **Schema and routes are real** (10 admin API routes, all RBAC-gated), but `rag_documents`/`rag_chunks`/`rag_embeddings`/`rag_runs` all have zero real rows as of this check -- the pipeline has never been exercised with a real document. |
+| 11 third-party integration providers (`lib/integrations/`) | Real provider adapter code exists for each; live-credential connectivity has not been independently re-verified this session. |
+| OAuth (Google/Microsoft) admin login | Real code, `tsc`-clean, fail-closed path verified live. The actual provider token-exchange flow is unverified -- no real Google Cloud Console / Azure AD app is registered yet. |
+| Vitest unit suite | Real, 23 tests across 5 files, passing as of 2026-09-09 (see [Testing & Evidence](#testing--evidence)). |
+
+## Known Issues & Deliberate Gaps
+
+| Issue | Status |
+|---|---|
+| All 3 `videos` table rows point to the same YouTube ID (`dQw4w9WgXcQ`, the Rickroll placeholder), presented as real demo content | **Known, not fixed.** Flagged explicitly; real video URLs to be supplied later rather than adding more placeholders. |
+| RAG pipeline has real schema/routes but zero real usage | **Known.** Needs a real document ingested and a real retrieval run before it can be called functional, not just schema-complete -- see this workspace's RAG+Ollama mandatory policy. |
+| SMTP-configs `POST` originally shared one permission gate between "create a config" and "test an existing config's connection" | **Fixed** 2026-09-08 (commit `78f81d1`) -- now checked per-branch. |
+| `broadcasts` launch action was gated the same as a plain field edit | **Fixed** 2026-09-08 (same commit) -- launch now requires `manage`, not just `update`. |
+| Admin role's description said "except role management" while actually having full role CRUD | **Description corrected** 2026-09-08 (commit `292981b`); the underlying grant was intentional, not a bug. |
+| `competitor_analysis` is admin-only by design (market-research intelligence, never customer-facing) | **Intentional**, not a gap -- verified via grep that it's referenced nowhere outside `app/admin/` and `app/api/admin/`. |
+
+## Fallback Behavior
+
+- **OAuth without configured credentials**: `/api/auth/oauth/{google,microsoft}` return `503` with
+  a clear "not configured" message rather than crashing or silently proceeding. The login page
+  shows both buttons in a disabled state until the status API confirms credentials exist.
+- **OAuth login for an unrecognized email**: fails closed with a redirect + error message. No
+  account is ever auto-created from an OAuth login -- verified via grep, no `createUser` call
+  exists anywhere in the OAuth code path.
+- **RBAC**: every admin route requires both a valid session (401 if missing) and the specific
+  resource:action permission (403 if insufficient) -- verified live for read, write, and delete
+  operations across multiple roles (see [Testing & Evidence](#testing--evidence)).
+- **Missing `DATABASE_URL`-equivalent** (SQLite file path issues): the app reads from
+  `data/talentshill.db` via `better-sqlite3`; if the file is missing, `better-sqlite3` will create
+  an empty one on first connection rather than crashing -- meaning a misconfigured deployment fails
+  silently into an empty database rather than erroring loudly. **Not yet hardened** -- a real gap
+  worth a startup-time check that the expected tables exist.
+
+## Deployment
+
+Not yet deployed anywhere persistent as of 2026-09-09 -- no systemd service, no Docker container,
+no fixed port, confirmed via process check. Before deploying:
+
+- **Hosting requirement**: this is a Next.js app with server-side API routes, a persistent
+  background job runner (`lib/jobs/`), and a file-based SQLite database needing durable write
+  access. It needs a real, persistent Node.js process (a VPS, a container platform, or a
+  Node.js-capable PaaS) -- standard shared/cPanel hosting without SSH/Node.js process control will
+  not run this.
+- **Disk footprint** (measured 2026-09-09): source ~17MB, production build output (`.next/server` +
+  `.next/static` + manifests) ~26MB, full `node_modules` (incl. dev tools) 715MB, SQLite DB
+  currently 1.4MB. Enabling `output: 'standalone'` in `next.config` (not yet done) would trim the
+  deployable `node_modules` footprint to roughly 80-150MB. Budget ~1-2GB total on the host to be
+  comfortable, not the bare minimum.
+- **Before first deploy**: run `npx drizzle-kit push` against the target database, then the seed
+  scripts in `lib/db/seed-*.ts` (admin user, RBAC, module registry, marketing services/blog,
+  competitor-analysis template) in the order they were introduced (check `git log --diff-filter=A
+  -- lib/db/seed-*.ts` for the real order).
+- **Backups**: `scripts/backup-database.sh` produces a real gzipped SQLite snapshot (verified live,
+  14-day retention). Not yet scheduled via cron/systemd-timer.
+- **Health monitoring**: `scripts/health-monitor.sh` checks the real `/api/health` and
+  `/admin/login` endpoints (verified live). Not yet scheduled -- there's no persistent deployment
+  to monitor yet, so scheduling it today would just log expected failures.
+
+## Testing & Evidence
+
+- **Automated**: `npm test` (Vitest, 5 files / 23 tests) -- real, passing.
+- **Manual end-to-end pass**: full test-case table, raw command log, and known-defects list at
+  [`docs/testing/2026-09-09_e2e-test-evidence.md`](docs/testing/2026-09-09_e2e-test-evidence.md)
+  (write-up) and
+  [`docs/testing/2026-09-09_e2e-test-log.txt`](docs/testing/2026-09-09_e2e-test-log.txt) (raw
+  captured output). Covers RBAC enforcement across roles, OAuth fail-closed paths, all 13 solution
+  pages, the blog, the services catalog, and both operational scripts -- 12/12 manual cases passed.
+- Every commit message in this repo's history is written as a self-contained evidence record
+  (what was verified, how, and what the real output was) -- `git log` is a legitimate second source
+  of truth alongside the docs above, not just change descriptions.
 
 ---
 

@@ -1,0 +1,108 @@
+=== TEST 1: Unauthenticated access to admin API (expect 401) ===
+{"error":"Unauthorized"}
+HTTP:401
+=== TEST 2: Public health endpoint (expect 200) ===
+{"status":"ok","timestamp":"2026-09-09T01:46:10.977Z"}
+HTTP:200
+=== TEST 3: Login as SuperAdmin ===
+{"success":true,"user":{"id":"9778a4cd-3d0b-484a-9cf4-b06efff2fcdb","email":"admin@talentshill.com","name":"Admin","role":"admin"}}
+HTTP:200
+=== TEST 4: Module registry (expect 38 modules, 35 real / 3 partial) ===
+catalogedCount: 38
+tally: {'real': 35, 'partial': 3}
+=== TEST 5: Competitor analysis - GET (expect 1 template row) ===
+entries: 1
+isTemplate: True
+=== TEST 6: OAuth not-configured fail-closed ===
+{"error":"Google OAuth is not configured on this server."} HTTP:503
+{"error":"Microsoft OAuth is not configured on this server."} HTTP:503
+{"google":false,"microsoft":false}=== TEST 7: RBAC role enforcement - create temp Viewer user ===
+node:internal/modules/cjs/loader:1134
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module '../../../mnt/deepa/talentshill/lib/db/schema'
+Require stack:
+- /mnt/deepa/talentshill/scripts/_e2e_setup_rbac.ts
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1134:15)
+    at nextResolveSimple (/home/praveen/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1006)
+    at /home/praveen/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4959
+    at /home/praveen/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4261
+    at resolveTsPaths (/home/praveen/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:759)
+    at /home/praveen/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1199
+    at j._resolveFilename (file:///home/praveen/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:17957)
+    at Module._load (node:internal/modules/cjs/loader:975:27)
+    at Module.require (node:internal/modules/cjs/loader:1225:19)
+    at require (node:internal/modules/helpers:177:18) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ '/mnt/deepa/talentshill/scripts/_e2e_setup_rbac.ts' ]
+}
+
+Node.js v18.19.1
+{"email":"_e2e_test_viewer@test.local","password":"testpass123"}
+{"success":true,"user":{"id":"ddab9d6c-1ebc-4f2c-92bf-b88cec3645e0","email":"_e2e_test_viewer@test.local","name":"E2E Test Viewer","role":"admin"}}
+HTTP:200
+=== TEST 7a: Viewer GET module-registry (expect 200, read-only) ===
+HTTP:200
+=== TEST 7b: Viewer DELETE competitor-analysis (expect 403, no delete permission) ===
+{"error":"Insufficient permissions"}
+HTTP:403
+=== TEST 7c: verify template row NOT deleted (Viewer's 403 was real, not silently allowed) ===
+1 entries remain
+=== TEST 8: All 10 solution pages (expect 200 each) ===
+genai -> 200
+robotics-ai -> 200
+quantum-ai -> 200
+digital-marketing -> 200
+ads-management -> 200
+market-research -> 200
+performance-marketing -> 200
+seo-geo -> 200
+ai-automation -> 200
+ai-strategy -> 200
+agentic-ai -> 200
+enterprise-rag -> 200
+creator-video-marketing -> 200
+=== TEST 9: Blog - all 7 posts (3 original + 4 new) present and published ===
+HTTP:200
+Agentic AI Layer
+Building Production RAG
+Enterprise AI Strategy
+Enterprise RAG Actually
+Industrial Robotics Trends
+Market Research Doesn
+Optimizing for Search Engines
+=== TEST 10: Services catalog - all 10 new services present ===
+Ads Management
+Agentic AI
+AI Automation
+AI Strategy
+Digital Marketing
+Enterprise RAG
+Influencer
+Market Research
+Performance Marketing
+SEO &amp; GEO
+=== TEST 11: backup-database.sh (real run) ===
+[backup] OK talentshill -> /mnt/deepa/talentshill/.backups/talentshill_2026-09-09T01-48-13Z.db.gz (104K)
+=== TEST 12: health-monitor.sh against this live instance ===
+2026-09-09T01:48:13Z OK   TalentsHill (public liveness) (http://127.0.0.1:3010/api/health/) -> 200
+2026-09-09T01:48:13Z OK   TalentsHill (admin login page) (http://127.0.0.1:3010/admin/login/) -> 200
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/mnt/deepa/talentshill[39m
+
+ [32m✓[39m tests/unit/tracking.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 129[2mms[22m[39m
+ [32m✓[39m tests/unit/template-renderer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 664[2mms[22m[39m
+     [33m[2m✓[22m[39m should export render functions [33m 650[2mms[22m[39m
+ [32m✓[39m tests/unit/maintenance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 698[2mms[22m[39m
+     [33m[2m✓[22m[39m should export maintenance functions [33m 684[2mms[22m[39m
+ [32m✓[39m tests/unit/csv-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 690[2mms[22m[39m
+     [33m[2m✓[22m[39m should export parse function [33m 660[2mms[22m[39m
+ [32m✓[39m tests/unit/feature-flags.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 918[2mms[22m[39m
+     [33m[2m✓[22m[39m should export cache functions [33m 635[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m23 passed[39m[22m[90m (23)[39m
+[2m   Start at [22m 19:49:23
+[2m   Duration [22m 1.89s[2m (transform 1.40s, setup 258ms, import 626ms, tests 3.10s, environment 2ms)[22m
+
