@@ -212,6 +212,7 @@ export const services = sqliteTable('services', {
   useCases: text('use_cases'), // JSON array
   sortOrder: integer('sort_order').default(0),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  contentScore: integer('content_score'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
