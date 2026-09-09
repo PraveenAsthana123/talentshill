@@ -137,6 +137,7 @@ export const surveyResponses = sqliteTable('survey_responses', {
   maturityLevel: text('maturity_level', { enum: ['beginner', 'developing', 'advanced', 'leader'] }).notNull().default('beginner'),
   recommendedPath: text('recommended_path'),
   segmentationTags: text('segmentation_tags'), // JSON array
+  outreachPriority: integer('outreach_priority'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
   index('idx_survey_maturity').on(table.maturityLevel),
