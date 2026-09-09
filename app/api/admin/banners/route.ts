@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBanners, createBanner } from '@/lib/db/banner-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('banners', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -33,6 +34,11 @@ export const POST = withPermission('banners', 'create')(async (request: NextRequ
       endDate: endDate ? new Date(endDate) : undefined,
       priority,
       createdBy: userId ?? undefined,
+    });
+
+    logOperationRun({
+      moduleKey: 'banners', operationName: 'create_banner', executionMode: 'manual', status: 'completed',
+      inputPayload: { title }, outputPayload: { id }, triggeredBy: userId,
     });
 
     return NextResponse.json({ id }, { status: 201 });

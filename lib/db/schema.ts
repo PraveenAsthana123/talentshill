@@ -449,6 +449,7 @@ export const banners = sqliteTable('banners', {
   endDate: integer('end_date', { mode: 'timestamp' }),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   priority: integer('priority').default(0),
+  healthScore: integer('health_score'),
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
