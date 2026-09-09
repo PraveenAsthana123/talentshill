@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllCampaigns, createCampaign } from '@/lib/db/campaign-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('campaigns', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -24,6 +25,11 @@ export const POST = withPermission('campaigns', 'create')(async (request: NextRe
     const id = createCampaign({
       name, type, audienceType, audienceId, emailProfileId, templateId, subject, throttlePerMinute,
       createdBy: userId ?? undefined,
+    });
+
+    logOperationRun({
+      moduleKey: 'campaigns', operationName: 'create_campaign', executionMode: 'manual', status: 'completed',
+      inputPayload: { name, type }, outputPayload: { id }, triggeredBy: userId,
     });
 
     return NextResponse.json({ id }, { status: 201 });
