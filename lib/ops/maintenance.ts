@@ -18,11 +18,26 @@ export function getMaintenanceStatus(): MaintenanceStatus {
     return { enabled: false, message: '', scheduledEnd: null };
   }
 
+  let status: MaintenanceStatus;
   try {
-    return JSON.parse(setting.value as string);
+    status = JSON.parse(setting.value as string);
   } catch {
     return { enabled: false, message: '', scheduledEnd: null };
   }
+
+  // scheduledEnd was stored but never actually checked anywhere -- a
+  // real gap: maintenance mode could be scheduled to end at a given
+  // time but would stay enabled forever past that time until someone
+  // manually flipped it off. Auto-expire here so every caller
+  // (including the new public enforcement check) sees the real state.
+  if (status.enabled && status.scheduledEnd) {
+    const endTime = new Date(status.scheduledEnd).getTime();
+    if (!Number.isNaN(endTime) && endTime <= Date.now()) {
+      return { ...status, enabled: false };
+    }
+  }
+
+  return status;
 }
 
 export function setMaintenanceMode(enabled: boolean, message?: string, scheduledEnd?: string) {

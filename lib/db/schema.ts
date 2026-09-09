@@ -1367,3 +1367,22 @@ export const healthSnapshots = sqliteTable('health_snapshots', {
 }, (table) => [
   index('idx_health_snapshots_created').on(table.createdAt),
 ]);
+
+// ── Maintenance Enforcement Checks ──
+// Real self-test snapshots: each run reads the actual maintenance_mode
+// setting and makes a real HTTP request to a live public page to
+// confirm the middleware enforcement fix (see middleware.ts) is
+// actually behaving as expected, not just that the setting exists.
+export const maintenanceChecks = sqliteTable('maintenance_checks', {
+  id: text('id').primaryKey(),
+  score: integer('score').notNull(),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull(),
+  enforcementMatchesExpected: integer('enforcement_matches_expected', { mode: 'boolean' }).notNull(),
+  observedStatusCode: integer('observed_status_code'),
+  scheduledEndValid: integer('scheduled_end_valid', { mode: 'boolean' }),
+  messageSubstantive: integer('message_substantive', { mode: 'boolean' }).notNull(),
+  triggeredBy: text('triggered_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_maintenance_checks_created').on(table.createdAt),
+]);
