@@ -6,6 +6,7 @@ import PipelineTab from './PipelineTab';
 import AgenticTab from './AgenticTab';
 import MonitoringTab from './MonitoringTab';
 import DashboardTab from './DashboardTab';
+import ReportTab from './ReportTab';
 import NotYetBuiltTab from './NotYetBuiltTab';
 import styles from './AdminCompetitorAnalysis.module.css';
 
@@ -26,7 +27,7 @@ export default function CompetitorAnalysisPage() {
           { id: 'agentic', label: 'Agentic', content: <AgenticTab /> },
           { id: 'monitoring', label: 'Monitoring', content: <MonitoringTab /> },
           { id: 'dashboard', label: 'Dashboard', content: <DashboardTab /> },
-          { id: 'report', label: 'Report', content: <NotYetBuiltTab tabName="Report" /> },
+          { id: 'report', label: 'Report', content: <ReportTab /> },
           { id: 'governance', label: 'Governance', content: <NotYetBuiltTab tabName="Governance" /> },
           { id: 'user-story', label: 'User Story', content: <NotYetBuiltTab tabName="User Story" /> },
           { id: 'testing', label: 'Testing', content: <NotYetBuiltTab tabName="Testing" /> },
