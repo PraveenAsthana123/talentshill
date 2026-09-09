@@ -683,6 +683,7 @@ export const contentOverrides = sqliteTable('content_overrides', {
   value: text('value'), // JSON
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   updatedBy: text('updated_by'),
+  safetyScore: integer('safety_score'), // pipeline-computed: XSS-pattern + completeness checks on the raw override value
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
   index('idx_content_overrides_page').on(table.pageSlug),
