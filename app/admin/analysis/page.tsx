@@ -1,104 +1,41 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { SectionHeader } from '@/components/ui';
+import { SectionHeader, Tabs } from '@/components/ui';
+import ManualTab from './ManualTab';
+import PipelineTab from './PipelineTab';
+import AgenticTab from './AgenticTab';
+import MonitoringTab from './MonitoringTab';
+import DashboardTab from './DashboardTab';
+import ReportTab from './ReportTab';
+import GovernanceTab from './GovernanceTab';
+import UserStoryTab from './UserStoryTab';
+import TestingTab from './TestingTab';
+import LogTrackingTab from './LogTrackingTab';
 import styles from './AdminAnalysis.module.css';
 
-interface Framework {
-  id: string;
-  categoryKey: string;
-  categoryName: string;
-  description: string | null;
-  totalItems: number;
-  analysisTypes: { index: number; name: string }[];
-  assessmentCount: number;
-}
-
+// Module 15 on the Operational Portal 10-tab standard. Manual tab wraps
+// the pre-existing framework hub grid/search (unchanged logic, links out
+// to the existing [key] detail page for the full item-by-item scoring
+// editor), now with real operation_run transactional history added.
+// Already correctly RBAC-gated -- no security remediation needed here.
 export default function AdminAnalysisHubPage() {
-  const [frameworks, setFrameworks] = useState<Framework[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [stats, setStats] = useState({ totalFrameworks: 0, totalAssessments: 0, byStatus: { notStarted: 0, inProgress: 0, completed: 0 } });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [fwRes, dashRes] = await Promise.all([
-          fetch('/api/admin/analysis/frameworks'),
-          fetch('/api/admin/analysis/dashboard'),
-        ]);
-        const fwData = await fwRes.json();
-        const dashData = await dashRes.json();
-        setFrameworks(fwData.frameworks || []);
-        if (dashData.stats) setStats(dashData.stats);
-      } catch { /* empty */ }
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
-
-  const filtered = frameworks.filter(fw =>
-    fw.categoryName.toLowerCase().includes(search.toLowerCase()) ||
-    (fw.description || '').toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <div className={styles.page}>
-      <SectionHeader
-        label="AI Analysis"
-        title="Analysis Hub"
-        subtitle="Evaluate AI systems across 35 analysis frameworks with scoring matrices."
+      <SectionHeader label="AI Analysis" title="Analysis Hub" subtitle="Evaluate AI systems across 35 analysis frameworks, via Manual, Pipeline (deterministic health scoring), or Agentic (local LLM) execution modes." />
+      <Tabs
+        tabs={[
+          { id: 'manual', label: 'Manual', content: <ManualTab /> },
+          { id: 'pipeline', label: 'Pipeline', content: <PipelineTab /> },
+          { id: 'agentic', label: 'Agentic', content: <AgenticTab /> },
+          { id: 'monitoring', label: 'Monitoring', content: <MonitoringTab /> },
+          { id: 'dashboard', label: 'Dashboard', content: <DashboardTab /> },
+          { id: 'report', label: 'Report', content: <ReportTab /> },
+          { id: 'governance', label: 'Governance', content: <GovernanceTab /> },
+          { id: 'user-story', label: 'User Story', content: <UserStoryTab /> },
+          { id: 'testing', label: 'Testing', content: <TestingTab /> },
+          { id: 'log-tracking', label: 'Log & Tracking', content: <LogTrackingTab /> },
+        ]}
       />
-
-      <div className={styles.statsBar}>
-        <div className={styles.statCard}>
-          <span className={styles.statValue}>{stats.totalFrameworks}</span>
-          <span className={styles.statLabel}>Frameworks</span>
-        </div>
-        <div className={styles.statCard}>
-          <span className={styles.statValue}>{stats.totalAssessments}</span>
-          <span className={styles.statLabel}>Total Assessments</span>
-        </div>
-        <div className={styles.statCard}>
-          <span className={styles.statValue}>{stats.byStatus.inProgress}</span>
-          <span className={styles.statLabel}>In Progress</span>
-        </div>
-        <div className={styles.statCard}>
-          <span className={styles.statValue}>{stats.byStatus.completed}</span>
-          <span className={styles.statLabel}>Completed</span>
-        </div>
-      </div>
-
-      <div className={styles.toolbar}>
-        <input
-          className={styles.searchInput}
-          type="text"
-          placeholder="Search frameworks..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Link href="/admin/analysis/projects" className={styles.projectsLink}>View Projects</Link>
-      </div>
-
-      {loading ? (
-        <div className={styles.empty}>Loading frameworks...</div>
-      ) : filtered.length === 0 ? (
-        <div className={styles.empty}>No frameworks found.</div>
-      ) : (
-        <div className={styles.grid}>
-          {filtered.map((fw) => (
-            <Link key={fw.id} href={`/admin/analysis/${fw.categoryKey}`} className={styles.card}>
-              <h3 className={styles.cardTitle}>{fw.categoryName}</h3>
-              <p className={styles.cardDesc}>{fw.description}</p>
-              <div className={styles.cardFooter}>
-                <span className={styles.cardStat}>{fw.totalItems} items</span>
-                <span className={styles.cardStat}>{fw.assessmentCount} assessments</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
