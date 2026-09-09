@@ -1,9 +1,14 @@
 /**
- * Seed script for the Digital Marketing service catalog rows, added per
- * explicit request to build out TalentsHill's marketing service lines
- * (digital marketing, ads management, market research, performance
- * marketing, SEO/GEO, AI automation, AI strategy). Idempotent -- safe to
- * re-run. Run: npx tsx lib/db/seed-marketing-services.ts
+ * Seed script for the Digital Marketing + AI service catalog rows.
+ * Original 7 (digital marketing, ads management, market research,
+ * performance marketing, SEO/GEO, AI automation, AI strategy) added per
+ * explicit request. 3 more (agentic AI, enterprise RAG, influencer/video/
+ * viral growth) added after reconciling against a shared ChatGPT
+ * "AI Marketing Services Showcase" transcript -- see
+ * docs/chatgpt-extracts/2026-09-08_talentshill-ai-marketing-services-showcase.md
+ * in the sibling sohamyoga repo for the full enumeration and what was
+ * deliberately left out of scope. Idempotent -- safe to re-run.
+ * Run: npx tsx lib/db/seed-marketing-services.ts
  */
 import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
@@ -52,6 +57,21 @@ const SERVICES = [
     slug: 'ai-strategy', name: 'AI Strategy', category: 'AI Solutions',
     shortDesc: 'AI readiness, roadmap, and governance advisory for enterprises adopting AI.',
     useCases: ['AI readiness assessment', 'Use-case prioritization', 'Responsible AI governance', 'AI center of excellence'],
+  },
+  {
+    slug: 'agentic-ai', name: 'Agentic AI', category: 'AI Solutions',
+    shortDesc: 'Multi-agent systems and workflow automation, with human approval on consequential actions.',
+    useCases: ['Multi-agent systems', 'MCP integration', 'AI sales & marketing agents', 'Workflow automation'],
+  },
+  {
+    slug: 'enterprise-rag', name: 'Enterprise RAG', category: 'AI Solutions',
+    shortDesc: 'Retrieval-augmented generation grounded in your own enterprise knowledge, evaluated for quality.',
+    useCases: ['Enterprise knowledge assistant', 'Multimodal & GraphRAG', 'Secure RAG (RBAC/ABAC)', 'RAG evaluation & optimization'],
+  },
+  {
+    slug: 'creator-video-marketing', name: 'Influencer, Video & Viral Growth', category: 'Digital Marketing',
+    shortDesc: 'Creator partnerships, short-form video production, and trend-driven content growth.',
+    useCases: ['Influencer discovery & outreach', 'Short-form & AI video production', 'Viral content strategy', 'Creator analytics'],
   },
 ];
 

@@ -70,6 +70,8 @@ export default function Footer() {
         <div className={styles.column}>
           <h4>Solutions</h4>
           <Link href="/solutions/genai">Generative AI</Link>
+          <Link href="/solutions/agentic-ai">Agentic AI</Link>
+          <Link href="/solutions/enterprise-rag">Enterprise RAG</Link>
           <Link href="/solutions/robotics-ai">Robotics & AI</Link>
           <Link href="/solutions/quantum-ai">Quantum AI</Link>
           <Link href="/solutions/digital-marketing">Digital Marketing</Link>
@@ -79,6 +81,7 @@ export default function Footer() {
           <Link href="/solutions/seo-geo">SEO & GEO</Link>
           <Link href="/solutions/ai-automation">AI Automation</Link>
           <Link href="/solutions/ai-strategy">AI Strategy</Link>
+          <Link href="/solutions/creator-video-marketing">Influencer & Video Growth</Link>
           <Link href="/services">All Services</Link>
         </div>
 
