@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAppointment } from '@/lib/appointments-db';
 import { calculateLeadScore, getLeadTier } from '@/lib/booking-utils';
+import { logOperationRun } from '@/lib/operation-run';
 
 // SECURITY FIX (2026-09-09): GET (list all appointments incl. full
 // customer PII) was removed from this public route -- it is unauthenticated
@@ -30,6 +31,11 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       leadScore,
       leadTier,
+    });
+
+    logOperationRun({
+      moduleKey: 'appointments', operationName: 'create_booking', executionMode: 'manual', status: 'completed',
+      inputPayload: { id, leadScore, leadTier }, outputPayload: { id }, triggeredBy: null,
     });
 
     return NextResponse.json({ appointment, leadScore, leadTier }, { status: 201 });

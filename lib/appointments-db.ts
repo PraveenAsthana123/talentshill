@@ -12,6 +12,7 @@ export interface Appointment {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   leadScore: number;
   leadTier: 'hot' | 'warm' | 'cool' | 'cold';
+  followUpUrgency?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +76,15 @@ export function updateAppointmentStatus(id: string, status: Appointment['status'
   if (idx === -1) return null;
   all[idx].status = status;
   all[idx].updatedAt = new Date().toISOString();
+  writeAll(all);
+  return all[idx];
+}
+
+export function updateAppointmentUrgency(id: string, followUpUrgency: number): Appointment | null {
+  const all = readAll();
+  const idx = all.findIndex((a) => a.id === id);
+  if (idx === -1) return null;
+  all[idx].followUpUrgency = followUpUrgency;
   writeAll(all);
   return all[idx];
 }
