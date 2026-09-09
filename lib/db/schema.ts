@@ -241,6 +241,7 @@ export const roles = sqliteTable('roles', {
   name: text('name').notNull().unique(),
   description: text('description'),
   isSystem: integer('is_system', { mode: 'boolean' }).notNull().default(false),
+  hygieneScore: integer('hygiene_score'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 

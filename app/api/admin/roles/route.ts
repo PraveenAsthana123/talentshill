@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllRoles, createRole, getAllPermissions } from '@/lib/db/rbac-queries';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,12 @@ export const POST = withPermission('roles', 'create')(async (request: NextReques
     const role = createRole({
       name: body.name,
       description: body.description,
+    });
+
+    const triggeredBy = await getSessionUserIdAsync(request);
+    logOperationRun({
+      moduleKey: 'roles', operationName: 'create_role', executionMode: 'manual', status: 'completed',
+      inputPayload: { name: body.name }, outputPayload: { id: role.id }, triggeredBy,
     });
 
     return NextResponse.json({ role }, { status: 201 });
