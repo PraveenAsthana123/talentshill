@@ -62,7 +62,7 @@ export default function BlogPostEditor({ postId }: BlogPostEditorProps) {
 
   // Load categories
   useEffect(() => {
-    fetch('/api/blog/categories')
+    fetch('/api/admin/blog/categories')
       .then((r) => r.json())
       .then((d) => setCategories(d.categories || []))
       .catch(() => {});
@@ -71,7 +71,7 @@ export default function BlogPostEditor({ postId }: BlogPostEditorProps) {
   // Load post for editing
   useEffect(() => {
     if (!postId) return;
-    fetch(`/api/blog/posts/${postId}`)
+    fetch(`/api/admin/blog/posts/${postId}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.post) {
@@ -134,7 +134,7 @@ export default function BlogPostEditor({ postId }: BlogPostEditorProps) {
     };
 
     try {
-      const url = isEdit ? `/api/blog/posts/${postId}` : '/api/blog/posts';
+      const url = isEdit ? `/api/admin/blog/posts/${postId}` : '/api/admin/blog/posts';
       const method = isEdit ? 'PATCH' : 'POST';
       const res = await fetch(url, {
         method,

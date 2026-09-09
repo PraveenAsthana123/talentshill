@@ -34,7 +34,6 @@ export default function AdminBlogPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        admin: 'true',
         offset: String(page * limit),
         limit: String(limit),
       });
@@ -42,8 +41,8 @@ export default function AdminBlogPage() {
       if (search) params.set('search', search);
 
       const [postsRes, statsRes] = await Promise.all([
-        fetch(`/api/blog/posts?${params}`),
-        fetch('/api/blog/stats'),
+        fetch(`/api/admin/blog/posts?${params}`),
+        fetch('/api/admin/blog/stats'),
       ]);
 
       const postsData = await postsRes.json();
@@ -63,13 +62,13 @@ export default function AdminBlogPage() {
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
-    await fetch(`/api/blog/posts/${id}`, { method: 'DELETE' });
+    await fetch(`/api/admin/blog/posts/${id}`, { method: 'DELETE' });
     fetchData();
   };
 
   const handlePublish = async (id: string, currentStatus: string) => {
     const action = currentStatus === 'published' ? 'unpublish' : 'publish';
-    await fetch(`/api/blog/posts/${id}/publish`, {
+    await fetch(`/api/admin/blog/posts/${id}/publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action }),

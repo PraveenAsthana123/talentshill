@@ -24,7 +24,7 @@ export default function PreviewPostPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/blog/posts/${id}`)
+    fetch(`/api/admin/blog/posts/${id}`)
       .then((r) => r.json())
       .then(async (d) => {
         if (d.post) {

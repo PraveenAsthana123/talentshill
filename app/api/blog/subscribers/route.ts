@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addSubscriber, getAllSubscribers } from '@/lib/db/blog-queries';
+import { addSubscriber } from '@/lib/db/blog-queries';
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const status = (searchParams.get('status') || undefined) as 'active' | 'unsubscribed' | 'all' | undefined;
-    const subscribers = getAllSubscribers(status);
-    return NextResponse.json({ subscribers, total: subscribers.length });
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch subscribers' }, { status: 500 });
-  }
-}
-
+// SECURITY FIX (2026-09-09): GET (full subscriber list, real emails)
+// removed -- it previously required zero auth, letting anyone scrape the
+// entire newsletter list. The admin-gated equivalent now lives at
+// /api/admin/blog/subscribers. POST (signup) stays here and stays public
+// by design: this is the real newsletter opt-in endpoint.
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
