@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllUsers, createUser } from '@/lib/db/admin-queries';
 import { getUserRoles, setUserRoles } from '@/lib/db/rbac-queries';
 import { hashPassword } from '@/lib/security/password';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,13 @@ export const POST = withPermission('users', 'create')(async (request: NextReques
     }
 
     const roles = getUserRoles(user.id);
+
+    const triggeredBy = await getSessionUserIdAsync(request);
+    logOperationRun({
+      moduleKey: 'users', operationName: 'create_user', executionMode: 'manual', status: 'completed',
+      inputPayload: { email: body.email }, outputPayload: { id: user.id }, triggeredBy,
+    });
+
     return NextResponse.json({ user: { ...user, roles } }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });

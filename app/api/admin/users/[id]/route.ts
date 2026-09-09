@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserById, updateUser } from '@/lib/db/admin-queries';
 import { getUserRoles, setUserRoles, getUserPermissions } from '@/lib/db/rbac-queries';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +63,13 @@ export const PATCH = withPermission('users', 'update')(async (
     }
 
     const roles = getUserRoles(id);
+
+    const triggeredBy = await getSessionUserIdAsync(request);
+    logOperationRun({
+      moduleKey: 'users', operationName: 'update_user', executionMode: 'manual', status: 'completed',
+      inputPayload: { id, fields: Object.keys(body) }, outputPayload: { id }, triggeredBy,
+    });
+
     return NextResponse.json({ user: { ...user, roles } });
   } catch {
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
@@ -79,6 +87,13 @@ export const DELETE = withPermission('users', 'delete')(async (
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    const triggeredBy = await getSessionUserIdAsync(request);
+    logOperationRun({
+      moduleKey: 'users', operationName: 'deactivate_user', executionMode: 'manual', status: 'completed',
+      inputPayload: { id }, outputPayload: { id }, triggeredBy,
+    });
+
     return NextResponse.json({ success: true, message: 'User deactivated' });
   } catch {
     return NextResponse.json({ error: 'Failed to deactivate user' }, { status: 500 });

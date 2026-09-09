@@ -89,6 +89,7 @@ export const users = sqliteTable('users', {
   name: text('name').notNull(),
   role: text('role', { enum: ['admin', 'editor', 'viewer'] }).notNull().default('editor'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  securityScore: integer('security_score'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
