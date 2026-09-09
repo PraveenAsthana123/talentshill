@@ -4,6 +4,11 @@ import { createJob } from '@/lib/db/job-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
 import { logOperationRun } from '@/lib/operation-run';
 
+// Real gap fixed: the rag_embed job type was registered and fully
+// implemented (lib/jobs/handlers/rag-pipeline.ts), but nothing in the
+// app ever created one -- a document could reach 'chunked' status with
+// no way to progress to 'embedded' via the UI or API. This route
+// mirrors the existing ingest route's pattern.
 export const POST = withPermission('rag', 'manage')(async (
   request: NextRequest,
   context: unknown
@@ -21,25 +26,25 @@ export const POST = withPermission('rag', 'manage')(async (
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    if (document.status === 'ingested' || document.status === 'chunked' || document.status === 'embedded') {
+    if (document.status !== 'chunked') {
       return NextResponse.json(
-        { error: `Document already has status '${document.status}'. Delete and re-create to re-ingest.` },
+        { error: `Document has status '${document.status}'. Only a 'chunked' document can be embedded.` },
         { status: 409 }
       );
     }
 
     const jobId = createJob({
-      type: 'rag_ingest',
+      type: 'rag_embed',
       payload: { documentId: id },
       priority: 1,
       maxRetries: 3,
       createdBy: userId,
     });
 
-    logOperationRun({ moduleKey: 'rag', operationName: 'manual_trigger_ingest', executionMode: 'manual', status: 'completed', inputPayload: { documentId: id, jobId }, triggeredBy: userId });
+    logOperationRun({ moduleKey: 'rag', operationName: 'manual_trigger_embed', executionMode: 'manual', status: 'completed', inputPayload: { documentId: id, jobId }, triggeredBy: userId });
 
     return NextResponse.json({ jobId, documentId: id }, { status: 202 });
   } catch {
-    return NextResponse.json({ error: 'Failed to trigger ingestion' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to trigger embedding' }, { status: 500 });
   }
 });

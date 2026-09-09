@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/rag-embedding-queries';
 import { deleteChunksByDocument } from '@/lib/db/rag-chunk-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('rag', 'read')(async (
   request: NextRequest,
@@ -70,6 +71,7 @@ export const PATCH = withPermission('rag', 'update')(async (
         );
       }
       updateDocumentStatus(id, status, chunkCount);
+      logOperationRun({ moduleKey: 'rag', operationName: 'manual_update_document_status', executionMode: 'manual', status: 'completed', inputPayload: { id, status }, triggeredBy: userId });
     }
 
     const updated = getDocumentById(id);
@@ -100,6 +102,8 @@ export const DELETE = withPermission('rag', 'delete')(async (
     deleteEmbeddingsByDocument(id);
     deleteChunksByDocument(id);
     deleteDocument(id);
+
+    logOperationRun({ moduleKey: 'rag', operationName: 'manual_delete_document', executionMode: 'manual', status: 'completed', inputPayload: { id, name: document.name }, triggeredBy: userId });
 
     return NextResponse.json({ success: true });
   } catch {

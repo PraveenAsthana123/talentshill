@@ -6,6 +6,7 @@ import {
   getConfigHistory,
 } from '@/lib/db/rag-run-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('rag', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -54,6 +55,8 @@ export const POST = withPermission('rag', 'update')(async (request: NextRequest,
       changedBy: userId,
     });
 
+    logOperationRun({ moduleKey: 'rag', operationName: 'manual_create_config', executionMode: 'manual', status: 'completed', inputPayload: { id, name: name.trim() }, triggeredBy: userId });
+
     return NextResponse.json({ id }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create config' }, { status: 500 });
@@ -75,6 +78,7 @@ export const PATCH = withPermission('rag', 'update')(async (request: NextRequest
     }
 
     activateConfig(id);
+    logOperationRun({ moduleKey: 'rag', operationName: 'manual_activate_config', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
 
     const active = getActiveConfig();
     return NextResponse.json({ active });

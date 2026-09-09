@@ -930,6 +930,7 @@ export const ragDocuments = sqliteTable('rag_documents', {
   status: text('status').notNull().default('pending'), // pending, ingested, chunked, embedded, failed
   chunkCount: integer('chunk_count').default(0),
   metadata: text('metadata'), // JSON
+  readinessScore: integer('readiness_score'),
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),

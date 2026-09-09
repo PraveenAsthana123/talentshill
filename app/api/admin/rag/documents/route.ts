@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllDocuments, createDocument } from '@/lib/db/rag-document-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('rag', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
@@ -52,6 +53,8 @@ export const POST = withPermission('rag', 'create')(async (request: NextRequest,
       metadata,
       createdBy: userId,
     });
+
+    logOperationRun({ moduleKey: 'rag', operationName: 'manual_create_document', executionMode: 'manual', status: 'completed', inputPayload: { id, name, sourceType }, triggeredBy: userId });
 
     return NextResponse.json({ id }, { status: 201 });
   } catch {

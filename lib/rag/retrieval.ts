@@ -1,6 +1,6 @@
 import { getChunkById } from '@/lib/db/rag-chunk-queries';
 import { InMemoryVectorStore } from '@/lib/rag/vector-store';
-import { DummyEmbeddingProvider } from '@/lib/rag/embedding';
+import { OllamaEmbeddingProvider } from '@/lib/rag/embedding';
 
 interface RetrievalResult {
   chunkId: string;
@@ -132,7 +132,8 @@ function reciprocalRankFusion(
 /**
  * Hybrid retrieval combining vector search with BM25 keyword scoring.
  *
- * 1. Embeds the query using DummyEmbeddingProvider
+ * 1. Embeds the query using OllamaEmbeddingProvider (real local Ollama
+ *    embeddings, nomic-embed-text by default)
  * 2. Performs vector similarity search via InMemoryVectorStore
  * 3. Computes BM25 keyword scores for the same candidates
  * 4. Fuses results using Reciprocal Rank Fusion
@@ -155,7 +156,7 @@ export async function hybridRetrieve(
   const candidateCount = k * 3;
 
   // Vector search
-  const provider = new DummyEmbeddingProvider();
+  const provider = new OllamaEmbeddingProvider();
   const store = new InMemoryVectorStore();
   store.loadFromDB();
 

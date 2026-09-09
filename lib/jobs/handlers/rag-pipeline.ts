@@ -3,9 +3,10 @@ import { JOB_TYPES } from '../types';
 import type { JobContext } from '../types';
 import { ingestDocument } from '@/lib/rag/ingestion';
 import { chunkDocument } from '@/lib/rag/chunking';
-import { DummyEmbeddingProvider, embedChunks } from '@/lib/rag/embedding';
+import { OllamaEmbeddingProvider, embedChunks } from '@/lib/rag/embedding';
 import { evaluateRetrieval } from '@/lib/rag/evaluation';
 import { hybridRetrieve } from '@/lib/rag/retrieval';
+import { detectPII } from '@/lib/rag/pii';
 import { createRun, updateRunStatus, addRunStep, addRunMetric } from '@/lib/db/rag-run-queries';
 import { getChunksByDocument } from '@/lib/db/rag-chunk-queries';
 
@@ -30,7 +31,18 @@ async function handleRagIngest(ctx: JobContext) {
     ctx.log('info', 'Starting document ingestion', { documentId });
     addRunStep({ runId, stepName: 'ingest', status: 'running' });
     const text = await ingestDocument(documentId);
-    addRunStep({ runId, stepName: 'ingest', status: 'completed', output: { textLength: text.length }, durationMs: Date.now() - startTime });
+
+    // Real PII scan (lib/rag/pii.ts previously had zero callers anywhere
+    // in the app despite being a complete implementation). Informational
+    // only -- never auto-redacts, since silently altering a document's
+    // real business content (e.g. a lead's phone number) could be more
+    // harmful than the exposure itself; surfaced for a human to review.
+    const piiResult = detectPII(text);
+    if (piiResult.piiDetected) {
+      ctx.log('warn', 'PII detected during ingestion (informational, not redacted)', { documentId, findingTypes: [...new Set(piiResult.findings.map((f) => f.type))] });
+    }
+
+    addRunStep({ runId, stepName: 'ingest', status: 'completed', output: { textLength: text.length, piiDetected: piiResult.piiDetected, piiFindingCount: piiResult.findings.length }, durationMs: Date.now() - startTime });
 
     // Step 2: Chunk
     const chunkStart = Date.now();
@@ -68,7 +80,7 @@ async function handleRagEmbed(ctx: JobContext) {
 
     const chunks = getChunksByDocument(documentId, 0, 10000);
     const chunkIds = chunks.map((c: { id: string }) => c.id);
-    const provider = new DummyEmbeddingProvider();
+    const provider = new OllamaEmbeddingProvider();
     await embedChunks(chunkIds, provider);
 
     addRunStep({ runId, stepName: 'embed', status: 'completed', output: { embeddedCount: chunkIds.length }, durationMs: Date.now() - startTime });

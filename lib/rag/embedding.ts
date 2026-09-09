@@ -42,6 +42,44 @@ export class DummyEmbeddingProvider implements EmbeddingProvider {
 
 // ── Embed chunks and persist ──
 
+// ── Real local Ollama embedding provider ──
+
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11435';
+const OLLAMA_EMBEDDING_MODEL = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text:latest';
+const OLLAMA_EMBEDDING_DIMENSIONS = 768;
+
+/**
+ * Real embedding provider backed by local Ollama (nomic-embed-text by
+ * default). Per this workspace's RAG+Ollama mandatory-default policy --
+ * this is the module's default provider; DummyEmbeddingProvider above
+ * remains available for dev/test only, per its own doc comment.
+ */
+export class OllamaEmbeddingProvider implements EmbeddingProvider {
+  readonly modelName = OLLAMA_EMBEDDING_MODEL;
+  readonly dimensions = OLLAMA_EMBEDDING_DIMENSIONS;
+
+  async embed(texts: string[]): Promise<number[][]> {
+    const vectors: number[][] = [];
+    for (const text of texts) {
+      const res = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: OLLAMA_EMBEDDING_MODEL, prompt: text }),
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!res.ok) {
+        throw new Error(`Ollama embeddings request failed: HTTP ${res.status} ${await res.text().catch(() => '')}`);
+      }
+      const data = await res.json() as { embedding?: number[] };
+      if (!data.embedding || data.embedding.length !== this.dimensions) {
+        throw new Error(`Ollama embeddings returned unexpected dimensions (got ${data.embedding?.length ?? 0}, expected ${this.dimensions})`);
+      }
+      vectors.push(data.embedding);
+    }
+    return vectors;
+  }
+}
+
 /**
  * Embed chunks by their IDs:
  * 1. Fetch chunks from the database

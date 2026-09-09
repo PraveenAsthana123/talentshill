@@ -77,6 +77,13 @@ export default function AdminRagDocumentsPage() {
     } catch { /* empty */ }
   };
 
+  const handleEmbed = async (docId: string) => {
+    try {
+      await fetch(`/api/admin/rag/documents/${docId}/embed`, { method: 'POST' });
+      fetchDocuments();
+    } catch { /* empty */ }
+  };
+
   const handleDelete = async (docId: string) => {
     if (!confirm('Delete this document and all its chunks?')) return;
     try {
@@ -203,6 +210,11 @@ export default function AdminRagDocumentsPage() {
                     {(doc.status === 'pending' || doc.status === 'failed') && (
                       <button className={styles.actionBtn} onClick={() => handleIngest(doc.id)}>
                         Ingest
+                      </button>
+                    )}
+                    {doc.status === 'chunked' && (
+                      <button className={styles.actionBtn} onClick={() => handleEmbed(doc.id)}>
+                        Embed
                       </button>
                     )}
                     <button
