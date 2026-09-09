@@ -42,7 +42,7 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
   const addToast = useUIStore((s) => s.addToast);
 
   useEffect(() => {
-    fetch(`/api/appointments/${id}`)
+    fetch(`/api/admin/appointments/${id}`)
       .then((r) => r.json())
       .then((data) => {
         setAppointment(data.appointment || null);
@@ -54,7 +54,7 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
   const updateStatus = async (newStatus: string) => {
     setStatusUpdating(true);
     try {
-      const res = await fetch(`/api/appointments/${id}`, {
+      const res = await fetch(`/api/admin/appointments/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getAppointments } from '@/lib/appointments-db';
+import { withPermission } from '@/lib/security/rbac';
 
-export async function GET() {
+// SECURITY FIX (2026-09-09): see app/api/admin/appointments/route.ts --
+// this CSV export (full customer PII incl. email/phone/budget) previously
+// lived at the unauthenticated /api/appointments/export.
+export const GET = withPermission('appointments', 'read')(async () => {
   try {
     const appointments = getAppointments();
 
@@ -39,4 +43,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to export' }, { status: 500 });
   }
-}
+});

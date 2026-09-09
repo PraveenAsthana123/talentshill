@@ -38,8 +38,8 @@ export default function AdminAppointmentsPage() {
     setLoading(true);
     try {
       const [apptRes, statsRes] = await Promise.all([
-        fetch(`/api/appointments?status=${statusFilter}&search=${encodeURIComponent(search)}`),
-        fetch('/api/appointments?stats=true'),
+        fetch(`/api/admin/appointments?status=${statusFilter}&search=${encodeURIComponent(search)}`),
+        fetch('/api/admin/appointments?stats=true'),
       ]);
       const apptData = await apptRes.json();
       const statsData = await statsRes.json();
@@ -128,7 +128,7 @@ export default function AdminAppointmentsPage() {
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <Button variant="outline" size="sm" onClick={() => { window.location.href = '/api/appointments/export'; }}>
+          <Button variant="outline" size="sm" onClick={() => { window.location.href = '/api/admin/appointments/export'; }}>
             Export CSV
           </Button>
         </div>
