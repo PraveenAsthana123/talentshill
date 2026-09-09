@@ -3,6 +3,7 @@ import { getIndustryById, updateIndustry, deleteIndustry } from '@/lib/db/admin-
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
 import { withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('industries', 'read')(async (request: NextRequest, context: unknown) => {
   const { params } = context as { params: Promise<{ id: string }> };
@@ -25,10 +26,14 @@ export const PATCH = withPermission('industries', 'update')(async (request: Next
     if (!industry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const token = request.cookies.get('admin_session')?.value;
-    if (token) {
-      const session = await verifyToken(token);
-      logAudit({ entityType: 'industry', entityId: id, action: 'update', userId: session?.userId });
+    const userId = token ? (await verifyToken(token))?.userId ?? null : null;
+    if (userId) {
+      logAudit({ entityType: 'industry', entityId: id, action: 'update', userId });
     }
+    logOperationRun({
+      moduleKey: 'industries', operationName: 'update_industry', executionMode: 'manual', status: 'completed',
+      inputPayload: { id, fields: Object.keys(body) }, outputPayload: { id }, triggeredBy: userId,
+    });
 
     return NextResponse.json({ industry });
   } catch {
@@ -44,10 +49,14 @@ export const DELETE = withPermission('industries', 'delete')(async (request: Nex
     if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const token = request.cookies.get('admin_session')?.value;
-    if (token) {
-      const session = await verifyToken(token);
-      logAudit({ entityType: 'industry', entityId: id, action: 'delete', userId: session?.userId });
+    const userId = token ? (await verifyToken(token))?.userId ?? null : null;
+    if (userId) {
+      logAudit({ entityType: 'industry', entityId: id, action: 'delete', userId });
     }
+    logOperationRun({
+      moduleKey: 'industries', operationName: 'delete_industry', executionMode: 'manual', status: 'completed',
+      inputPayload: { id }, outputPayload: { id }, triggeredBy: userId,
+    });
 
     return NextResponse.json({ success: true });
   } catch {
