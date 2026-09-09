@@ -10,12 +10,13 @@ import ReportTab from './ReportTab';
 import UserStoryTab from './UserStoryTab';
 import TestingTab from './TestingTab';
 import LogTrackingTab from './LogTrackingTab';
-import NotYetBuiltTab from './NotYetBuiltTab';
+import GovernanceTab from './GovernanceTab';
 import styles from './AdminCompetitorAnalysis.module.css';
 
 // Pilot module for the Operational Portal Page & Tab Standard's 10-tab
-// requirement. Manual is real and fully built; the other 9 are honestly
-// marked not-yet-built rather than filled with placeholder content.
+// requirement. All 10 tabs are real and verified, built incrementally
+// across this session -- see git log for each tab's live-verification
+// evidence.
 export default function CompetitorAnalysisPage() {
   return (
     <div className={styles.page}>
@@ -31,7 +32,7 @@ export default function CompetitorAnalysisPage() {
           { id: 'monitoring', label: 'Monitoring', content: <MonitoringTab /> },
           { id: 'dashboard', label: 'Dashboard', content: <DashboardTab /> },
           { id: 'report', label: 'Report', content: <ReportTab /> },
-          { id: 'governance', label: 'Governance', content: <NotYetBuiltTab tabName="Governance" /> },
+          { id: 'governance', label: 'Governance', content: <GovernanceTab /> },
           { id: 'user-story', label: 'User Story', content: <UserStoryTab /> },
           { id: 'testing', label: 'Testing', content: <TestingTab /> },
           { id: 'log-tracking', label: 'Log & Tracking', content: <LogTrackingTab /> },
