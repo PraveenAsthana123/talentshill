@@ -787,6 +787,7 @@ export const chatRequests = sqliteTable('chat_requests', {
   assignedTo: text('assigned_to').references(() => users.id),
   resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
   closedAt: integer('closed_at', { mode: 'timestamp' }),
+  responseQualityScore: integer('response_quality_score'), // pipeline-computed from real chat_message_evals checks on the latest admin response
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
