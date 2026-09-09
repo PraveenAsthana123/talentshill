@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getContentById, updateContent, deleteContent } from '@/lib/db/marketing-content-queries';
 import { getVersions } from '@/lib/db/content-version-queries';
 import { UpdateContentSchema } from '@/lib/validation/content-schemas';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('content', 'read')(async (
   _request: NextRequest,
@@ -33,6 +34,8 @@ export const PATCH = withPermission('content', 'update')(async (
       return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 });
     }
     updateContent(id, parsed.data);
+    const userId = await getSessionUserIdAsync(request);
+    logOperationRun({ moduleKey: 'content', operationName: 'manual_update_content', executionMode: 'manual', status: 'completed', inputPayload: { id, fields: Object.keys(parsed.data) }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to update content' }, { status: 500 });
@@ -40,13 +43,15 @@ export const PATCH = withPermission('content', 'update')(async (
 });
 
 export const DELETE = withPermission('content', 'delete')(async (
-  _request: NextRequest,
+  request: NextRequest,
   context: unknown
 ) => {
   try {
     const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
+    const userId = await getSessionUserIdAsync(request);
     deleteContent(id);
+    logOperationRun({ moduleKey: 'content', operationName: 'manual_delete_content', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete content' }, { status: 500 });

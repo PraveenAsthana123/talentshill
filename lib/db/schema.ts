@@ -1031,6 +1031,7 @@ export const marketingContent = sqliteTable('marketing_content', {
   coverImage: text('cover_image'),
   authorId: text('author_id'),
   metadata: text('metadata'), // JSON
+  readinessScore: integer('readiness_score'), // real publish-readiness score -- publishContent() has no guard today
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
   publishedAt: integer('published_at', { mode: 'timestamp' }),

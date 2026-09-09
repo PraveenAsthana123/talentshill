@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getContentList, getContentCount, createContent } from '@/lib/db/marketing-content-queries';
 import { CreateContentSchema } from '@/lib/validation/content-schemas';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('content', 'read')(async (
   request: NextRequest,
@@ -35,6 +36,7 @@ export const POST = withPermission('content', 'create')(async (
     }
     const userId = await getSessionUserIdAsync(request);
     const id = createContent({ ...parsed.data, authorId: userId ?? undefined });
+    logOperationRun({ moduleKey: 'content', operationName: 'manual_create_content', executionMode: 'manual', status: 'completed', inputPayload: { title: parsed.data.title, contentType: parsed.data.contentType }, outputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ id }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create content' }, { status: 500 });
