@@ -3,6 +3,7 @@ import { getSubmissionById, updateSubmissionStatus } from '@/lib/db/contact-quer
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
 import { withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('leads', 'read')(async (
   request: NextRequest,
@@ -52,6 +53,16 @@ export const PATCH = withPermission('leads', 'update')(async (
       action: 'update',
       userId,
       metadata: { status },
+    });
+
+    logOperationRun({
+      moduleKey: 'leads',
+      operationName: 'update_status',
+      executionMode: 'manual',
+      status: 'completed',
+      inputPayload: { id, status },
+      outputPayload: { id: updated.id, status: updated.status },
+      triggeredBy: userId,
     });
 
     return NextResponse.json({ submission: updated });
