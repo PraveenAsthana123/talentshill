@@ -36,6 +36,7 @@ export const blogPosts = sqliteTable('blog_posts', {
   authorId: text('author_id').references(() => blogAuthors.id),
   metaTitle: text('meta_title'),
   metaDescription: text('meta_description'),
+  seoReadinessScore: integer('seo_readiness_score'),
   publishedAt: integer('published_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),

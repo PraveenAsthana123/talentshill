@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllPostsAdmin, createPost } from '@/lib/db/blog-queries';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 // SECURITY FIX (2026-09-09): this admin post list (all statuses incl.
 // unpublished drafts) and post-creation endpoint previously lived at the
@@ -31,6 +32,13 @@ export const POST = withPermission('blog', 'create')(async (request: NextRequest
       return NextResponse.json({ error: 'Title, content, and summary are required' }, { status: 400 });
     }
     const post = createPost(body);
+
+    const userId = await getSessionUserIdAsync(request);
+    logOperationRun({
+      moduleKey: 'blog', operationName: 'create_post', executionMode: 'manual', status: 'completed',
+      inputPayload: { title }, outputPayload: { id: post.id }, triggeredBy: userId,
+    });
+
     return NextResponse.json({ post }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
