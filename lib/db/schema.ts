@@ -194,6 +194,7 @@ export const videos = sqliteTable('videos', {
   duration: text('duration'),
   sortOrder: integer('sort_order').default(0),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  contentScore: integer('content_score'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });

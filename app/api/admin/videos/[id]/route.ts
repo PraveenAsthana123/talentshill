@@ -3,6 +3,7 @@ import { getVideoById, updateVideo, deleteVideo } from '@/lib/db/admin-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
 import { withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('videos', 'read')(async (
   request: NextRequest,
@@ -31,10 +32,14 @@ export const PATCH = withPermission('videos', 'update')(async (
     if (!video) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const token = request.cookies.get('admin_session')?.value;
-    if (token) {
-      const session = await verifyToken(token);
-      logAudit({ entityType: 'video', entityId: id, action: 'update', userId: session?.userId });
+    const userId = token ? (await verifyToken(token))?.userId ?? null : null;
+    if (userId) {
+      logAudit({ entityType: 'video', entityId: id, action: 'update', userId });
     }
+    logOperationRun({
+      moduleKey: 'videos', operationName: 'update_video', executionMode: 'manual', status: 'completed',
+      inputPayload: { id, fields: Object.keys(body) }, outputPayload: { id }, triggeredBy: userId,
+    });
 
     return NextResponse.json({ video });
   } catch {
@@ -53,10 +58,14 @@ export const DELETE = withPermission('videos', 'delete')(async (
     if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const token = request.cookies.get('admin_session')?.value;
-    if (token) {
-      const session = await verifyToken(token);
-      logAudit({ entityType: 'video', entityId: id, action: 'delete', userId: session?.userId });
+    const userId = token ? (await verifyToken(token))?.userId ?? null : null;
+    if (userId) {
+      logAudit({ entityType: 'video', entityId: id, action: 'delete', userId });
     }
+    logOperationRun({
+      moduleKey: 'videos', operationName: 'delete_video', executionMode: 'manual', status: 'completed',
+      inputPayload: { id }, outputPayload: { id }, triggeredBy: userId,
+    });
 
     return NextResponse.json({ success: true });
   } catch {

@@ -3,6 +3,7 @@ import { getAllVideos, createVideo } from '@/lib/db/admin-queries';
 import { logAudit } from '@/lib/db/admin-queries';
 import { verifyToken } from '@/lib/security/session';
 import { withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('videos', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -22,10 +23,14 @@ export const POST = withPermission('videos', 'create')(async (request: NextReque
     const video = createVideo(body);
 
     const token = request.cookies.get('admin_session')?.value;
-    if (token) {
-      const session = await verifyToken(token);
-      logAudit({ entityType: 'video', entityId: video.id, action: 'create', userId: session?.userId, metadata: { title: body.title } });
+    const userId = token ? (await verifyToken(token))?.userId ?? null : null;
+    if (userId) {
+      logAudit({ entityType: 'video', entityId: video.id, action: 'create', userId, metadata: { title: body.title } });
     }
+    logOperationRun({
+      moduleKey: 'videos', operationName: 'create_video', executionMode: 'manual', status: 'completed',
+      inputPayload: { title: body.title }, outputPayload: { id: video.id }, triggeredBy: userId,
+    });
 
     return NextResponse.json({ video }, { status: 201 });
   } catch {
