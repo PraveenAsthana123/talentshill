@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getBroadcastById, updateBroadcast, deleteBroadcast, launchBroadcast } from '@/lib/db/broadcast-queries';
 import { withPermission, getSessionUserIdAsync, checkPermission } from '@/lib/security/rbac';
 import { logOperationRun } from '@/lib/operation-run';
+import { createJob } from '@/lib/db/job-queries';
 
 export const GET = withPermission('broadcasts', 'read')(async (
   _request: NextRequest,
@@ -38,9 +39,26 @@ export async function PATCH(request: NextRequest, context: unknown) {
       if (!checkPermission(userId, 'broadcasts', 'manage')) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
       }
+      const broadcast = getBroadcastById(id);
+      if (!broadcast) return NextResponse.json({ error: 'Broadcast not found' }, { status: 404 });
+
       launchBroadcast(id);
-      logOperationRun({ moduleKey: 'broadcasts', operationName: 'manual_launch_broadcast', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
-      return NextResponse.json({ success: true });
+
+      // Real fix: nothing anywhere created a broadcast_send job --
+      // launchBroadcast() only ever flipped the DB status to 'sending';
+      // handleBroadcastSend (lib/jobs/handlers/broadcast-sender.ts) was
+      // fully implemented but unreachable, so "Launch" never actually
+      // sent a single email. This enqueues the real send job.
+      const jobId = createJob({
+        type: 'broadcast_send',
+        payload: { broadcastId: id },
+        priority: 1,
+        maxRetries: 3,
+        createdBy: userId,
+      });
+
+      logOperationRun({ moduleKey: 'broadcasts', operationName: 'manual_launch_broadcast', executionMode: 'manual', status: 'completed', inputPayload: { id, jobId }, triggeredBy: userId });
+      return NextResponse.json({ success: true, jobId });
     }
 
     if (!checkPermission(userId, 'broadcasts', 'update')) {

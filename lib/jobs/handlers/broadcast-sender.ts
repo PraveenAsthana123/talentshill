@@ -12,6 +12,7 @@ import { getContacts } from '@/lib/db/contact-crm-queries';
 import { getListMembers, getListMemberCount } from '@/lib/db/list-queries';
 import { sendWithProfile } from '@/lib/email/profile-mailer';
 import { logEmailEvent } from '@/lib/db/email-event-queries';
+import { createRun, updateRunStatus, addRunEvent } from '@/lib/db/run-queries';
 
 const BATCH_SIZE = 20;
 
@@ -30,6 +31,23 @@ async function handleBroadcastSend(ctx: JobContext) {
   // Mark as sending
   launchBroadcast(broadcastId);
 
+  // Real cross-module run tracking for the Run Console -- previously
+  // lib/db/run-queries.ts had zero callers anywhere in the app despite
+  // a real UI/API reading from it, so the runs/run_events tables were
+  // always empty. This is the first real populator.
+  const runId = createRun({
+    type: 'broadcast',
+    entityId: broadcastId,
+    name: broadcast.name,
+    config: { audienceType: broadcast.audienceType, throttlePerMinute: broadcast.throttlePerMinute ?? 60 },
+    createdBy: broadcast.createdBy ?? undefined,
+  });
+  // Go through updateRunStatus (not a direct 'active' status on create)
+  // so started_at is actually set -- createRun() itself never stamps
+  // started_at regardless of the status passed to it.
+  updateRunStatus(runId, 'active');
+  addRunEvent(runId, 'started', `Broadcast send started: ${broadcast.name}`, { broadcastId });
+
   const throttlePerMinute = broadcast.throttlePerMinute ?? 60;
   const delayBetweenEmails = Math.max(Math.floor(60_000 / throttlePerMinute), 100);
 
@@ -37,6 +55,7 @@ async function handleBroadcastSend(ctx: JobContext) {
   let failedCount = 0;
   let offset = 0;
 
+  try {
   // Resolve recipients based on audience type
   while (true) {
     let recipients: Array<{ email: string; contactId?: string }> = [];
@@ -86,6 +105,7 @@ async function handleBroadcastSend(ctx: JobContext) {
 
     offset += BATCH_SIZE;
     ctx.log('info', `Progress: ${sentCount} sent, ${failedCount} failed`);
+    addRunEvent(runId, 'progress', `${sentCount} sent, ${failedCount} failed so far`, { sentCount, failedCount });
   }
 
   // Update counters and mark completed
@@ -93,7 +113,16 @@ async function handleBroadcastSend(ctx: JobContext) {
   completeBroadcast(broadcastId);
   ctx.log('info', `Broadcast completed: ${sentCount} sent, ${failedCount} failed`);
 
+  updateRunStatus(runId, 'completed');
+  addRunEvent(runId, 'completed', `Broadcast completed: ${sentCount} sent, ${failedCount} failed`, { sentCount, failedCount });
+
   return { sentCount, failedCount };
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    updateRunStatus(runId, 'failed');
+    addRunEvent(runId, 'failed', `Broadcast send failed: ${errorMsg}`, { sentCount, failedCount });
+    throw err;
+  }
 }
 
 registerHandler(JOB_TYPES.BROADCAST_SEND, handleBroadcastSend);

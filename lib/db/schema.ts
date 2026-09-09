@@ -659,6 +659,7 @@ export const runs = sqliteTable('runs', {
   startedAt: integer('started_at', { mode: 'timestamp' }),
   completedAt: integer('completed_at', { mode: 'timestamp' }),
   createdBy: text('created_by'),
+  healthScore: integer('health_score'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
   index('idx_runs_type').on(table.type),
