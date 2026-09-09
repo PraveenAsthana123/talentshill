@@ -1181,3 +1181,31 @@ export const moduleRegistry = sqliteTable('module_registry', {
 }, (table) => [
   index('idx_module_registry_status').on(table.builtStatus),
 ]);
+
+// Competitor Analysis -- admin-only market-research intelligence, per
+// service. NOT exposed on any public route. Tracks who else is offering a
+// comparable service, how they position it, and what TalentsHill would
+// offer to differentiate. This is a research tool for the team to fill in
+// with real findings -- it must never be seeded with invented competitor
+// names, pricing, or claims presented as real research. A template row
+// (isTemplate=true) demonstrates the intended structure without claiming
+// to be real intelligence.
+export const competitorAnalysis = sqliteTable('competitor_analysis', {
+  id: text('id').primaryKey(),
+  serviceId: text('service_id').notNull().references(() => services.id, { onDelete: 'cascade' }),
+  competitorName: text('competitor_name').notNull(),
+  competitorWebsite: text('competitor_website'),
+  offeringSummary: text('offering_summary'),
+  pricingNotes: text('pricing_notes'),
+  strengthsWeaknesses: text('strengths_weaknesses'),
+  sampleDeliverables: text('sample_deliverables'), // JSON array of {name, description} -- what TalentsHill would produce as a sample/template deliverable for this service
+  status: text('status', { enum: ['needs_research', 'researched', 'monitoring'] }).notNull().default('needs_research'),
+  isTemplate: integer('is_template', { mode: 'boolean' }).notNull().default(false),
+  lastResearchedAt: integer('last_researched_at', { mode: 'timestamp' }),
+  researchedBy: text('researched_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_competitor_analysis_service').on(table.serviceId),
+  index('idx_competitor_analysis_status').on(table.status),
+]);

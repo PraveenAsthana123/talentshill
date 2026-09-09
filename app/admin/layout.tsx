@@ -50,6 +50,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/marketing/workflow', label: 'Workflow' },
       { href: '/admin/marketing/approvals', label: 'Approvals' },
       { href: '/admin/marketing/monitor', label: 'Monitor' },
+      { href: '/admin/competitor-analysis', label: 'Competitor Analysis' },
     ],
   },
   {

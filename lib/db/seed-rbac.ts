@@ -21,6 +21,10 @@ const RESOURCES = [
   // segment (SMTP sender identities) from 'smtp_configs' (SMTP server
   // configs) so it needs its own resource rather than being folded in.
   'lists', 'email_profiles',
+  // Admin-only market-research intelligence -- never exposed on any public
+  // route. Restricted deliberately: this holds competitive research, not
+  // content meant for customers.
+  'competitor_analysis',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];
