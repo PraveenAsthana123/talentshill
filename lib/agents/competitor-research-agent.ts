@@ -147,8 +147,11 @@ export async function runCompetitorResearchAgent(params: {
     updateOperationRunStatus(runId, 'completed', { outputPayload: { competitorAnalysisId: id }, tokensUsed: totalTokens });
     return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, competitorAnalysisId: id };
   } catch (err) {
+    // Re-throw (after logging to operation_run) so the API route's 502
+    // catch handles it -- returning competitorAnalysisId: null here would
+    // make an Ollama timeout look like a validation failure (422).
     updateOperationRunStatus(runId, 'failed', { errorMessage: err instanceof Error ? err.message : String(err), tokensUsed: totalTokens });
     steps.push({ phase: 'complete', agentRole, input: '', output: `FAILED: ${err instanceof Error ? err.message : String(err)}`, tokensUsed: 0 });
-    return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, competitorAnalysisId: null };
+    throw err;
   }
 }

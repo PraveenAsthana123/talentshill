@@ -64,8 +64,11 @@ export async function runAppointmentFollowupAgent(params: { appointmentId: strin
     updateOperationRunStatus(runId, 'completed', { outputPayload: { appointmentId: params.appointmentId, score: urgency.score, recommendation: actResult.content }, tokensUsed: totalTokens });
     return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, appointmentId: params.appointmentId, recommendation: actResult.content };
   } catch (err) {
+    // Re-throw (after logging to operation_run) so the API route's 502
+    // catch handles it -- returning appointmentId: null here would make
+    // an Ollama timeout look like "appointment not found" (404).
     updateOperationRunStatus(runId, 'failed', { errorMessage: err instanceof Error ? err.message : String(err), tokensUsed: totalTokens });
     steps.push({ phase: 'complete', agentRole, input: '', output: `FAILED: ${err instanceof Error ? err.message : String(err)}`, tokensUsed: 0 });
-    return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, appointmentId: null, recommendation: null };
+    throw err;
   }
 }

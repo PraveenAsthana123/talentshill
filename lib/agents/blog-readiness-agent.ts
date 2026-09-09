@@ -64,8 +64,11 @@ export async function runBlogReadinessAgent(params: { postId: string; triggeredB
     updateOperationRunStatus(runId, 'completed', { outputPayload: { postId: params.postId, score: readiness.score, recommendation: actResult.content }, tokensUsed: totalTokens });
     return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, postId: params.postId, recommendation: actResult.content };
   } catch (err) {
+    // Re-throw (after logging to operation_run) so the API route's 502
+    // catch handles it -- returning postId: null here would make an
+    // Ollama timeout look like "post not found" (404).
     updateOperationRunStatus(runId, 'failed', { errorMessage: err instanceof Error ? err.message : String(err), tokensUsed: totalTokens });
     steps.push({ phase: 'complete', agentRole, input: '', output: `FAILED: ${err instanceof Error ? err.message : String(err)}`, tokensUsed: 0 });
-    return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, postId: null, recommendation: null };
+    throw err;
   }
 }

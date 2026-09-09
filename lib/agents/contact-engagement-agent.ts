@@ -66,8 +66,11 @@ export async function runContactEngagementAgent(params: { contactId: string; tri
     updateOperationRunStatus(runId, 'completed', { outputPayload: { contactId: params.contactId, score: completeness.score, recommendation: actResult.content }, tokensUsed: totalTokens });
     return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, contactId: params.contactId, recommendation: actResult.content };
   } catch (err) {
+    // Re-throw (after logging to operation_run) so the API route's 502
+    // catch handles it -- returning contactId: null here would make an
+    // Ollama timeout look like "contact not found" (404).
     updateOperationRunStatus(runId, 'failed', { errorMessage: err instanceof Error ? err.message : String(err), tokensUsed: totalTokens });
     steps.push({ phase: 'complete', agentRole, input: '', output: `FAILED: ${err instanceof Error ? err.message : String(err)}`, tokensUsed: 0 });
-    return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, contactId: null, recommendation: null };
+    throw err;
   }
 }

@@ -70,8 +70,11 @@ export async function runCampaignSubjectAgent(params: { campaignId: string; trig
     updateOperationRunStatus(runId, 'completed', { outputPayload: { campaignId: params.campaignId, suggestions }, tokensUsed: totalTokens });
     return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, campaignId: params.campaignId, subjectSuggestions: suggestions };
   } catch (err) {
+    // Re-throw (after logging to operation_run) so the API route's 502
+    // catch handles it -- returning campaignId: null here would make an
+    // Ollama timeout look like "campaign not found" (404).
     updateOperationRunStatus(runId, 'failed', { errorMessage: err instanceof Error ? err.message : String(err), tokensUsed: totalTokens });
     steps.push({ phase: 'complete', agentRole, input: '', output: `FAILED: ${err instanceof Error ? err.message : String(err)}`, tokensUsed: 0 });
-    return { runId, agentCount: 1, steps, totalTokensUsed: totalTokens, campaignId: null, subjectSuggestions: null };
+    throw err;
   }
 }
