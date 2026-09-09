@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllLists, createList } from '@/lib/db/list-queries';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('lists', 'read')(async (_request: NextRequest, _context: unknown) => {
   try {
@@ -28,6 +29,7 @@ export const POST = withPermission('lists', 'create')(async (request: NextReques
       segmentRules,
       createdBy: userId ?? undefined,
     });
+    logOperationRun({ moduleKey: 'lists', operationName: 'manual_create_list', executionMode: 'manual', status: 'completed', inputPayload: { name, type }, outputPayload: { id }, triggeredBy: userId });
 
     return NextResponse.json({ id }, { status: 201 });
   } catch {

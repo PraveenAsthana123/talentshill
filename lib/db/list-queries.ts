@@ -133,3 +133,8 @@ export function getListMemberCount(listId: string) {
     .get();
   return result?.count ?? 0;
 }
+
+// ── Get list member contact IDs (no join, no pagination limit) ──
+export function getListMemberIds(listId: string): string[] {
+  return db.select({ contactId: listMembers.contactId }).from(listMembers).where(eq(listMembers.listId, listId)).all().map(r => r.contactId);
+}

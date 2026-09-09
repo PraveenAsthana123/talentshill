@@ -506,6 +506,7 @@ export const lists = sqliteTable('lists', {
   type: text('type').notNull().default('static'), // static, dynamic
   segmentRules: text('segment_rules'), // JSON for dynamic lists
   memberCount: integer('member_count').default(0),
+  lastSyncedAt: integer('last_synced_at', { mode: 'timestamp' }), // dynamic lists only -- real gap this tracks: listMembers was never auto-materialized from segmentRules before this build
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),

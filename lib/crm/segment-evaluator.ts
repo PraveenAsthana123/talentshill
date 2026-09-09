@@ -77,3 +77,13 @@ export function evaluateSegmentRules(rules: RuleGroup): { count: number; sampleI
     sampleIds: sampleResults.map(r => r.id),
   };
 }
+
+// Full (unlimited) match resolution -- evaluateSegmentRules() above caps
+// at a 10-row preview sample, which is correct for the UI preview but
+// cannot be used to materialize real list membership. Reuses the same
+// condition-building logic so preview and real sync always agree.
+export function getMatchingContactIds(rules: RuleGroup): string[] {
+  const condition = buildGroupCondition(rules);
+  const results = db.select({ id: contacts.id }).from(contacts).where(condition).all();
+  return results.map(r => r.id);
+}
