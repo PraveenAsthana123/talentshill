@@ -1,171 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { SectionHeader } from '@/components/ui';
+import { SectionHeader, Tabs } from '@/components/ui';
+import ManualTab from './ManualTab';
+import PipelineTab from './PipelineTab';
+import AgenticTab from './AgenticTab';
+import MonitoringTab from './MonitoringTab';
+import DashboardTab from './DashboardTab';
+import ReportTab from './ReportTab';
+import GovernanceTab from './GovernanceTab';
+import UserStoryTab from './UserStoryTab';
+import TestingTab from './TestingTab';
+import LogTrackingTab from './LogTrackingTab';
 import styles from './AdminAnalytics.module.css';
 
-interface CampaignSummary {
-  totalCampaigns: number;
-  completedCampaigns: number;
-  totalSent: number;
-  totalOpened: number;
-  totalClicked: number;
-  totalBounced: number;
-  openRate: string;
-  clickRate: string;
-  bounceRate: string;
-}
-
-interface TopCampaign {
-  id: string;
-  name: string;
-  sent: number;
-  opened: number;
-  clicked: number;
-  openRate: string;
-  clickRate: string;
-}
-
-interface ContactSummary {
-  totalContacts: number;
-  activeContacts: number;
-  unsubscribed: number;
-  bounced: number;
-}
-
-interface SourceItem { source: string; count: number; }
-interface ScoreItem { bucket: string; count: number; }
-
+// Module 16 on the Operational Portal 10-tab standard. Unlike other
+// modules, Analytics has no CRUD entity of its own -- Manual wraps the
+// pre-existing real campaign/contact rollup view (unchanged logic).
+// Pipeline/Agentic score overall program health and insert a new
+// timestamped analytics_snapshots row per run instead of updating a
+// single record. Already correctly RBAC-gated -- no security
+// remediation needed here.
 export default function AdminAnalyticsPage() {
-  const [campaignSummary, setCampaignSummary] = useState<CampaignSummary | null>(null);
-  const [topCampaigns, setTopCampaigns] = useState<TopCampaign[]>([]);
-  const [contactSummary, setContactSummary] = useState<ContactSummary | null>(null);
-  const [sourceDistribution, setSourceDistribution] = useState<SourceItem[]>([]);
-  const [scoreDistribution, setScoreDistribution] = useState<ScoreItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      fetch('/api/admin/analytics/campaigns').then(r => r.json()),
-      fetch('/api/admin/analytics/contacts').then(r => r.json()),
-    ]).then(([cData, ctData]) => {
-      setCampaignSummary(cData.summary || null);
-      setTopCampaigns(cData.topCampaigns || []);
-      setContactSummary(ctData.summary || null);
-      setSourceDistribution(ctData.sourceDistribution || []);
-      setScoreDistribution(ctData.scoreDistribution || []);
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className={styles.page}><div className={styles.empty}>Loading analytics...</div></div>;
-
   return (
     <div className={styles.page}>
-      <SectionHeader label="Analytics" title="Dashboard" subtitle="Campaign performance and contact insights." />
-
-      {/* Campaign Metrics */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Campaign Performance</h2>
-        <div className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{campaignSummary?.totalCampaigns || 0}</div>
-            <div className={styles.metricLabel}>Total Campaigns</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{campaignSummary?.totalSent || 0}</div>
-            <div className={styles.metricLabel}>Emails Sent</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{campaignSummary?.openRate || '0'}%</div>
-            <div className={styles.metricLabel}>Open Rate</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{campaignSummary?.clickRate || '0'}%</div>
-            <div className={styles.metricLabel}>Click Rate</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{campaignSummary?.bounceRate || '0'}%</div>
-            <div className={styles.metricLabel}>Bounce Rate</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top Campaigns */}
-      {topCampaigns.length > 0 && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Top Campaigns (by Open Rate)</h2>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead><tr><th>Campaign</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Open Rate</th><th>Click Rate</th></tr></thead>
-              <tbody>
-                {topCampaigns.map(c => (
-                  <tr key={c.id}>
-                    <td className={styles.nameCell}>{c.name}</td>
-                    <td>{c.sent}</td>
-                    <td>{c.opened}</td>
-                    <td>{c.clicked}</td>
-                    <td><span className={styles.rateBadge}>{c.openRate}%</span></td>
-                    <td><span className={styles.rateBadge}>{c.clickRate}%</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Contact Metrics */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Contact Overview</h2>
-        <div className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{contactSummary?.totalContacts || 0}</div>
-            <div className={styles.metricLabel}>Total Contacts</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{contactSummary?.activeContacts || 0}</div>
-            <div className={styles.metricLabel}>Active</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{contactSummary?.unsubscribed || 0}</div>
-            <div className={styles.metricLabel}>Unsubscribed</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricValue}>{contactSummary?.bounced || 0}</div>
-            <div className={styles.metricLabel}>Bounced</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Source + Score Distribution */}
-      <div className={styles.twoCol}>
-        <div className={styles.distCard}>
-          <h3 className={styles.distTitle}>Contact Sources</h3>
-          {sourceDistribution.length === 0 ? <div className={styles.empty}>No data</div> : (
-            <div className={styles.distList}>
-              {sourceDistribution.map(s => (
-                <div key={s.source} className={styles.distItem}>
-                  <span className={styles.distLabel}>{s.source || 'unknown'}</span>
-                  <span className={styles.distValue}>{s.count}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className={styles.distCard}>
-          <h3 className={styles.distTitle}>Lead Score Distribution</h3>
-          {scoreDistribution.length === 0 ? <div className={styles.empty}>No data</div> : (
-            <div className={styles.distList}>
-              {scoreDistribution.map(s => (
-                <div key={s.bucket} className={styles.distItem}>
-                  <span className={styles.distLabel}>{s.bucket}</span>
-                  <span className={styles.distValue}>{s.count}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <SectionHeader label="Analytics" title="Dashboard" subtitle="Campaign performance and contact insights, via Manual, Pipeline (deterministic program-health scoring), or Agentic (local LLM) execution modes." />
+      <Tabs
+        tabs={[
+          { id: 'manual', label: 'Manual', content: <ManualTab /> },
+          { id: 'pipeline', label: 'Pipeline', content: <PipelineTab /> },
+          { id: 'agentic', label: 'Agentic', content: <AgenticTab /> },
+          { id: 'monitoring', label: 'Monitoring', content: <MonitoringTab /> },
+          { id: 'dashboard', label: 'Dashboard', content: <DashboardTab /> },
+          { id: 'report', label: 'Report', content: <ReportTab /> },
+          { id: 'governance', label: 'Governance', content: <GovernanceTab /> },
+          { id: 'user-story', label: 'User Story', content: <UserStoryTab /> },
+          { id: 'testing', label: 'Testing', content: <TestingTab /> },
+          { id: 'log-tracking', label: 'Log & Tracking', content: <LogTrackingTab /> },
+        ]}
+      />
     </div>
   );
 }
