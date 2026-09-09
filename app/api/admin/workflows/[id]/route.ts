@@ -3,7 +3,8 @@ import {
   getWorkflowById, updateWorkflowStep, updateWorkflowStatus, deleteWorkflow, getComments,
 } from '@/lib/db/marketing-workflow-queries';
 import { UpdateWorkflowStepSchema, UpdateWorkflowStatusSchema } from '@/lib/validation/content-schemas';
-import { withPermission } from '@/lib/security/rbac';
+import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('workflows', 'read')(async (
   _request: NextRequest,
@@ -29,12 +30,14 @@ export const PATCH = withPermission('workflows', 'update')(async (
   try {
     const { id } = await params;
     const body = await request.json();
+    const userId = await getSessionUserIdAsync(request);
 
     if (body.action === 'update-step') {
       const parsed = UpdateWorkflowStepSchema.safeParse(body);
       if (!parsed.success) return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 });
       const { step, ...data } = parsed.data;
       updateWorkflowStep(id, step, data);
+      logOperationRun({ moduleKey: 'marketing', operationName: 'manual_update_workflow_step', executionMode: 'manual', status: 'completed', inputPayload: { id, step }, triggeredBy: userId });
       return NextResponse.json({ success: true });
     }
 
@@ -42,6 +45,7 @@ export const PATCH = withPermission('workflows', 'update')(async (
       const parsed = UpdateWorkflowStatusSchema.safeParse(body);
       if (!parsed.success) return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 });
       updateWorkflowStatus(id, parsed.data.status);
+      logOperationRun({ moduleKey: 'marketing', operationName: 'manual_update_workflow_status', executionMode: 'manual', status: 'completed', inputPayload: { id, status: parsed.data.status }, triggeredBy: userId });
       return NextResponse.json({ success: true });
     }
 
@@ -52,13 +56,15 @@ export const PATCH = withPermission('workflows', 'update')(async (
 });
 
 export const DELETE = withPermission('workflows', 'delete')(async (
-  _request: NextRequest,
+  request: NextRequest,
   context: unknown
 ) => {
   const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
+    const userId = await getSessionUserIdAsync(request);
     deleteWorkflow(id);
+    logOperationRun({ moduleKey: 'marketing', operationName: 'manual_delete_workflow', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete workflow' }, { status: 500 });

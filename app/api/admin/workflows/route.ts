@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getWorkflows, getWorkflowCount, createWorkflow } from '@/lib/db/marketing-workflow-queries';
 import { CreateWorkflowSchema } from '@/lib/validation/content-schemas';
 import { getSessionUserIdAsync, withPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('workflows', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
@@ -27,6 +28,7 @@ export const POST = withPermission('workflows', 'create')(async (request: NextRe
     }
     const userId = await getSessionUserIdAsync(request);
     const id = createWorkflow({ ...parsed.data, createdBy: userId ?? undefined });
+    logOperationRun({ moduleKey: 'marketing', operationName: 'manual_create_workflow', executionMode: 'manual', status: 'completed', inputPayload: { name: parsed.data.name }, outputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ id }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create workflow' }, { status: 500 });

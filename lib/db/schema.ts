@@ -1121,6 +1121,7 @@ export const marketingWorkflows = sqliteTable('marketing_workflows', {
   scheduledAt: integer('scheduled_at', { mode: 'timestamp' }),
   completedAt: integer('completed_at', { mode: 'timestamp' }),
   metadata: text('metadata'), // JSON
+  readinessScore: integer('readiness_score'), // real consistency score -- update-status accepts any status with no validation, so 'approved' can be set with no approvedBy, etc.
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
