@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBroadcastById, updateBroadcast, deleteBroadcast, launchBroadcast } from '@/lib/db/broadcast-queries';
 import { withPermission, getSessionUserIdAsync, checkPermission } from '@/lib/security/rbac';
+import { logOperationRun } from '@/lib/operation-run';
 
 export const GET = withPermission('broadcasts', 'read')(async (
   _request: NextRequest,
@@ -38,6 +39,7 @@ export async function PATCH(request: NextRequest, context: unknown) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
       }
       launchBroadcast(id);
+      logOperationRun({ moduleKey: 'broadcasts', operationName: 'manual_launch_broadcast', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
       return NextResponse.json({ success: true });
     }
 
@@ -45,6 +47,7 @@ export async function PATCH(request: NextRequest, context: unknown) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
     updateBroadcast(id, body);
+    logOperationRun({ moduleKey: 'broadcasts', operationName: 'manual_update_broadcast', executionMode: 'manual', status: 'completed', inputPayload: { id, fields: Object.keys(body) }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to update broadcast' }, { status: 500 });
@@ -52,13 +55,15 @@ export async function PATCH(request: NextRequest, context: unknown) {
 }
 
 export const DELETE = withPermission('broadcasts', 'delete')(async (
-  _request: NextRequest,
+  request: NextRequest,
   context: unknown
 ) => {
   const { params } = context as { params: Promise<{ id: string }> };
   try {
     const { id } = await params;
+    const userId = await getSessionUserIdAsync(request);
     deleteBroadcast(id);
+    logOperationRun({ moduleKey: 'broadcasts', operationName: 'manual_delete_broadcast', executionMode: 'manual', status: 'completed', inputPayload: { id }, triggeredBy: userId });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete broadcast' }, { status: 500 });

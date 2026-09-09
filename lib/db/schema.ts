@@ -705,6 +705,7 @@ export const broadcasts = sqliteTable('broadcasts', {
   throttlePerMinute: integer('throttle_per_minute').default(60),
   totalSent: integer('total_sent').default(0),
   totalFailed: integer('total_failed').default(0),
+  readinessScore: integer('readiness_score'), // real launch-readiness score -- launchBroadcast() has no audience/sender guard today
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
