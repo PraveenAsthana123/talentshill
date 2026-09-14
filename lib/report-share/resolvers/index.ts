@@ -9,3 +9,4 @@ import '@/lib/report-share/resolvers/campaigns';
 import '@/lib/report-share/resolvers/contacts';
 import '@/lib/report-share/resolvers/branding';
 import '@/lib/report-share/resolvers/market-research';
+import '@/lib/report-share/resolvers/chat';

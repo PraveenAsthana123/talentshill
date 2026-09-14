@@ -10,6 +10,9 @@ export const GET = withPermission('chat', 'read')(async () => {
   const runs = db.select().from(schema.operationRun).where(eq(schema.operationRun.moduleKey, 'chat')).all();
   const scored = requests.filter((r) => r.responseQualityScore !== null && r.responseQualityScore !== undefined);
   const evalStats = getEvalStats();
+  const qualified = requests.filter((r) => r.qualificationTier !== null && r.qualificationTier !== undefined);
+  const hotRequests = qualified.filter((r) => r.qualificationTier === 'hot').length;
+  const contactsLinkedFromChat = requests.filter((r) => r.contactId !== null && r.contactId !== undefined).length;
 
   return NextResponse.json({
     kpis: {
@@ -19,8 +22,12 @@ export const GET = withPermission('chat', 'read')(async () => {
       unscoredRequests: requests.length - scored.length,
       avgResponseQualityScore: scored.length > 0 ? Math.round(scored.reduce((s, r) => s + (r.responseQualityScore || 0), 0) / scored.length) : 0,
       totalRuns: runs.length,
+      qualifiedRequests: qualified.length,
+      hotRequests,
+      contactsLinkedFromChat,
     },
     evalStats,
     byRequestStatus: requests.reduce((acc: Record<string, number>, r) => ({ ...acc, [r.status]: (acc[r.status] ?? 0) + 1 }), {}),
+    byQualificationTier: qualified.reduce((acc: Record<string, number>, r) => ({ ...acc, [r.qualificationTier!]: (acc[r.qualificationTier!] ?? 0) + 1 }), {}),
   });
 });

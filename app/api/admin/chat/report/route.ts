@@ -10,6 +10,7 @@ export const GET = withPermission('chat', 'read')(async () => {
     totalRequests: all.length,
     requests: all.map((r) => ({
       subject: r.subject, status: r.status, priority: r.priority, responseQualityScore: r.responseQualityScore ?? null,
+      qualificationScore: r.qualificationScore ?? null, qualificationTier: r.qualificationTier ?? null, contactLinked: !!r.contactId,
     })),
   });
 });

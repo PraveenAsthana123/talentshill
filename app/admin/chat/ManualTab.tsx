@@ -91,18 +91,19 @@ export default function ManualTab() {
 
         {tab === 'requests' && (
           <table className={styles.table}>
-            <thead><tr><th>Subject</th><th>Status</th><th>Priority</th><th>Created</th><th></th></tr></thead>
+            <thead><tr><th>Subject</th><th>Status</th><th>Priority</th><th>Qualification</th><th>Created</th><th></th></tr></thead>
             <tbody>
               {requests.map((r: any) => (
                 <tr key={r.id}>
                   <td>{r.subject || 'No subject'}</td>
                   <td><span className={styles.badge}>{r.status}</span></td>
                   <td><span className={`${styles.priorityBadge} ${styles[`priority${r.priority?.charAt(0).toUpperCase()}${r.priority?.slice(1)}`] || ''}`}>{r.priority}</span></td>
+                  <td>{r.qualificationTier ? <Badge variant={r.qualificationTier === 'hot' ? 'error' : r.qualificationTier === 'warm' ? 'warning' : 'default'}>{r.qualificationTier} ({r.qualificationScore})</Badge> : '—'}</td>
                   <td>{new Date(r.createdAt).toLocaleString()}</td>
                   <td><Link href={`/admin/chat/requests/${r.id}`} className={styles.link}>View</Link></td>
                 </tr>
               ))}
-              {requests.length === 0 && <tr><td colSpan={5} className={styles.empty}>No requests</td></tr>}
+              {requests.length === 0 && <tr><td colSpan={6} className={styles.empty}>No requests</td></tr>}
             </tbody>
           </table>
         )}

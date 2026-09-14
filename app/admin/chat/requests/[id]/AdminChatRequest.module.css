@@ -27,3 +27,15 @@
 .addNoteRow { display: flex; gap: var(--space-2); }
 .noteInput { flex: 1; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .empty { text-align: center; color: var(--color-text-muted); font-size: var(--font-size-sm); padding: var(--space-4); }
+
+.transcript { display: flex; flex-direction: column; gap: var(--space-2); max-height: 360px; overflow-y: auto; margin-bottom: var(--space-4); }
+.msgUser { align-self: flex-start; max-width: 80%; padding: var(--space-2) var(--space-3); background: var(--color-surface-light); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
+.msgAssistant { align-self: flex-end; max-width: 80%; padding: var(--space-2) var(--space-3); background: var(--color-heading); color: white; border-radius: var(--radius-md); font-size: var(--font-size-sm); }
+.msgRole { display: block; font-size: var(--font-size-xs); opacity: 0.7; margin-bottom: 2px; text-transform: capitalize; }
+
+.qualBox { padding: var(--space-4); background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+.signalList { list-style: none; padding: 0; margin: var(--space-2) 0 0 0; font-size: var(--font-size-sm); }
+.signalHit { color: var(--color-heading); font-weight: var(--font-weight-semibold); }
+.signalMiss { color: var(--color-text-muted); }
+
+.draftBox { padding: var(--space-4); background: var(--color-surface-light); border-radius: var(--radius-md); margin-top: var(--space-3); white-space: pre-wrap; font-size: var(--font-size-sm); }

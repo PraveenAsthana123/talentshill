@@ -10,10 +10,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const SUB_TABS = [
   { id: 'resai', label: 'ResAI', content: (<>
     <Section title="Research AI">
-      <p>The Agentic tab drafts a response-quality note from real message content and the real safety pipeline output — see Agentic/Testing tabs for live-verified evidence.</p>
+      <p>The Agentic tab drafts a response-quality note from real message content and the real safety pipeline output — see Agentic/Testing tabs for live-verified evidence. Added 2026-09-14: the request-detail page&apos;s &quot;Draft AI Reply&quot; assistant drafts a suggested visitor reply grounded strictly in the real conversation transcript, never auto-sent — an admin must review and explicitly use it via &quot;Use as Response&quot; before sending.</p>
     </Section>
     <Section title="Responsible AI">
-      <p><strong>Data provenance:</strong> the admin&apos;s own response text, read at run time. <strong>PII handling:</strong> the pipeline&apos;s own pii_check exists specifically to catch PII accidentally pasted into a response before it&apos;s emailed to the visitor.</p>
+      <p><strong>Data provenance:</strong> the admin&apos;s own response text, read at run time. <strong>PII handling:</strong> the pipeline&apos;s own pii_check exists specifically to catch PII accidentally pasted into a response before it&apos;s emailed to the visitor. Sales-qualification scoring is a fixed keyword-match rule (5 real signal categories) over the real visitor conversation, never an LLM guess at buying intent.</p>
     </Section>
   </>) },
   { id: 'expai', label: 'ExpAI', content: (<>
@@ -57,6 +57,8 @@ const SUB_TABS = [
         <li>Hallucination in the Agentic recommendation — mitigated by an explicit &quot;never invent facts&quot; prompt, not formally red-teamed for this module.</li>
         <li><strong>Real, pre-existing risk this pipeline exists to catch:</strong> <code>evaluateMessage()</code> already ran on every automated bot response, but the human-admin respond endpoint (the path that actually reaches real customers most often) never called it — a safety-eval gap between the automated and human-authored paths.</li>
         <li>The underlying evaluateMessage() checks are pattern/keyword matches, not a trained classifier — they will miss PII, toxicity, or bias that doesn&apos;t match the specific patterns checked (a limitation of the pre-existing evaluator itself, not introduced by this pipeline).</li>
+        <li><strong>Honest scope note:</strong> a second, entirely separate, purely client-side chatbot widget (<code>features/chatbot/</code>, mounted site-wide in the app layout) exists in this codebase. It is a keyword-matching placeholder with a simulated typing effect, has no database persistence, and is not wired to this <code>chat</code> module, its sessions/messages/requests, or the AI Sales Assistant built here. Do not conflate the two — this module&apos;s admin-facing qualification and draft-reply features apply only to real <code>chat_sessions</code>/<code>chat_requests</code> conversations.</li>
+        <li>The Draft AI Reply assistant is explicitly instructed not to invent pricing/dates/statistics, and its output is scanned by the shared fabrication-guard backstop — but like every other Ollama-backed drafting agent in this codebase, prompting alone has been observed to fail in isolated cases, which is exactly why the backstop and the human-review-before-send step both exist.</li>
       </ul>
     </Section>
     <Section title="Current risk level"><p><strong>Medium.</strong> Chat responses go directly to real customer email addresses, and the pii_check exists specifically to catch accidental PII disclosure before that happens — but pattern-matching has real, disclosed blind spots.</p></Section>

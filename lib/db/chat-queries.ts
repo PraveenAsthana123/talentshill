@@ -166,3 +166,18 @@ export function getConversation(sessionId: string) {
   const requests = getRequestsBySession(sessionId);
   return { session, messages, requests };
 }
+
+// Real conversation transcript for a single request -- resolves via the
+// request's session since not every message is directly tagged with a
+// requestId (pre-request session messages have requestId=null).
+export function getMessagesForRequest(requestId: string) {
+  const request = getRequest(requestId);
+  if (!request) return [];
+  return getMessages(request.sessionId);
+}
+
+export function setRequestQualification(id: string, data: { qualificationScore: number; qualificationTier: 'cold' | 'warm' | 'hot'; contactId?: string }) {
+  const updates: Record<string, unknown> = { qualificationScore: data.qualificationScore, qualificationTier: data.qualificationTier, updatedAt: new Date() };
+  if (data.contactId) updates.contactId = data.contactId;
+  db.update(chatRequests).set(updates).where(eq(chatRequests.id, id)).run();
+}

@@ -815,6 +815,11 @@ export const chatRequests = sqliteTable('chat_requests', {
   resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
   closedAt: integer('closed_at', { mode: 'timestamp' }),
   responseQualityScore: integer('response_quality_score'), // pipeline-computed from real chat_message_evals checks on the latest admin response
+  // ── AI Conversational Sales Assistant, added 2026-09-14 -- computed
+  // from real keyword-detected buying signals in the real conversation,
+  // never LLM-estimated ──
+  qualificationScore: integer('qualification_score'), // 0-100 composite
+  qualificationTier: text('qualification_tier', { enum: ['cold', 'warm', 'hot'] }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
@@ -822,6 +827,7 @@ export const chatRequests = sqliteTable('chat_requests', {
   index('idx_chat_requests_status').on(table.status),
   index('idx_chat_requests_assigned').on(table.assignedTo),
   index('idx_chat_requests_priority').on(table.priority),
+  index('idx_chat_requests_qualification_tier').on(table.qualificationTier),
 ]);
 
 // ── Chat Messages ──

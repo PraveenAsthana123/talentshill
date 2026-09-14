@@ -4,9 +4,14 @@ import { useEffect, useState } from 'react';
 import styles from './ChatShared.module.css';
 
 interface DashboardData {
-  kpis: { totalSessions: number; activeSessions: number; totalRequests: number; unscoredRequests: number; avgResponseQualityScore: number; totalRuns: number };
+  kpis: {
+    totalSessions: number; activeSessions: number; totalRequests: number; unscoredRequests: number;
+    avgResponseQualityScore: number; totalRuns: number;
+    qualifiedRequests: number; hotRequests: number; contactsLinkedFromChat: number;
+  };
   evalStats: { total: number; passed: number; failed: number };
   byRequestStatus: Record<string, number>;
+  byQualificationTier: Record<string, number>;
 }
 
 export default function DashboardTab() {
@@ -31,6 +36,15 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.avgResponseQualityScore}</span>Avg response quality</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
         </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>AI sales qualification</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.qualifiedRequests}</span>Requests scored</div>
+          <div className={styles.vizBox}><span>{data.kpis.hotRequests}</span>Hot</div>
+          <div className={styles.vizBox}><span>{data.kpis.contactsLinkedFromChat}</span>Contacts linked from chat</div>
+        </div>
+        <p>By tier: {Object.entries(data.byQualificationTier).map(([t, n]) => `${t}: ${n}`).join(' · ') || 'None scored yet.'}</p>
       </div>
       <div className={styles.subSection}>
         <h4>Message evaluations (chat_message_evals)</h4>

@@ -1,0 +1,66 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  14 passed (14)
+      Tests  119 passed (119)
+
+$ curl -s -c cookies-uc9.txt -X POST http://127.0.0.1:3019/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3019/api/admin/chat/requests/nonexistent/qualify/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -X POST http://127.0.0.1:3019/api/chat/ -d '{"message":"Hi, what is your pricing for a demo? I need this set up asap, my email is __e2e_test_hotlead@example.com"}'
+{"response":"Hello! Welcome to TalentsHill...","sessionToken":"576b022b-..."}
+  -> real chat_session d02d2717..., real chat_request fcd0086d... auto-created
+
+$ curl -s -b cookies-uc9.txt -X POST .../chat/requests/fcd0086d.../qualify/
+score=80, tier=hot
+detected: pricing_interest, demo_request, timeline_urgency, contact_shared (NOT buying_intent -- no "buy" keyword, correct)
+  hand-check: 4 signals x 20 = 80 (exact match)
+link_contact stage: "Hot conversation with a real visitor email not yet a contact -- create one, source=chat"
+  contactId=9c1577ef-..., created=true
+
+$ curl -s -b cookies-uc9.txt -X POST .../chat/requests/fcd0086d.../draft-reply/
+fabricationWarning: false
+qualification: 80 hot
+draftReply: "...To provide an accurate quote tailored specifically towards your needs... is currently outside my direct capabilities..." [correctly declined to invent a price]
+
+$ curl -s -b cookies-uc9.txt .../chat/requests/fcd0086d.../messages/
+{"messages":[{role:"user",content:"Hi, what is your pricing..."},{role:"assistant",content:"Hello! Welcome to TalentsHill..."}]}
+
+$ curl -s -b cookies-uc9.txt .../chat/dashboard/
+{"kpis":{"totalRequests":3,"qualifiedRequests":3,"hotRequests":2,"contactsLinkedFromChat":2},"byQualificationTier":{"cold":1,"hot":2}}
+
+$ curl -s -b cookies-uc9.txt .../chat/report/
+hot entries include qualificationScore=80, qualificationTier=hot, contactLinked=true for the real e2e request
+
+$ curl -s -b cookies-uc9.txt -X POST .../chat/share-link/
+{"token":"...","url":"/report/chat/..."}
+$ curl -s http://127.0.0.1:3019/api/public/report/.../
+{"title":"Chat Sales Qualification Summary","data":{"totalRequests":3,"qualifiedRequests":3,"byTier":{"cold":1,"hot":2},"contactsLinkedFromChat":2}}
+  -- aggregate only, no visitor email/name/content
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3019/report/chat/.../
+200
+
+-- Cleanup discovered residue from an EARLIER vitest run whose afterAll
+-- crashed on an FK-order bug (fixed in the test file) before deleting
+-- its own test data. Cleaned both that residue and this session's live
+-- test data together:
+$ sqlite3 data/talentshill.db "DELETE FROM chat_messages WHERE session_id IN (...);"
+$ sqlite3 data/talentshill.db "DELETE FROM chat_requests WHERE session_id IN (...);"
+$ sqlite3 data/talentshill.db "DELETE FROM chat_sessions WHERE id IN (...);"
+$ sqlite3 data/talentshill.db "DELETE FROM contacts WHERE email IN ('__e2e_test_hotlead@example.com','__test_hot_lead_1789401469382@example.com');"
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='chat';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM chat_sessions WHERE session_token LIKE '__test%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM contacts WHERE email LIKE '__%test%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='chat';"
+0
+
+$ npx tsx scripts/record-usecase9-chat-sales-assistant-tests.ts
+--- Recording AI Conversational Sales Assistant use-case test results ---
+Created 18, skipped 0 (already present).
