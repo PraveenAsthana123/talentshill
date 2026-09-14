@@ -8,6 +8,7 @@ import styles from './ContentShared.module.css';
 interface ContentOption { id: string; title: string }
 interface StageResult { stage: string; input: unknown; process: string; output: unknown; status: string }
 interface RunEntry { id: string; status: string; createdAt: string; triggeredBy: string | null }
+interface ContentSuggestion { contentId: string; title: string; contentType: string; conversionRate: number | null; action: string; reason: string }
 
 export default function PipelineTab() {
   const [items, setItems] = useState<ContentOption[]>([]);
@@ -17,6 +18,21 @@ export default function PipelineTab() {
   const [score, setScore] = useState<number | null>(null);
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
+
+  const [perfRunning, setPerfRunning] = useState(false);
+  const [perfSuggestions, setPerfSuggestions] = useState<ContentSuggestion[] | null>(null);
+  const [perfError, setPerfError] = useState('');
+
+  const runPerformance = async () => {
+    setPerfRunning(true); setPerfError(''); setPerfSuggestions(null);
+    try {
+      const res = await fetch('/api/admin/content/performance/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setPerfSuggestions(data.suggestions);
+      loadRuns();
+    } catch (e) { setPerfError(String(e)); } finally { setPerfRunning(false); }
+  };
 
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=content&executionMode=pipeline&limit=20')
@@ -67,6 +83,22 @@ export default function PipelineTab() {
           </table>
         </div>
       )}
+      <div className={styles.subSection}>
+        <h4>Content performance &amp; optimization (cross-content, deterministic)</h4>
+        <p>Ranks every content item with real logged engagement by conversion rate (leads/views). Rule: top half → produce more like it; bottom half → deprioritize; no data → hold. Log engagement on the Manual tab first.</p>
+        <div className={styles.formActions}><Button onClick={runPerformance} disabled={perfRunning}>{perfRunning ? 'Scoring…' : 'Run Performance Scoring'}</Button></div>
+        {perfError && <p className={styles.error}>{perfError}</p>}
+        {perfSuggestions && (
+          perfSuggestions.length === 0 ? <p className={styles.empty}>No content has logged engagement yet.</p> : (
+            <table className={styles.table}>
+              <thead><tr><th>Title</th><th>Type</th><th>Conversion</th><th>Action</th><th>Reason</th></tr></thead>
+              <tbody>{perfSuggestions.map((s) => (
+                <tr key={s.contentId}><td>{s.title}</td><td>{s.contentType}</td><td>{s.conversionRate === null ? 'No data' : `${(s.conversionRate * 100).toFixed(1)}%`}</td><td><Badge variant={s.action === 'produce_more' ? 'success' : s.action === 'deprioritize' ? 'warning' : 'default'}>{s.action}</Badge></td><td>{s.reason}</td></tr>
+              ))}</tbody>
+            </table>
+          )
+        )}
+      </div>
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No pipeline runs yet.</p>}

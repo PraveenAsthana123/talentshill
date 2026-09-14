@@ -1067,6 +1067,52 @@ export const contentVersions = sqliteTable('content_versions', {
   index('idx_content_ver_content').on(table.contentId),
 ]);
 
+// ── AI Content Factory (personas, editorial calendar, performance) ──
+// Targets marketingContent (the internal multi-channel content library),
+// not the separate public blogPosts table -- no bridge/sync exists
+// between the two, disclosed rather than faked. Promoting factory output
+// to the public blog remains a separate, manual human decision.
+
+export const contentPersonas = sqliteTable('content_personas', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description').notNull(), // real, admin-written target-audience description
+  toneNotes: text('tone_notes'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const contentTopics = sqliteTable('content_topics', {
+  id: text('id').primaryKey(),
+  personaId: text('persona_id').references(() => contentPersonas.id),
+  title: text('title').notNull(),
+  targetContentType: text('target_content_type').notNull(), // reuses marketingContent.contentType values
+  scheduledDate: integer('scheduled_date', { mode: 'timestamp' }),
+  status: text('status', { enum: ['proposed', 'scheduled', 'generated', 'published'] }).notNull().default('proposed'),
+  generatedContentId: text('generated_content_id').references(() => marketingContent.id),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_content_topics_status').on(table.status),
+]);
+
+// Real, manually-entered engagement metrics per published content item --
+// no analytics-platform integration exists, same honesty boundary as
+// every other metrics table added this session.
+export const contentEngagementMetrics = sqliteTable('content_engagement_metrics', {
+  id: text('id').primaryKey(),
+  contentId: text('content_id').notNull().references(() => marketingContent.id, { onDelete: 'cascade' }),
+  recordedDate: integer('recorded_date', { mode: 'timestamp' }).notNull(),
+  views: integer('views').default(0),
+  leadsGenerated: integer('leads_generated').default(0),
+  enteredBy: text('entered_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_content_engagement_content').on(table.contentId),
+]);
+
 // ── Content Assets (Brochures & Presentations) ──
 
 export const contentAssets = sqliteTable('content_assets', {

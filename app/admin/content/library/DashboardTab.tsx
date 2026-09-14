@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import styles from './ContentShared.module.css';
 
 interface DashboardData {
-  kpis: { totalContent: number; published: number; draft: number; unscored: number; avgReadinessScore: number; totalRuns: number };
+  kpis: { totalContent: number; published: number; draft: number; unscored: number; avgReadinessScore: number; totalRuns: number; totalPersonas: number; totalTopics: number; generatedTopics: number; contentWithEngagementData: number; avgConversionRate: number | null };
   byType: Record<string, number>;
   byStatus: Record<string, number>;
 }
@@ -30,6 +30,16 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.unscored}</span>Unscored readiness</div>
           <div className={styles.vizBox}><span>{data.kpis.avgReadinessScore}</span>Avg readiness</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
+        </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>AI Content Factory</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.totalPersonas}</span>Personas</div>
+          <div className={styles.vizBox}><span>{data.kpis.totalTopics}</span>Topics in calendar</div>
+          <div className={styles.vizBox}><span>{data.kpis.generatedTopics}</span>Drafts generated</div>
+          <div className={styles.vizBox}><span>{data.kpis.contentWithEngagementData}</span>Content with real engagement data</div>
+          <div className={styles.vizBox}><span>{data.kpis.avgConversionRate !== null ? `${data.kpis.avgConversionRate}%` : '—'}</span>Avg conversion rate</div>
         </div>
       </div>
       <div className={styles.subSection}>

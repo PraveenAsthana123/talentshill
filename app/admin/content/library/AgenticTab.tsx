@@ -18,6 +18,21 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [perfRunning, setPerfRunning] = useState(false);
+  const [perfNarrative, setPerfNarrative] = useState('');
+  const [perfError, setPerfError] = useState('');
+
+  const runPerformanceAgent = async () => {
+    setPerfRunning(true); setPerfError(''); setPerfNarrative('');
+    try {
+      const res = await fetch('/api/admin/content/performance/agentic/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setPerfNarrative(data.narrative || '');
+      loadRuns();
+    } catch (e) { setPerfError(String(e)); } finally { setPerfRunning(false); }
+  };
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=content&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -69,6 +84,13 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+      <div className={styles.subSection}>
+        <h4>Content performance narrative (cross-content, Ollama)</h4>
+        <p>Runs the deterministic performance pipeline, then asks the local model to turn the real per-content numbers into a short editorial-strategy narrative. Note: content generation itself (persona → topic → AI draft) is on the Manual tab&apos;s editorial calendar, not here — this tab is for readiness scoring and performance narration only.</p>
+        <div className={styles.formActions}><Button onClick={runPerformanceAgent} disabled={perfRunning}>{perfRunning ? 'Agent running (30-60s)…' : 'Run Performance Agent'}</Button></div>
+        {perfError && <p className={styles.error}>{perfError}</p>}
+        {perfNarrative && <div className={styles.card}><p>{perfNarrative}</p></div>}
+      </div>
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

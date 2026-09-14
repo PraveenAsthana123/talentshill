@@ -1,0 +1,64 @@
+$ npx tsc --noEmit -p tsconfig.json
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  9 passed (9)
+      Tests  66 passed (66)
+
+$ curl -s http://127.0.0.1:3014/api/admin/content/personas/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies.txt -X POST .../content/personas/ -d '{"name":"__e2e_test_persona","description":"Mid-market CFOs evaluating AI marketing ROI...","toneNotes":"Direct, data-driven, no fluff"}'
+{"id":"fd71b594-1568-4984-928d-95a9d8b11f8b"}
+
+$ curl -s -b cookies.txt -X POST .../content/topics/ -d '{"title":"__e2e_test_topic: 5 Ways AI Marketing Actually Pays For Itself","targetContentType":"article","personaId":"fd71b594-...","scheduledDate":"2026-10-01"}'
+{"id":"5a3aee3e-41c4-49d7-9067-5aeaa00b064a"}
+$ curl -s -b cookies.txt .../content/topics/ | grep status
+"status": "scheduled"
+
+$ curl -s -b cookies.txt -X POST .../content/topics/5a3aee3e-.../generate/
+{"totalTokensUsed":1031,"generatedContentId":"b665fb32-...",
+ "steps":[...,{"phase":"act","output":"...found a 15% increase...reducing its creative department expenses by 20%...lead retention improve by 18%...saw a 10% uptick...like TalentsHill for their content creation..."}]}
+# BUG-CLASS FINDING: model fabricated specific stats + a fake customer name despite explicit
+# "Do not invent specific statistics, customer names..." instruction in both system and user prompt.
+
+--- added containsSuspiciousStatistics() backstop, strengthened prompt wording ---
+
+$ curl -s -b cookies.txt -X POST .../content/topics/e6cb1380-.../generate/   [second topic]
+{"fabricationWarning":false,"generatedContentId":"4c9aca53-..."}
+$ curl -s -b cookies.txt .../content/4c9aca53-.../ | grep -o "body.\{200\}"
+"Content automation stands at the forefront...measurable ways to streamline operations..."
+# Purely qualitative, no numbers -- correctly not flagged.
+
+$ curl -s -b cookies.txt -X POST .../content/engagement/ -d '{"contentId":"b665fb32-...","views":2000,"leadsGenerated":100}'
+{"id":"b6e29141-..."}
+$ curl -s -b cookies.txt -X POST .../content/engagement/ -d '{"contentId":"4c9aca53-...","views":2000,"leadsGenerated":2}'
+{"id":"b06ef75a-..."}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3014/api/admin/content/performance/
+{"suggestions":[
+  {"title":"__e2e_test_topic...","conversionRate":0.05,"action":"produce_more"},
+  {"title":"__e2e_test_topic2...","conversionRate":0.001,"action":"deprioritize"}
+]}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3014/api/admin/content/performance/agentic/
+{"narrative":"...e2e_test_topic (5 Ways AI Marketing Actually Pays For Itself)...100 leads generated from just over 2000 views...deserves more production...e2e_test_topic2 (Why Content Automation Matters)...mere 0.1% in conversions...deprioritize..."}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3014/api/admin/content/share-link/
+{"token":"NwoSFy3Y_k-...","url":"/report/content/NwoSFy3Y_k-..."}
+$ curl -s http://127.0.0.1:3014/api/public/report/NwoSFy3Y_k-.../
+{"data":{"scoredContent":2,...}}
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3014/report/content/NwoSFy3Y_k-.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM content_engagement_metrics WHERE content_id IN (SELECT id FROM marketing_content WHERE title LIKE '__e2e%');"
+$ sqlite3 data/talentshill.db "DELETE FROM content_topics WHERE title LIKE '__e2e%';"
+$ sqlite3 data/talentshill.db "DELETE FROM marketing_content WHERE title LIKE '__e2e%';"
+$ sqlite3 data/talentshill.db "DELETE FROM content_personas WHERE name LIKE '__e2e%';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM marketing_content WHERE title LIKE '__e2e%';"
+0
+
+$ npx tsx scripts/record-usecase4-content-factory-tests.ts
+--- Recording AI Content Factory use-case test results ---
+Created 19, skipped 0 (already present).
