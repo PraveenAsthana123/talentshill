@@ -25,6 +25,13 @@ const RESOURCES = [
   // route. Restricted deliberately: this holds competitive research, not
   // content meant for customers.
   'competitor_analysis',
+  // The 8 new module concepts (module_registry built_status='not_built'
+  // as of 2026-09-09), scaffolded with real local CRUD + the Operational
+  // Portal 10-tab standard; third-party integrations (Adobe/CapCut/HeyGen,
+  // YouTube Data API, ad-platform APIs, voice-cloning APIs) disclosed as
+  // not-yet-wired per module rather than faked.
+  'ads_management', 'video_editing', 'voice_ai', 'market_research',
+  'branding', 'influencer_video', 'reels_management', 'youtube',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];

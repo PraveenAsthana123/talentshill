@@ -1392,3 +1392,146 @@ export const maintenanceChecks = sqliteTable('maintenance_checks', {
 }, (table) => [
   index('idx_maintenance_checks_created').on(table.createdAt),
 ]);
+
+// ── 8 new module concepts (2026-09-09) ──
+// Real local CRUD + Operational Portal 10-tab standard for each. Every
+// third-party integration (ad-platform spend sync, Adobe/CapCut/HeyGen,
+// YouTube Data API, voice-cloning APIs) is deliberately NOT built here
+// -- disclosed honestly per module's Governance tab and module_registry
+// row rather than faked with placeholder API clients.
+
+export const adCampaigns = sqliteTable('ad_campaigns', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  platform: text('platform', { enum: ['google', 'meta', 'linkedin', 'tiktok', 'other'] }).notNull(),
+  status: text('status', { enum: ['draft', 'active', 'paused', 'completed'] }).notNull().default('draft'),
+  objective: text('objective'),
+  budget: real('budget'),
+  spend: real('spend').default(0),
+  targetAudience: text('target_audience'),
+  creativeUrl: text('creative_url'),
+  startDate: integer('start_date', { mode: 'timestamp' }),
+  endDate: integer('end_date', { mode: 'timestamp' }),
+  notes: text('notes'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_ad_campaigns_platform').on(table.platform),
+  index('idx_ad_campaigns_status').on(table.status),
+]);
+
+export const videoProjects = sqliteTable('video_projects', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  tool: text('tool', { enum: ['adobe_premiere', 'adobe_after_effects', 'capcut', 'heygen', 'other'] }).notNull(),
+  status: text('status', { enum: ['planning', 'in_progress', 'review', 'published'] }).notNull().default('planning'),
+  strategyNotes: text('strategy_notes'), // viral/VFX/editing-dos-and-donts guidance per this module's real scope
+  outputUrl: text('output_url'),
+  durationSeconds: integer('duration_seconds'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_video_projects_status').on(table.status),
+]);
+
+export const voiceAssets = sqliteTable('voice_assets', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  type: text('type', { enum: ['script', 'recording', 'transcript'] }).notNull(),
+  status: text('status', { enum: ['draft', 'recorded', 'approved'] }).notNull().default('draft'),
+  content: text('content'), // script/transcript text
+  filePath: text('file_path'), // real local file, for uploaded recordings
+  durationSeconds: integer('duration_seconds'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_voice_assets_type').on(table.type),
+]);
+
+export const marketResearchBriefs = sqliteTable('market_research_briefs', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  topic: text('topic').notNull(),
+  sourceNotes: text('source_notes'), // real input the analyst provides -- never fabricated market data
+  findings: text('findings'), // human-written or agent-synthesized from sourceNotes only
+  status: text('status', { enum: ['draft', 'in_review', 'published'] }).notNull().default('draft'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_market_research_status').on(table.status),
+]);
+
+export const brandAssets = sqliteTable('brand_assets', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  category: text('category', { enum: ['logo', 'color_palette', 'typography', 'guideline_doc', 'template', 'other'] }).notNull(),
+  filePath: text('file_path'),
+  description: text('description'),
+  version: integer('version').notNull().default(1),
+  status: text('status', { enum: ['draft', 'approved', 'deprecated'] }).notNull().default('draft'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_brand_assets_category').on(table.category),
+]);
+
+export const influencerCampaigns = sqliteTable('influencer_campaigns', {
+  id: text('id').primaryKey(),
+  influencerName: text('influencer_name').notNull(),
+  platform: text('platform', { enum: ['instagram', 'youtube', 'tiktok', 'linkedin', 'other'] }).notNull(),
+  status: text('status', { enum: ['prospecting', 'negotiating', 'active', 'completed', 'cancelled'] }).notNull().default('prospecting'),
+  deliverables: text('deliverables'), // JSON array of {description, dueDate, delivered}
+  agreedFee: real('agreed_fee'),
+  contactEmail: text('contact_email'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_influencer_campaigns_status').on(table.status),
+]);
+
+export const reels = sqliteTable('reels', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  platform: text('platform', { enum: ['instagram', 'tiktok', 'youtube_shorts', 'other'] }).notNull(),
+  status: text('status', { enum: ['idea', 'scripted', 'filmed', 'edited', 'scheduled', 'published'] }).notNull().default('idea'),
+  scheduledAt: integer('scheduled_at', { mode: 'timestamp' }),
+  publishedAt: integer('published_at', { mode: 'timestamp' }),
+  assetUrl: text('asset_url'),
+  caption: text('caption'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_reels_status').on(table.status),
+  index('idx_reels_platform').on(table.platform),
+]);
+
+export const youtubeVideos = sqliteTable('youtube_videos', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  status: text('status', { enum: ['planned', 'recorded', 'edited', 'scheduled', 'published'] }).notNull().default('planned'),
+  externalVideoId: text('external_video_id'), // real YouTube video ID, once actually synced -- null until the Data API integration exists
+  scheduledAt: integer('scheduled_at', { mode: 'timestamp' }),
+  publishedAt: integer('published_at', { mode: 'timestamp' }),
+  tags: text('tags'), // JSON array
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_youtube_videos_status').on(table.status),
+]);

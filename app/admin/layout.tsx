@@ -54,6 +54,19 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: 'Growth Marketing',
+    items: [
+      { href: '/admin/ads-management', label: 'Ads Management' },
+      { href: '/admin/video-editing', label: 'Video Editing' },
+      { href: '/admin/voice-ai', label: 'Voice AI' },
+      { href: '/admin/market-research', label: 'Market Research' },
+      { href: '/admin/branding', label: 'Branding' },
+      { href: '/admin/influencer-video', label: 'Influencer Video' },
+      { href: '/admin/reels-management', label: 'Reels Management' },
+      { href: '/admin/youtube', label: 'YouTube' },
+    ],
+  },
+  {
     label: 'CRM',
     items: [
       { href: '/admin/contacts', label: 'Contacts' },
