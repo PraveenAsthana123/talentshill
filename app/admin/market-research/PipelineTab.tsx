@@ -8,6 +8,7 @@ import styles from './MarketResearchShared.module.css';
 interface BriefOption { id: string; title: string; status: string }
 interface StageResult { stage: string; input: unknown; process: string; output: unknown; status: string }
 interface RunEntry { id: string; status: string; createdAt: string; triggeredBy: string | null }
+interface RankedBrief { id: string; title: string; opportunityScore: number; opportunityRank: number }
 
 export default function PipelineTab() {
   const [briefs, setBriefs] = useState<BriefOption[]>([]);
@@ -17,6 +18,12 @@ export default function PipelineTab() {
   const [score, setScore] = useState<number | null>(null);
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
+
+  const [rankingRunning, setRankingRunning] = useState(false);
+  const [ranked, setRanked] = useState<RankedBrief[] | null>(null);
+  const [scoredCount, setScoredCount] = useState<number | null>(null);
+  const [skippedCount, setSkippedCount] = useState<number | null>(null);
+  const [rankingError, setRankingError] = useState('');
 
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=market_research&executionMode=pipeline&limit=20')
@@ -43,6 +50,16 @@ export default function PipelineTab() {
     } catch (e) { setError(String(e)); } finally { setRunning(false); }
   };
 
+  const runRanking = async () => {
+    setRankingRunning(true); setRankingError(''); setRanked(null);
+    try {
+      const res = await fetch('/api/admin/market-research/opportunity-scoring/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setRanked(data.ranked); setScoredCount(data.scoredCount); setSkippedCount(data.skippedCount); loadRuns();
+    } catch (e) { setRankingError(String(e)); } finally { setRankingRunning(false); }
+  };
+
   return (
     <div>
       <div className={styles.subSection}>
@@ -65,6 +82,25 @@ export default function PipelineTab() {
           </table>
         </div>
       )}
+
+      <div className={styles.subSection} style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-6)' }}>
+        <h4>Opportunity Scoring &amp; Ranking (portfolio-wide, distinct from per-brief readiness above)</h4>
+        <p>Scores every brief with real SOM estimate + competition level + risk level + strategic-fit input entered (Manual tab), using a fixed disclosed formula: SOM tier (0-40) + competition (0-30, low competition scores highest) + risk (0-15, low risk scores highest) + strategic fit (0-15, scaled from your 0-100 input). Writes <code>opportunity_score</code> and <code>opportunity_rank</code> to each scorable brief.</p>
+        <div className={styles.formActions}><Button onClick={runRanking} disabled={rankingRunning}>{rankingRunning ? 'Scoring…' : 'Run Opportunity Scoring'}</Button></div>
+        {rankingError && <p className={styles.error}>{rankingError}</p>}
+        {ranked && (
+          <>
+            <p>Scored <strong>{scoredCount}</strong> brief(s); skipped <strong>{skippedCount}</strong> (missing real inputs).</p>
+            {ranked.length > 0 && (
+              <table className={styles.table}>
+                <thead><tr><th>Rank</th><th>Brief</th><th>Score</th></tr></thead>
+                <tbody>{ranked.map((r) => <tr key={r.id}><td>{r.opportunityRank}</td><td>{r.title}</td><td>{r.opportunityScore}/100</td></tr>)}</tbody>
+              </table>
+            )}
+          </>
+        )}
+      </div>
+
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No pipeline runs yet.</p>}

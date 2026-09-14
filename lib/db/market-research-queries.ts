@@ -1,5 +1,5 @@
 import { db, schema } from './index';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, isNotNull } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 const { marketResearchBriefs } = schema;
@@ -37,10 +37,38 @@ export function getAllMarketResearchBriefs(options: { status?: string; limit?: n
 
 export function updateMarketResearchBrief(id: string, data: Partial<{
   title: string; status: 'draft' | 'in_review' | 'published'; sourceNotes: string; findings: string;
+  somEstimateUsd: number; competitionLevel: 'low' | 'medium' | 'high';
+  riskLevel: 'low' | 'medium' | 'high'; strategicFitScore: number;
 }>) {
   db.update(marketResearchBriefs).set({ ...data, updatedAt: new Date() }).where(eq(marketResearchBriefs.id, id)).run();
 }
 
 export function deleteMarketResearchBrief(id: string) {
   db.delete(marketResearchBriefs).where(eq(marketResearchBriefs.id, id)).run();
+}
+
+// Real cross-brief data for opportunity ranking -- unlike every other
+// query in this file, this loads MULTIPLE briefs at once specifically
+// to compare them against each other. Only briefs with the real inputs
+// an opportunity score requires are eligible.
+export function getScorableMarketResearchBriefs() {
+  return db.select().from(marketResearchBriefs)
+    .where(and(
+      isNotNull(marketResearchBriefs.somEstimateUsd),
+      isNotNull(marketResearchBriefs.competitionLevel),
+      isNotNull(marketResearchBriefs.riskLevel),
+      isNotNull(marketResearchBriefs.strategicFitScore),
+    ))
+    .all();
+}
+
+export function getRankedMarketResearchBriefs() {
+  return db.select().from(marketResearchBriefs)
+    .where(isNotNull(marketResearchBriefs.opportunityScore))
+    .orderBy(desc(marketResearchBriefs.opportunityScore))
+    .all();
+}
+
+export function setBriefOpportunityScoreAndRank(id: string, opportunityScore: number, opportunityRank: number) {
+  db.update(marketResearchBriefs).set({ opportunityScore, opportunityRank, updatedAt: new Date() }).where(eq(marketResearchBriefs.id, id)).run();
 }

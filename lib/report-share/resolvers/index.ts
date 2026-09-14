@@ -8,3 +8,4 @@ import '@/lib/report-share/resolvers/content';
 import '@/lib/report-share/resolvers/campaigns';
 import '@/lib/report-share/resolvers/contacts';
 import '@/lib/report-share/resolvers/branding';
+import '@/lib/report-share/resolvers/market-research';

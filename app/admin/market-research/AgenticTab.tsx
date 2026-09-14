@@ -19,6 +19,13 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [oppRunning, setOppRunning] = useState(false);
+  const [oppSteps, setOppSteps] = useState<StepRecord[] | null>(null);
+  const [oppNarrative, setOppNarrative] = useState<string | null>(null);
+  const [oppTokens, setOppTokens] = useState<number | null>(null);
+  const [oppFabricationWarning, setOppFabricationWarning] = useState(false);
+  const [oppError, setOppError] = useState('');
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=market_research&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -42,6 +49,16 @@ export default function AgenticTab() {
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setSteps(data.steps); setSynthesized(data.synthesizedFindings); setTotalTokens(data.totalTokensUsed); loadRuns();
     } catch (e) { setError(String(e)); } finally { setRunning(false); }
+  };
+
+  const runOpportunityRecommendation = async () => {
+    setOppRunning(true); setOppError(''); setOppSteps(null); setOppNarrative(null);
+    try {
+      const res = await fetch('/api/admin/market-research/opportunity-scoring/agentic/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setOppSteps(data.steps); setOppNarrative(data.narrative); setOppTokens(data.totalTokensUsed); setOppFabricationWarning(data.fabricationWarning); loadRuns();
+    } catch (e) { setOppError(String(e)); } finally { setOppRunning(false); }
   };
 
   return (
@@ -74,6 +91,31 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+
+      <div className={styles.subSection} style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-6)' }}>
+        <h4>Opportunity Recommendation (portfolio-wide, compares briefs against each other)</h4>
+        <p>Runs the real deterministic Opportunity Scoring pipeline, then asks the agent for a 3-5 sentence recommendation referencing only the real computed titles/ranks/scores — flagged automatically (<code>fabrication-guard.ts</code>) if it references any figure not given to it.</p>
+        <div className={styles.formActions}><Button onClick={runOpportunityRecommendation} disabled={oppRunning}>{oppRunning ? 'Agent running (30-60s)…' : 'Run Opportunity Recommendation'}</Button></div>
+        {oppError && <p className={styles.error}>{oppError}</p>}
+        {oppSteps && (
+          <>
+            {oppTokens !== null && <p>Total tokens used: <strong>{oppTokens}</strong></p>}
+            {oppNarrative && (
+              <div className={styles.card} style={{ marginBottom: 'var(--space-3)' }}>
+                <div className={styles.cardHeader}><strong>Recommendation</strong>{oppFabricationWarning && <Badge variant="warning">possible fabrication — verify</Badge>}</div>
+                <div className={styles.field}>{oppNarrative}</div>
+              </div>
+            )}
+            {oppSteps.map((s, i) => (
+              <div key={i} className={styles.card} style={{ marginTop: 'var(--space-3)' }}>
+                <div className={styles.cardHeader}><strong>{i + 1}. {s.phase.toUpperCase()}</strong>{s.tokensUsed > 0 && <Badge variant="accent">{s.tokensUsed} tokens</Badge>}</div>
+                <div className={styles.field}><span>Output:</span> {s.output.slice(0, 400)}{s.output.length > 400 ? '…' : ''}</div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

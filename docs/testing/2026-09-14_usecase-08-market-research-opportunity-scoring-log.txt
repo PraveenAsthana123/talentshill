@@ -1,0 +1,62 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  13 passed (13)
+      Tests  113 passed (113)
+
+$ curl -s -c cookies-uc8.txt -X POST http://127.0.0.1:3018/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","email":"admin@talentshill.com","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3018/api/admin/market-research/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies-uc8.txt -X POST .../market-research/ -d '{"title":"__e2e_test_opp_RAG_adoption","topic":"Enterprise RAG adoption","sourceNotes":"..."}'
+{"id":"4553a94f-873a-4986-a3fc-3d920d5f2211"}
+$ curl -s -b cookies-uc8.txt -X POST .../market-research/ -d '{"title":"__e2e_test_opp_voice_agents","topic":"AI voice agents for SMB support"}'
+{"id":"402edf3d-280d-4b68-92ad-dac254e9d8a7"}
+$ curl -s -b cookies-uc8.txt -X POST .../market-research/ -d '{"title":"__e2e_test_opp_incomplete","topic":"Undecided market"}'
+{"id":"217df907-6d2d-47ec-9ef0-f7d69158b2b2"}   [deliberately left without opportunity inputs]
+
+$ curl -s -b cookies-uc8.txt -X PATCH .../market-research/4553a94f.../ -d '{"somEstimateUsd":2000000,"competitionLevel":"medium","riskLevel":"low","strategicFitScore":80}'
+{"success":true}
+$ curl -s -b cookies-uc8.txt -X PATCH .../market-research/402edf3d.../ -d '{"somEstimateUsd":150000,"competitionLevel":"low","riskLevel":"medium","strategicFitScore":60}'
+{"success":true}
+
+$ curl -s -b cookies-uc8.txt -X POST .../market-research/opportunity-scoring/
+scoredCount 2 skippedCount 1
+{'id': '4553a94f...', 'title': '__e2e_test_opp_RAG_adoption', 'opportunityScore': 82, 'opportunityRank': 1}
+{'id': '402edf3d...', 'title': '__e2e_test_opp_voice_agents', 'opportunityScore': 72, 'opportunityRank': 2}
+  hand-check A: som>=1M->40 + competition medium->15 + risk low->15 + fit 80*0.15=12 = 82 (exact match)
+  hand-check B: som>=100k->25 + competition low->30 + risk medium->8 + fit 60*0.15=9 = 72 (exact match)
+
+$ curl -s -b cookies-uc8.txt -X POST .../market-research/opportunity-scoring/agentic/
+fabricationWarning: False
+narrative: "...Prioritize \"__e2e_test_opp_RAG_adoption\" (score 82/100)... second ranked... \"__e2e_test_opp_voice_agents,\" which scored well at 72 out of 100..."
+  -- real Ollama call, cited only the real titles/scores given to it, zero invented figures
+
+$ curl -s -b cookies-uc8.txt .../market-research/dashboard/
+{"kpis":{"totalBriefs":3,"opportunityScoredCount":2,"avgOpportunityScore":77,"topOpportunity":{"title":"__e2e_test_opp_RAG_adoption","opportunityScore":82,"opportunityRank":1}},...}
+  hand-check avg: (82+72)/2 = 77 (exact match)
+
+$ curl -s -b cookies-uc8.txt .../market-research/report/
+opportunityRanking: [{'rank':1,'title':'__e2e_test_opp_RAG_adoption','opportunityScore':82,'somEstimateUsd':2000000,...},{'rank':2,'title':'__e2e_test_opp_voice_agents','opportunityScore':72,...}]
+
+$ curl -s -b cookies-uc8.txt -X POST .../market-research/share-link/
+{"token":"B-M-f3ZTFWNHIMM901tCVcr2ZXV29C1vDXrR5Gmwlt4","url":"/report/market-research/B-M-..."}
+$ curl -s http://127.0.0.1:3018/api/public/report/B-M-.../
+{"title":"Market Opportunity Ranking","data":{"ranked":[...2 real ranked briefs, matching values...]}}
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3018/report/market-research/B-M-.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='market_research';"
+$ sqlite3 data/talentshill.db "DELETE FROM market_research_briefs WHERE title LIKE '__e2e_test_opp%';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM market_research_briefs WHERE title LIKE '__e2e_test_opp%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='market_research';"
+0
+
+$ npx tsx scripts/record-usecase8-opportunity-scoring-tests.ts
+--- Recording Market Research Opportunity Scoring use-case test results ---
+Created 19, skipped 0 (already present).

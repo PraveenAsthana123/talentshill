@@ -1567,11 +1567,21 @@ export const marketResearchBriefs = sqliteTable('market_research_briefs', {
   findings: text('findings'), // human-written or agent-synthesized from sourceNotes only
   status: text('status', { enum: ['draft', 'in_review', 'published'] }).notNull().default('draft'),
   readinessScore: integer('readiness_score'),
+  // ── Opportunity Scoring inputs (all real, analyst-entered estimates --
+  // never inferred or fabricated by an agent) ──
+  somEstimateUsd: integer('som_estimate_usd'), // analyst's own Serviceable Obtainable Market estimate
+  competitionLevel: text('competition_level', { enum: ['low', 'medium', 'high'] }),
+  riskLevel: text('risk_level', { enum: ['low', 'medium', 'high'] }),
+  strategicFitScore: integer('strategic_fit_score'), // 0-100, analyst's own judgment input
+  // ── Computed (deterministic pipeline output, never LLM-generated) ──
+  opportunityScore: integer('opportunity_score'), // 0-100 composite
+  opportunityRank: integer('opportunity_rank'), // rank among all scored+published briefs, 1=best
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
   index('idx_market_research_status').on(table.status),
+  index('idx_market_research_opportunity_score').on(table.opportunityScore),
 ]);
 
 export const brandAssets = sqliteTable('brand_assets', {

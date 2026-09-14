@@ -1,19 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import styles from './MarketResearchShared.module.css';
 
 interface BriefRow { title: string; topic: string; status: string; readinessScore: number | null }
-interface ReportData { generatedAt: string; totalBriefs: number; briefs: BriefRow[] }
+interface RankedRow { rank: number | null; title: string; opportunityScore: number | null; somEstimateUsd: number | null; competitionLevel: string | null; riskLevel: string | null; strategicFitScore: number | null }
+interface ReportData { generatedAt: string; totalBriefs: number; briefs: BriefRow[]; opportunityRanking: RankedRow[] }
 
 export default function ReportTab() {
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
     fetch('/api/admin/market-research/report/').then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).then(setData).catch((e) => setError(String(e)));
   }, []);
+
+  const handleGenerateShareLink = async () => {
+    const res = await fetch('/api/admin/market-research/share-link/', { method: 'POST' });
+    const d = await res.json().catch(() => null);
+    if (d?.url) setShareUrl(d.url);
+  };
 
   if (error) return <p className={styles.error}>{error}</p>;
   if (!data) return <p>Loading…</p>;
@@ -35,6 +43,25 @@ export default function ReportTab() {
           ))}
         </tbody>
       </table>
+
+      <h4 style={{ marginTop: 'var(--space-5)' }}>Opportunity Ranking</h4>
+      {data.opportunityRanking.length === 0 ? <p className={styles.empty}>No briefs scored yet — run Opportunity Scoring in the Pipeline tab.</p> : (
+        <table className={styles.table}>
+          <thead><tr><th>Rank</th><th>Title</th><th>Score</th><th>SOM Estimate</th><th>Competition</th><th>Risk</th><th>Strategic Fit</th></tr></thead>
+          <tbody>
+            {data.opportunityRanking.map((r, i) => (
+              <tr key={i}>
+                <td>{r.rank}</td><td>{r.title}</td><td>{r.opportunityScore}/100</td>
+                <td>{r.somEstimateUsd !== null ? `$${r.somEstimateUsd.toLocaleString()}` : '—'}</td>
+                <td>{r.competitionLevel ?? '—'}</td><td>{r.riskLevel ?? '—'}</td><td>{r.strategicFitScore ?? '—'}/100</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div className={styles.formActions} style={{ marginTop: 'var(--space-4)' }}><Button onClick={handleGenerateShareLink}>Generate Client Link</Button></div>
+      {shareUrl && <p>Share this link: <code>{shareUrl}</code></p>}
     </div>
   );
 }
