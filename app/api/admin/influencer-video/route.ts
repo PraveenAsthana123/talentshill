@@ -23,7 +23,7 @@ export const POST = withPermission('influencer_video', 'create')(async (request:
     const { influencerName, platform } = body;
     if (!influencerName || !platform) return NextResponse.json({ error: 'influencerName and platform are required' }, { status: 400 });
     const userId = await getSessionUserIdAsync(request);
-    const id = createInfluencerCampaign({ influencerName, platform, deliverables: body.deliverables, agreedFee: body.agreedFee, contactEmail: body.contactEmail, createdBy: userId ?? undefined });
+    const id = createInfluencerCampaign({ influencerName, platform, deliverables: body.deliverables, agreedFee: body.agreedFee, contactEmail: body.contactEmail, audienceFitScore: body.audienceFitScore, campaignFeedbackNotes: body.campaignFeedbackNotes, createdBy: userId ?? undefined });
     logOperationRun({ moduleKey: 'influencer_video', operationName: 'manual_create_campaign', executionMode: 'manual', status: 'completed', inputPayload: { id, influencerName, platform }, triggeredBy: userId });
     return NextResponse.json({ id }, { status: 201 });
   } catch {

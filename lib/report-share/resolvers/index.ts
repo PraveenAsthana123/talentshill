@@ -3,3 +3,4 @@
 // resolver files) from anywhere that needs the registry populated.
 import '@/lib/report-share/resolvers/ads-management';
 import '@/lib/report-share/resolvers/leads';
+import '@/lib/report-share/resolvers/influencer-video';

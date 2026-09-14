@@ -18,6 +18,38 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [roiRunning, setRoiRunning] = useState(false);
+  const [roiNarrative, setRoiNarrative] = useState('');
+  const [roiError, setRoiError] = useState('');
+
+  const [sentimentCampaignId, setSentimentCampaignId] = useState('');
+  const [sentimentRunning, setSentimentRunning] = useState(false);
+  const [sentiment, setSentiment] = useState<{ sentiment: string; explanation: string } | null>(null);
+  const [sentimentError, setSentimentError] = useState('');
+
+  const runRoiAgent = async () => {
+    setRoiRunning(true); setRoiError(''); setRoiNarrative('');
+    try {
+      const res = await fetch('/api/admin/influencer-video/roi-scoring/agentic/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setRoiNarrative(data.narrative || '');
+      loadRuns();
+    } catch (e) { setRoiError(String(e)); } finally { setRoiRunning(false); }
+  };
+
+  const runSentimentAgent = async () => {
+    if (!sentimentCampaignId) { setSentimentError('Select a campaign first.'); return; }
+    setSentimentRunning(true); setSentimentError(''); setSentiment(null);
+    try {
+      const res = await fetch(`/api/admin/influencer-video/${sentimentCampaignId}/sentiment/`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setSentiment({ sentiment: data.sentiment, explanation: data.explanation });
+      loadRuns();
+    } catch (e) { setSentimentError(String(e)); } finally { setSentimentRunning(false); }
+  };
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=influencer_video&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -67,6 +99,26 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+      <div className={styles.subSection}>
+        <h4>Creator ROI narrative (cross-creator, Ollama)</h4>
+        <p>Runs the deterministic ROI pipeline, then asks the local model to turn the real per-creator numbers into a short prioritized renewal narrative.</p>
+        <div className={styles.formActions}><Button onClick={runRoiAgent} disabled={roiRunning}>{roiRunning ? 'Agent running (30-60s)…' : 'Run ROI Agent'}</Button></div>
+        {roiError && <p className={styles.error}>{roiError}</p>}
+        {roiNarrative && <div className={styles.card}><p>{roiNarrative}</p></div>}
+      </div>
+      <div className={styles.subSection}>
+        <h4>Sentiment analysis (real feedback text, Ollama)</h4>
+        <p>Classifies sentiment from real, admin-entered campaign feedback notes (Manual tab). Reports &quot;insufficient data&quot; honestly if no feedback has been logged — never invents a score.</p>
+        <Select label="Campaign" options={campaigns.map((c) => ({ value: c.id, label: `${c.influencerName} (${c.status})` }))} placeholder="Select a campaign..." value={sentimentCampaignId} onChange={(e) => setSentimentCampaignId(e.target.value)} />
+        <div className={styles.formActions}><Button onClick={runSentimentAgent} disabled={sentimentRunning}>{sentimentRunning ? 'Analyzing…' : 'Run Sentiment Analysis'}</Button></div>
+        {sentimentError && <p className={styles.error}>{sentimentError}</p>}
+        {sentiment && (
+          <div className={styles.card}>
+            <Badge variant={sentiment.sentiment === 'positive' ? 'success' : sentiment.sentiment === 'negative' ? 'warning' : 'default'}>{sentiment.sentiment}</Badge>
+            <p>{sentiment.explanation}</p>
+          </div>
+        )}
+      </div>
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

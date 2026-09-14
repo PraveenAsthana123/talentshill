@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import styles from './InfluencerVideoShared.module.css';
 
 interface DashboardData {
-  kpis: { totalCampaigns: number; active: number; totalAgreedFees: number; unscored: number; avgReadinessScore: number; totalRuns: number };
+  kpis: { totalCampaigns: number; active: number; totalAgreedFees: number; unscored: number; avgReadinessScore: number; totalRuns: number; creatorsWithMetrics: number; avgRoi: number | null };
   byPlatform: Record<string, number>;
 }
 
@@ -29,6 +29,13 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>${data.kpis.totalAgreedFees}</span>Total agreed fees</div>
           <div className={styles.vizBox}><span>{data.kpis.avgReadinessScore}</span>Avg readiness</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
+        </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Creator ROI coverage</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.creatorsWithMetrics}</span>Creators with real metrics</div>
+          <div className={styles.vizBox}><span>{data.kpis.avgRoi !== null ? `${data.kpis.avgRoi}%` : '—'}</span>Avg ROI (scored creators)</div>
         </div>
       </div>
       <div className={styles.subSection}><h4>By platform</h4><p>{Object.entries(data.byPlatform).map(([p, n]) => `${p}: ${n}`).join(' · ') || 'None yet.'}</p></div>

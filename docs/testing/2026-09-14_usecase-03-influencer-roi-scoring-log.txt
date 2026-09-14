@@ -1,0 +1,69 @@
+$ npx tsc --noEmit -p tsconfig.json
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  8 passed (8)
+      Tests  60 passed (60)
+
+$ curl -s http://127.0.0.1:3013/api/admin/influencer-video/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3013/api/admin/influencer-video/ -d '{"influencerName":"__e2e_test_creator_win","platform":"instagram","contactEmail":"win@example.com","agreedFee":500,"audienceFitScore":92}'
+{"id":"28c5e1b0-830d-4a0b-ab8b-8220708ffcb6"}
+$ curl -s -b cookies.txt http://127.0.0.1:3013/api/admin/influencer-video/28c5e1b0.../
+audienceFitScore: null   # BUG -- route never forwarded this field
+
+--- fixed app/api/admin/influencer-video/route.ts ---
+
+$ curl -s -b cookies.txt -X POST .../influencer-video/ -d '{"influencerName":"__e2e_test_creator_fit","platform":"youtube","audienceFitScore":85}'
+{"id":"e7a26f33-..."}
+$ curl -s -b cookies.txt .../influencer-video/e7a26f33-.../
+audienceFitScore: 85   # confirmed fixed
+
+$ curl -s -b cookies.txt -X POST .../metrics/ -d '{"campaignId":"28c5e1b0-...","reach":50000,"clicks":2000,"sales":40,"revenue":2000,...}'
+{"id":"ed5abf46-..."}
+$ curl -s -b cookies.txt -X POST .../metrics/ -d '{"campaignId":"46bbf297-...","reach":5000,"clicks":50,"sales":2,"revenue":200,...}'
+{"id":"f8d12165-..."}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3013/api/admin/influencer-video/roi-scoring/
+{"suggestions":[
+  {"influencerName":"__e2e_test_creator_win","roi":3,"action":"renew","reason":"ROI 300% is in the top half..."},
+  {"influencerName":"__e2e_test_creator_lose","roi":-0.6,"action":"drop","reason":"ROI -60% -- revenue of $200.00 did not cover the $500.00 fee"}
+]}
+
+$ curl -s -b cookies.txt "http://127.0.0.1:3013/api/admin/influencer-video/creator-search/?platform=youtube&minAudienceFitScore=80"
+["__e2e_test_creator_fit"]
+$ curl -s -b cookies.txt "http://127.0.0.1:3013/api/admin/influencer-video/creator-search/?platform=youtube&minAudienceFitScore=95"
+[]
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3013/api/admin/influencer-video/e7a26f33-.../sentiment/
+{"sentiment":"insufficient_data",...}
+
+$ curl -s -b cookies.txt -X PATCH .../influencer-video/e7a26f33-.../ -d '{"campaignFeedbackNotes":"The audience loved this campaign! ..."}'
+{"success":true}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3013/api/admin/influencer-video/e7a26f33-.../sentiment/
+{"sentiment":"positive","totalTokensUsed":318,"explanation":"Positive\n\nThe audience loved this campaign and expressed overwhelmingly positive comments about it."}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3013/api/admin/influencer-video/roi-scoring/agentic/
+{"narrative":"...E2E Test Creator Win has demonstrated exceptional performance with an impressive 300% return-on-investment (ROI)...E2E Test Creator Lose must be dropped due to a negative ROI of -60%, where the revenue generated was significantly lower than their fee ($200 compared to $500)..."}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3013/api/admin/influencer-video/share-link/
+{"token":"y1zhM_...","url":"/report/influencer-video/y1zhM_..."}
+
+$ curl -s http://127.0.0.1:3013/api/public/report/y1zhM_.../
+{"data":{"scoredCreators":2,"unscoredCreators":0,"suggestions":[...2 items...]}}
+
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3013/report/influencer-video/y1zhM_.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM influencer_campaign_metrics WHERE campaign_id IN (SELECT id FROM influencer_campaigns WHERE influencer_name LIKE '__e2e%');"
+$ sqlite3 data/talentshill.db "DELETE FROM influencer_campaigns WHERE influencer_name LIKE '__e2e%';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM influencer_campaigns WHERE influencer_name LIKE '__e2e%';"
+0
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='influencer_video';"
+
+$ npx tsx scripts/record-usecase3-influencer-roi-tests.ts
+--- Recording Influencer Creator Discovery & ROI Scoring use-case test results ---
+Created 21, skipped 0 (already present).

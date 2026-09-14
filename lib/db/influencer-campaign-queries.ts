@@ -10,6 +10,8 @@ export function createInfluencerCampaign(data: {
   deliverables?: string;
   agreedFee?: number;
   contactEmail?: string;
+  audienceFitScore?: number;
+  campaignFeedbackNotes?: string;
   createdBy?: string;
 }) {
   const id = randomUUID();
@@ -17,6 +19,7 @@ export function createInfluencerCampaign(data: {
   db.insert(influencerCampaigns).values({
     id, influencerName: data.influencerName, platform: data.platform, status: 'prospecting',
     deliverables: data.deliverables, agreedFee: data.agreedFee, contactEmail: data.contactEmail,
+    audienceFitScore: data.audienceFitScore, campaignFeedbackNotes: data.campaignFeedbackNotes,
     createdBy: data.createdBy, createdAt: now, updatedAt: now,
   }).run();
   return id;
@@ -40,6 +43,7 @@ export function getAllInfluencerCampaigns(options: { status?: string; platform?:
 export function updateInfluencerCampaign(id: string, data: Partial<{
   influencerName: string; status: 'prospecting' | 'negotiating' | 'active' | 'completed' | 'cancelled';
   deliverables: string; agreedFee: number; contactEmail: string;
+  audienceFitScore: number; campaignFeedbackNotes: string;
 }>) {
   db.update(influencerCampaigns).set({ ...data, updatedAt: new Date() }).where(eq(influencerCampaigns.id, id)).run();
 }

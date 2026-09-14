@@ -1537,11 +1537,37 @@ export const influencerCampaigns = sqliteTable('influencer_campaigns', {
   agreedFee: real('agreed_fee'),
   contactEmail: text('contact_email'),
   readinessScore: integer('readiness_score'),
+  // Manually assessed 0-100 fit between the creator's stated audience and
+  // the target audience -- real human judgment entered at prospecting
+  // time, not a fabricated third-party audience-data lookup.
+  audienceFitScore: integer('audience_fit_score'),
+  // Real qualitative feedback/comments about the campaign (client notes,
+  // audience comment excerpts) -- grounds the Ollama sentiment agent so
+  // it classifies real text instead of inventing a sentiment score.
+  campaignFeedbackNotes: text('campaign_feedback_notes'),
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
   index('idx_influencer_campaigns_status').on(table.status),
+]);
+
+// Real per-period performance metrics per creator campaign, manually
+// entered from the platform's own analytics (no third-party creator/
+// social-analytics API integration exists -- same honesty boundary as
+// ads_management's ad_campaign_metrics).
+export const influencerCampaignMetrics = sqliteTable('influencer_campaign_metrics', {
+  id: text('id').primaryKey(),
+  campaignId: text('campaign_id').notNull().references(() => influencerCampaigns.id, { onDelete: 'cascade' }),
+  recordedDate: integer('recorded_date', { mode: 'timestamp' }).notNull(),
+  reach: integer('reach').default(0),
+  clicks: integer('clicks').default(0),
+  sales: integer('sales').default(0),
+  revenue: real('revenue').default(0),
+  enteredBy: text('entered_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_influencer_campaign_metrics_campaign').on(table.campaignId),
 ]);
 
 export const reels = sqliteTable('reels', {
