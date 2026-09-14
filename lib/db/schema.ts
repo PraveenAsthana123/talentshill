@@ -766,6 +766,49 @@ export const reEngagementMessages = sqliteTable('re_engagement_messages', {
   index('idx_re_engagement_triggered_at').on(table.triggeredAt),
 ]);
 
+// ── AI Webinar-to-Pipeline Engine, added 2026-09-14 ──
+// The pre-existing `appointments` module (lib/appointments-db.ts, a
+// flat JSON file, not this DB) models only 1:1 consultation bookings --
+// no group/event entity existed anywhere in this codebase before this.
+// No real webinar-platform integration exists (confirmed via
+// repo-wide search: zero Zoom/Calendly hits) -- attendance and
+// engagement notes are real, admin-entered observations, never a
+// fabricated join-duration/engagement number.
+export const webinars = sqliteTable('webinars', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  topic: text('topic').notNull(),
+  scheduledAt: integer('scheduled_at', { mode: 'timestamp' }).notNull(),
+  durationMinutes: integer('duration_minutes'),
+  status: text('status', { enum: ['scheduled', 'completed', 'cancelled'] }).notNull().default('scheduled'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_webinars_status').on(table.status),
+]);
+
+export const webinarRegistrants = sqliteTable('webinar_registrants', {
+  id: text('id').primaryKey(),
+  webinarId: text('webinar_id').notNull().references(() => webinars.id),
+  fullName: text('full_name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone'),
+  company: text('company'),
+  consent: integer('consent', { mode: 'boolean' }).notNull().default(false),
+  registeredAt: integer('registered_at', { mode: 'timestamp' }).notNull(),
+  attended: integer('attended', { mode: 'boolean' }), // null until an admin records the real outcome
+  engagementNotes: text('engagement_notes'), // real, admin-entered observation (e.g. "asked pricing question, requested demo")
+  qualificationScore: integer('qualification_score'), // 0-100, computed from real attended+engagement signals, never LLM-estimated
+  qualificationTier: text('qualification_tier', { enum: ['hot', 'warm', 'cool', 'cold'] }),
+  contactSubmissionId: text('contact_submission_id').references(() => contactSubmissions.id), // real link into the pre-existing leads pipeline, only written for a real qualifying registrant
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_webinar_registrants_webinar').on(table.webinarId),
+  index('idx_webinar_registrants_tier').on(table.qualificationTier),
+]);
+
 // ── Email Events (Granular Tracking) ──
 
 export const emailEvents = sqliteTable('email_events', {

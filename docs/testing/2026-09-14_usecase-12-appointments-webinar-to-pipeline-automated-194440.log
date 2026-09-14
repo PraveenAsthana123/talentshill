@@ -1,0 +1,44 @@
+=== 2026-09-14T19:44:40Z run-usecase-tests.sh usecase-12-appointments-webinar-to-pipeline ===
+--- npx tsc --noEmit ---
+tsc exit: 0
+--- npx vitest run ---
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/mnt/deepa/talentshill[39m
+
+ [32m✓[39m tests/unit/template-renderer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1002[2mms[22m[39m
+     [33m[2m✓[22m[39m should export render functions [33m 995[2mms[22m[39m
+ [32m✓[39m tests/unit/maintenance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1273[2mms[22m[39m
+     [33m[2m✓[22m[39m should export maintenance functions [33m 1071[2mms[22m[39m
+ [32m✓[39m tests/unit/csv-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1343[2mms[22m[39m
+     [33m[2m✓[22m[39m should export parse function [33m 1321[2mms[22m[39m
+ [32m✓[39m tests/unit/market-opportunity-scoring.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 834[2mms[22m[39m
+     [33m[2m✓[22m[39m skips briefs missing any real opportunity-scoring input (negative case) [33m 797[2mms[22m[39m
+ [32m✓[39m tests/unit/tracking.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m tests/unit/feature-flags.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2395[2mms[22m[39m
+     [33m[2m✓[22m[39m should export cache functions [33m 1054[2mms[22m[39m
+     [33m[2m✓[22m[39m should export flag guard functions [33m 1334[2mms[22m[39m
+ [32m✓[39m tests/unit/influencer-roi-scoring.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 327[2mms[22m[39m
+ [32m✓[39m tests/unit/contact-activation-lifecycle.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 954[2mms[22m[39m
+     [33m[2m✓[22m[39m writes real lifecycle_stage/activation_score/last_engaged_at from real campaign_recipients history (positive case) [33m 880[2mms[22m[39m
+ [32m✓[39m tests/unit/ad-budget-optimization.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 322[2mms[22m[39m
+ [32m✓[39m tests/unit/chat-sales-qualification.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 1528[2mms[22m[39m
+     [33m[2m✓[22m[39m writes score/tier back to chat_requests without linking a contact for a cold conversation (negative case) [33m 1466[2mms[22m[39m
+ [32m✓[39m tests/unit/brand-health-perception.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 1348[2mms[22m[39m
+     [33m[2m✓[22m[39m computes a real positive lift between two real snapshots (positive case) [33m 943[2mms[22m[39m
+ [32m✓[39m tests/unit/voice-call-qualification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 646[2mms[22m[39m
+     [33m[2m✓[22m[39m writes score/tier back without linking a contact for a cold call (negative case) [33m 589[2mms[22m[39m
+ [32m✓[39m tests/unit/re-engagement-trigger.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 1588[2mms[22m[39m
+     [33m[2m✓[22m[39m writes a real logged message for a real eligible at_risk contact with a phone (positive case) [33m 1503[2mms[22m[39m
+ [32m✓[39m tests/unit/webinar-pipeline-conversion.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1623[2mms[22m[39m
+     [33m[2m✓[22m[39m does not push a cold no-show registrant into the leads pipeline (negative case) [33m 1536[2mms[22m[39m
+ [32m✓[39m tests/unit/campaign-personalization.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 475[2mms[22m[39m
+ [32m✓[39m tests/unit/content-performance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m tests/unit/lead-scoring-and-qualification.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m      Tests [22m [1m[32m146 passed[39m[22m[90m (146)[39m
+[2m   Start at [22m 13:46:20
+[2m   Duration [22m 5.12s[2m (transform 9.47s, setup 1.08s, import 15.71s, tests 15.80s, environment 11ms)[22m
+
+vitest exit: 0
+RESULT: PASS

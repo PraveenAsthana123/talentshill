@@ -123,6 +123,12 @@ export function getSubmissionById(id: string): ContactSubmissionRow | null {
   return parseSubmission(row);
 }
 
+export function getSubmissionByEmail(email: string): ContactSubmissionRow | null {
+  const row = db.select().from(contactSubmissions).where(eq(contactSubmissions.email, email)).get();
+  if (!row) return null;
+  return parseSubmission(row);
+}
+
 // ── Paginated List with Filters ──
 
 export function getAllSubmissions(options: {

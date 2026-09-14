@@ -17,6 +17,7 @@ interface AppointmentRow {
 }
 interface Stats { total: number; today: number; thisWeek: number; byStatus: { pending: number; confirmed: number; completed: number; cancelled: number }; byTier: { hot: number; warm: number; cool: number; cold: number } }
 interface RunEntry { id: string; operationName: string; status: string; triggeredBy: string | null; createdAt: string }
+interface WebinarRow { id: string; title: string; topic: string; status: string; scheduledAt: string }
 
 export default function ManualTab() {
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
@@ -25,18 +26,24 @@ export default function ManualTab() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [runs, setRuns] = useState<RunEntry[]>([]);
+  const [webinars, setWebinars] = useState<WebinarRow[]>([]);
+  const [showWebinarForm, setShowWebinarForm] = useState(false);
+  const [webinarForm, setWebinarForm] = useState({ title: '', topic: '', scheduledAt: '' });
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [apptRes, statsRes, rRes] = await Promise.all([
+      const [apptRes, statsRes, rRes, wRes] = await Promise.all([
         fetch(`/api/admin/appointments/?status=${statusFilter}&search=${encodeURIComponent(search)}`),
         fetch('/api/admin/appointments/?stats=true'),
         fetch('/api/admin/operation-runs/?moduleKey=appointments&executionMode=manual&limit=20'),
+        fetch('/api/admin/appointments/webinars'),
       ]);
       const apptData = await apptRes.json();
       const statsData = await statsRes.json();
       const rData = await rRes.json().catch(() => ({ runs: [] }));
+      const wData = await wRes.json().catch(() => ({ items: [] }));
+      setWebinars(wData.items || []);
       setAppointments(apptData.appointments || []);
       setStats(statsData.stats || null);
       setRuns(rData.runs || []);
@@ -51,6 +58,17 @@ export default function ManualTab() {
   };
   const scoreClass = (tier: string) => {
     switch (tier) { case 'hot': return styles.scoreHot; case 'warm': return styles.scoreWarm; case 'cool': return styles.scoreCool; case 'cold': return styles.scoreCold; default: return ''; }
+  };
+
+  const handleCreateWebinar = async () => {
+    if (!webinarForm.title.trim() || !webinarForm.topic.trim() || !webinarForm.scheduledAt) return;
+    await fetch('/api/admin/appointments/webinars', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: webinarForm.title.trim(), topic: webinarForm.topic.trim(), scheduledAt: webinarForm.scheduledAt }),
+    });
+    setWebinarForm({ title: '', topic: '', scheduledAt: '' });
+    setShowWebinarForm(false);
+    fetchData();
   };
 
   return (
@@ -112,6 +130,36 @@ export default function ManualTab() {
             </table>
           )}
         </div>
+      </div>
+
+      <div className={sharedStyles.subSection}>
+        <h4>Webinars (AI Webinar-to-Pipeline Engine)</h4>
+        <p>Real group-event entity, distinct from 1:1 bookings above. No webinar-platform integration exists in this build (no Zoom/Calendly) — registrants and attendance are real, admin-entered records. Add registrants and record attendance on a webinar&apos;s detail page.</p>
+        <div className={sharedStyles.formActions} style={{ marginBottom: 'var(--space-4)' }}>
+          <Button size="sm" onClick={() => setShowWebinarForm((v) => !v)}>{showWebinarForm ? 'Cancel' : 'New Webinar'}</Button>
+        </div>
+        {showWebinarForm && (
+          <div className={sharedStyles.card} style={{ marginBottom: 'var(--space-4)' }}>
+            <div><label className={sharedStyles.formLabel}>Title</label><input className={sharedStyles.formInput} value={webinarForm.title} onChange={(e) => setWebinarForm((p) => ({ ...p, title: e.target.value }))} /></div>
+            <div style={{ marginTop: 'var(--space-3)' }}><label className={sharedStyles.formLabel}>Topic</label><input className={sharedStyles.formInput} value={webinarForm.topic} onChange={(e) => setWebinarForm((p) => ({ ...p, topic: e.target.value }))} /></div>
+            <div style={{ marginTop: 'var(--space-3)' }}><label className={sharedStyles.formLabel}>Scheduled at</label><input className={sharedStyles.formInput} type="datetime-local" value={webinarForm.scheduledAt} onChange={(e) => setWebinarForm((p) => ({ ...p, scheduledAt: e.target.value }))} /></div>
+            <div className={sharedStyles.formActions}><Button onClick={handleCreateWebinar} disabled={!webinarForm.title.trim() || !webinarForm.topic.trim() || !webinarForm.scheduledAt}>Create Webinar</Button></div>
+          </div>
+        )}
+        {webinars.length === 0 ? <p className={sharedStyles.empty}>No webinars yet.</p> : (
+          <table className={sharedStyles.table}>
+            <thead><tr><th>Title</th><th>Topic</th><th>Status</th><th>Scheduled</th><th></th></tr></thead>
+            <tbody>
+              {webinars.map((w) => (
+                <tr key={w.id}>
+                  <td>{w.title}</td><td>{w.topic}</td><td><Badge variant="default">{w.status}</Badge></td>
+                  <td>{new Date(w.scheduledAt).toLocaleString()}</td>
+                  <td><Link href={`/admin/appointments/webinars/${w.id}`} className={sharedStyles.link}>View</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className={sharedStyles.subSection}>

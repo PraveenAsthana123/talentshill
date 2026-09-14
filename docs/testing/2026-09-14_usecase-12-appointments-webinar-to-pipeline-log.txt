@@ -1,0 +1,77 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  17 passed (17)
+      Tests  146 passed (146)
+
+$ curl -s -c cookies-uc12.txt -X POST http://127.0.0.1:3022/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3022/api/admin/appointments/webinars/ -d '{"title":"x","topic":"x","scheduledAt":"2026-10-01T10:00:00Z"}'
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies-uc12.txt -X POST .../appointments/webinars/ -d '{"title":"__e2e_test_webinar AI Marketing 101","topic":"AI in marketing","scheduledAt":"2026-10-01T10:00:00Z","durationMinutes":60}'
+{"id":"49796749-..."}
+
+$ curl -s -b cookies-uc12.txt -X POST .../webinars/49796749.../registrants/ -d '{"fullName":"__e2e_test_hot_attendee","email":"...","company":"Acme Co","consent":true}'
+{"id":"8b8667d2-..."}
+$ curl -s -b cookies-uc12.txt -X POST .../webinars/49796749.../registrants/ -d '{"fullName":"__e2e_test_noshow","email":"...","consent":true}'
+{"id":"33b409cd-..."}
+$ curl -s -b cookies-uc12.txt -X POST .../webinars/49796749.../registrants/ -d '{"fullName":"__e2e_test_warm_attendee","email":"...","consent":true}'
+{"id":"4eb8787b-..."}
+
+$ curl -s -b cookies-uc12.txt -X POST .../registrants/8b8667d2.../attendance/ -d '{"attended":true,"engagementNotes":"asked a great question, requested a follow-up demo, stayed until the end"}'
+{"success":true}
+$ curl -s -b cookies-uc12.txt -X POST .../registrants/33b409cd.../attendance/ -d '{"attended":false}'
+{"success":true}
+$ curl -s -b cookies-uc12.txt -X POST .../registrants/4eb8787b.../attendance/ -d '{"attended":true}'
+{"success":true}
+
+$ curl -s -b cookies-uc12.txt -X POST .../webinars/49796749.../convert/
+registrantCount=3, attendedCount=2, qualifiedCount=2
+pipelineLinked: [{registrantId: 4eb8787b (warm), qualificationStage: mql}, {registrantId: 8b8667d2 (hot), qualificationStage: sql}]
+  -- no-show (33b409cd) correctly absent from pipelineLinked
+
+$ curl -s -b cookies-uc12.txt -X POST .../webinars/49796749.../recap/
+fabricationWarning: false
+summary: "...total: 3...just 2 attended the session and both qualified into leads pipeline - one new lead from a fresh attendee, another promotion carried over for an existing client..."
+  -- real Ollama call, cites only the real 3/2/2 numbers, no fabricated figures
+
+$ curl -s -b cookies-uc12.txt .../webinars/49796749.../
+registrants: warm_attendee attended=true score=50 tier=warm contactSubmissionId=893d9089-...
+             noshow attended=false score=0 tier=cold contactSubmissionId=None
+             hot_attendee attended=true score=100 tier=hot contactSubmissionId=0babd952-...
+  -- exact hand-verified match
+
+$ curl -s -b cookies-uc12.txt .../appointments/dashboard/
+{"kpis":{"totalWebinars":1,"totalRegistrants":3,"attendedCount":2,"qualifiedFromWebinars":2,"pipelineLinkedCount":2},"byRegistrantTier":{"hot":1,"cold":1,"warm":1}}
+
+$ curl -s -b cookies-uc12.txt .../appointments/report/
+webinars: [{"title":"__e2e_test_webinar AI Marketing 101","registrantCount":3,"attendedCount":2,"qualifiedCount":2}]
+
+$ curl -s -b cookies-uc12.txt -X POST .../appointments/share-link/
+{"token":"...","url":"/report/appointments/..."}
+$ curl -s http://127.0.0.1:3022/api/public/report/.../
+{"title":"Webinar-to-Pipeline Summary","data":{"totalWebinars":1,"totalRegistrants":3,"attendedCount":2,"qualifiedCount":2,"pipelineLinkedCount":2,"byTier":{"hot":1,"cold":1,"warm":1}}}
+  -- aggregate only, no registrant names/emails/notes
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3022/report/appointments/.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM contact_submissions WHERE email LIKE '__e2e_test_%';"
+$ sqlite3 data/talentshill.db "DELETE FROM webinar_registrants WHERE webinar_id='49796749-...';"
+$ sqlite3 data/talentshill.db "DELETE FROM webinars WHERE id='49796749-...';"
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='appointments';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM contact_submissions WHERE email LIKE '__e2e_test_%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM webinar_registrants WHERE webinar_id='49796749-...';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM webinars WHERE id='49796749-...';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='appointments';"
+0
+
+$ npx tsx scripts/record-usecase12-webinar-pipeline-tests.ts
+--- Recording AI Webinar-to-Pipeline Engine use-case test results ---
+Created 19, skipped 0 (already present).

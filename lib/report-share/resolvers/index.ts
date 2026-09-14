@@ -12,3 +12,4 @@ import '@/lib/report-share/resolvers/market-research';
 import '@/lib/report-share/resolvers/chat';
 import '@/lib/report-share/resolvers/voice-ai';
 import '@/lib/report-share/resolvers/broadcasts';
+import '@/lib/report-share/resolvers/appointments';

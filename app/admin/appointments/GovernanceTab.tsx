@@ -14,10 +14,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const SUB_TABS = [
   { id: 'resai', label: 'ResAI', content: (<>
     <Section title="Research AI">
-      <p>The Agentic tab drafts a follow-up recommendation from real booking data and the real urgency pipeline output — see Agentic/Testing tabs for live-verified evidence.</p>
+      <p>The Agentic tab drafts a follow-up recommendation from real booking data and the real urgency pipeline output — see Agentic/Testing tabs for live-verified evidence. Added 2026-09-14: a second agent generates a post-webinar recap for the sales team, grounded strictly in the real registrant/attendance/pipeline-conversion numbers just computed by the real webinar-conversion pipeline — never a specific attendee&apos;s name or invented engagement detail.</p>
     </Section>
     <Section title="Responsible AI">
-      <p><strong>Data provenance:</strong> the booking&apos;s own submitted form fields only. <strong>Consent:</strong> the public booking form is the only intake path — filling it out and submitting is the consent event, no separate opt-in exists or is verified. <strong>Bias checks:</strong> the booking-time leadScore formula weights company size and budget heavily, which could systematically deprioritize smaller/earlier-stage prospects — not formally evaluated for this bias.</p>
+      <p><strong>Data provenance:</strong> the booking&apos;s own submitted form fields only. <strong>Consent:</strong> the public booking form is the only intake path — filling it out and submitting is the consent event, no separate opt-in exists or is verified. <strong>Bias checks:</strong> the booking-time leadScore formula weights company size and budget heavily, which could systematically deprioritize smaller/earlier-stage prospects — not formally evaluated for this bias. Webinar registrants explicitly capture a real consent field per registrant (unlike the implicit-consent booking form) — an improvement in this module&apos;s consent discipline, not a regression.</p>
     </Section>
   </>) },
   { id: 'expai', label: 'ExpAI', content: (<>
@@ -64,9 +64,11 @@ const SUB_TABS = [
         <li><strong>Fixed, disclosed:</strong> unauthenticated access to full booking PII and write/delete capability via the public API path — see GovAI above for the fix and Log &amp; Tracking for verification evidence.</li>
         <li>Hallucination in the Agentic recommendation — mitigated by an explicit &quot;never invent facts&quot; prompt, not formally red-teamed for this module.</li>
         <li>File-based storage (data/appointments.json) instead of the SQLite database every other module uses — no transactional guarantees under concurrent writes, a real architectural risk at higher booking volume, not yet migrated.</li>
+        <li><strong>No real webinar-platform integration exists in this build</strong> (confirmed via repo-wide search before building the webinar feature — zero Zoom/Calendly hits anywhere in this codebase). Attendance and engagement notes are real, admin-entered observations, never a fabricated join-duration or automatically-detected engagement signal.</li>
+        <li>Webinar qualification scoring is a fixed keyword match over real admin-entered engagement notes (asked-a-question / requested-follow-up / stayed-engaged), not a trained classifier — it will miss real engagement phrased in ways the 3 patterns don&apos;t match. A no-show always scores 0 regardless of any notes entered, by design.</li>
       </ul>
     </Section>
-    <Section title="Current risk level"><p><strong>Medium (post-fix), was High pre-fix.</strong> The unauthenticated-access finding was the module&apos;s most severe issue and is now closed. Remaining risk is the file-based storage concurrency gap and the unweighted fairness concern above.</p></Section>
+    <Section title="Current risk level"><p><strong>Medium (post-fix), was High pre-fix.</strong> The unauthenticated-access finding was the module&apos;s most severe issue and is now closed. Remaining risk is the file-based storage concurrency gap and the unweighted fairness concern above. The webinar-to-pipeline feature carries the same real-not-fabricated-attendance caveat as every other module in this build with no real third-party platform credentials.</p></Section>
   </>) },
 ];
 

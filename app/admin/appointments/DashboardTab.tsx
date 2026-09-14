@@ -4,8 +4,12 @@ import { useEffect, useState } from 'react';
 import styles from './AppointmentsShared.module.css';
 
 interface DashboardData {
-  kpis: { totalAppointments: number; unscored: number; pending: number; confirmed: number; completed: number; cancelled: number; avgUrgency: number; totalRuns: number };
+  kpis: {
+    totalAppointments: number; unscored: number; pending: number; confirmed: number; completed: number; cancelled: number; avgUrgency: number; totalRuns: number;
+    totalWebinars: number; totalRegistrants: number; attendedCount: number; qualifiedFromWebinars: number; pipelineLinkedCount: number;
+  };
   byTier: { hot: number; warm: number; cool: number; cold: number };
+  byRegistrantTier: Record<string, number>;
 }
 
 export default function DashboardTab() {
@@ -29,6 +33,17 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.avgUrgency}</span>Avg urgency</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
         </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Webinar-to-Pipeline conversion</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.totalWebinars}</span>Webinars</div>
+          <div className={styles.vizBox}><span>{data.kpis.totalRegistrants}</span>Registrants</div>
+          <div className={styles.vizBox}><span>{data.kpis.attendedCount}</span>Attended</div>
+          <div className={styles.vizBox}><span>{data.kpis.qualifiedFromWebinars}</span>Qualified</div>
+          <div className={styles.vizBox}><span>{data.kpis.pipelineLinkedCount}</span>Linked to leads pipeline</div>
+        </div>
+        <p>By tier: {Object.entries(data.byRegistrantTier).map(([t, n]) => `${t}: ${n}`).join(' · ') || 'None scored yet.'}</p>
       </div>
       <div className={styles.subSection}>
         <h4>Status breakdown</h4>
