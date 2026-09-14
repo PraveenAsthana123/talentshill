@@ -107,24 +107,33 @@ export async function runContactActivationPipeline(params: { triggeredBy?: strin
 
   const byStage: Record<LifecycleStage, number> = { new: 0, engaged: 0, at_risk: 0, churned: 0 };
 
-  for (const agg of aggregates) {
-    const engagedAt = lastEngagedAt(agg);
-    const stage = classifyLifecycleStage({
-      status: agg.status, totalSent: agg.totalSent, totalOpens: agg.totalOpens, totalClicks: agg.totalClicks,
-      lastEngagedAt: engagedAt, createdAt: agg.createdAt, now,
-    });
-    const score = computeActivationScore({
-      totalSent: agg.totalSent, totalOpens: agg.totalOpens, totalClicks: agg.totalClicks, lastEngagedAt: engagedAt, now,
-    });
-    byStage[stage]++;
+  // Real fix, found by this session's own production-scale seeding: at
+  // small (test-fixture) contact counts a per-row db.update().run() loop
+  // is invisible, but at real volume (1,000+ contacts) each is a
+  // separate auto-committed write, and the whole pass took 7+ real
+  // seconds -- slow enough to trip a test timeout and to matter for a
+  // real admin waiting on this pipeline. Wrapping the same per-row
+  // writes in one transaction batches them into a single commit.
+  db.transaction((tx) => {
+    for (const agg of aggregates) {
+      const engagedAt = lastEngagedAt(agg);
+      const stage = classifyLifecycleStage({
+        status: agg.status, totalSent: agg.totalSent, totalOpens: agg.totalOpens, totalClicks: agg.totalClicks,
+        lastEngagedAt: engagedAt, createdAt: agg.createdAt, now,
+      });
+      const score = computeActivationScore({
+        totalSent: agg.totalSent, totalOpens: agg.totalOpens, totalClicks: agg.totalClicks, lastEngagedAt: engagedAt, now,
+      });
+      byStage[stage]++;
 
-    db.update(schema.contacts).set({
-      lifecycleStage: stage,
-      activationScore: score,
-      lastEngagedAt: engagedAt,
-      updatedAt: now,
-    }).where(eq(schema.contacts.id, agg.contactId)).run();
-  }
+      tx.update(schema.contacts).set({
+        lifecycleStage: stage,
+        activationScore: score,
+        lastEngagedAt: engagedAt,
+        updatedAt: now,
+      }).where(eq(schema.contacts.id, agg.contactId)).run();
+    }
+  });
 
   stages.push({ stage: 'classify_and_write', input: { rule: 'unsubscribed/bounced->churned; 0 sent->new; sent+never engaged+<14d->new else at_risk; engaged<=30d->engaged; <=90d->at_risk; else churned' }, process: 'Apply the disclosed rule per contact and write lifecycle_stage/activation_score/last_engaged_at', output: byStage, status: 'ok' });
 

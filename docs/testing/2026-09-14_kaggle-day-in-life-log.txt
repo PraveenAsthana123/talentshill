@@ -1,0 +1,66 @@
+=== DAY-IN-THE-LIFE SCENARIO — real Kaggle-seeded production-grade data, live dev server :3025 ===
+
+--- 08:00 Admin: system health snapshot ---
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/_next/static/css/app/layout.css?v=1789421559220" data-precedence="next_static/css/app/layout.css"/><link rel="stylesheet" href="/_next/static/css/app/not-found.css?v=1789421559220" data-precedence="next_static/css/app/not-found.css"/><link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/webpack.js?v=1789421559220"/><script src="/_next/static/chunks/main-app.js?v=1789421559220" async=""></script><script src="/_nex
+
+--- 08:15 Sales lead review: top-scored real lead (Kaggle lead-scoring data) ---
+lead.660522@kaggle-leads.example|100|active
+lead.660312@kaggle-leads.example|100|active
+lead.659395@kaggle-leads.example|100|active
+
+--- 08:30 Lifecycle dashboard (real engagement-derived stages) ---
+{"kpis":{"totalContacts":1108,"unscored":680,"active":1063,"unsubscribed":45,"bounced":0,"avgScore":22,"totalRuns":65,"newStage":550,"engagedStage":510,"atRiskStage":3,"churnedStage":45,"avgActivationScore":46},"bySource":{"manual":5,"import":1103}}
+
+--- 10:00 Ads dashboard (real Kaggle ad-performance data, 407 campaigns) ---
+{"kpis":{"totalCampaigns":407,"active":407,"totalBudget":13330498.908000004,"totalSpend":11108749.090000007,"unscored":407,"avgReadinessScore":0,"totalRuns":19,"campaignsWithMetrics":407,"avgRoas":5.8},"byPlatform":{"google":139,"tiktok":129,"meta":139}}
+
+--- 10:30 Influencer dashboard (real Instagram creator data) ---
+{"kpis":{"totalCampaigns":200,"active":200,"totalAgreedFees":0,"unscored":200,"avgReadinessScore":0,"totalRuns":15,"creatorsWithMetrics":200,"avgRoi":null},"byPlatform":{"instagram":200}}
+
+--- 11:00 Brand health dashboard ---
+{"kpis":{"totalAssets":0,"approved":0,"unscored":0,"avgReadinessScore":0,"totalRuns":53,"totalMentions":400,"scoredMentions":321,"latestHealthScore":null},"byCategory":{}}
+
+--- 08:00 Admin: system health snapshot (corrected route) ---
+{"runId":"cebcda49-24f7-4634-a960-50bf5c203ebf","snapshotId":"045179fa-3859-4fba-b327-1eb8b03ead04","stages":[{"stage":"job_runner_check","input":false,"process":"Score 25 if the job runner is running","output":0,"status":"ok"},{"stage":"recent_errors_check","input":"0 recent errors","process":"Score 25 if 0 recent errors in job_logs (last 10 checked)","output":25,"status":"ok"},{"stage":"job_failure_rate_check","input":"0.0% (0/5)","process":"Score 30 if job failure rate is <=10%","output":30,"status":"ok"},{"stage":"db_size_check","input":"5.91 MB","process":"Score 20 if the DB file is reada
+
+--- 11:30 Content dashboard + publish real seeded article ---
+{"kpis":{"totalContent":46,"published":42,"draft":4,"unscored":46,"avgReadinessScore":0,"totalRuns":12,"totalPersonas":0,"totalTopics":0,"generatedTopics":0,"contentWithEngagementData":40,"avgConversionRate":0},"byType":{"article":45,"email_copy":1},"byStatus":{"draft":4,"published":42}}
+
+--- 12:00 Market research opportunity briefs (real survey-derived) ---
+{"kpis":{"totalBriefs":6,"published":6,"unscored":6,"avgReadinessScore":0,"totalRuns":47,"opportunityScoredCount":0,"avgOpportunityScore":0,"topOpportunity":null},"byStatus":{"published":6}}
+
+--- 13:00 Webinar recap for a second real webinar ---
+webinar id: 6620bc10-f9a8-4267-92eb-3e93c1fcb0e7
+{"runId":"c8378944-8e60-4421-96cb-6664ecf30ac7","agentCount":1,"steps":[{"phase":"plan","agentRole":"webinar_followup_advisor","input":"Plan how to turn real webinar registration/attendance/pipeline-conversion numbers into a short recap for the sales team (max 2 steps).","output":"1. **Compile Key Metrics**: Gather and summarize data on total registrations, actual attendance figures vs projected attendees.\n\n2. **Highlight Conversion Trends & Insights:** Analyze conversion rates at different st
+
+--- 14:00 Competitor analysis dashboard (real 31 SaaS profiles) ---
+{"kpis":{"totalServices":17,"servicesCovered":1,"servicesUncovered":16,"coveragePercent":6,"totalRealEntries":30,"needsResearch":0,"researched":30,"monitoring":0,"totalRuns":16,"aiDraftedPendingReview":0,"totalObservations":0},"uncoveredServices":[{"id":"customer-analytics","name":"Customer Analytics","category":"Analytics"},{"id":"data-integration","name":"Data Integration","category":"Analytics"
+
+--- 14:30 YouTube growth (already verified: +2M subs / 30 days, real T-Series data) ---
+(see earlier run: subscriberDelta=2000000, daysBetween=30)
+
+--- 15:30 Chat: review one real qualified/cold request ---
+@76099 @AppleSupport fix this update. Itâs horrible|0|cold
+
+--- 16:00 Customer self-service: public branding report share link ---
+{"token":"rbFGD066qCPmuPKlq4jDOKYB2NTgnk_lnY8yjqvvgqs","url":"/report/branding/rbFGD066qCPmuPKlq4jDOKYB2NTgnk_lnY8yjqvvgqs"}
+62|321|100|196|25
+
+--- 17:00 EOD: final counts across all real-seeded modules ---
+t                          c   
+-------------------------  ----
+contacts(real+derived)     1108
+campaigns                  7   
+ad_campaigns               407 
+influencer_campaigns       200 
+marketing_content          46  
+brand_mentions             400 
+market_research_briefs     6   
+webinars                   5   
+webinar_registrants        400 
+voice_call_logs            20  
+video_projects             40  
+youtube_channel_snapshots  2   
+competitor_analysis        31  
+chat_sessions              26  
+re_engagement_messages     3   
