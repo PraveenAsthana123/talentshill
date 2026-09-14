@@ -1,19 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import styles from './BroadcastsShared.module.css';
 
 interface BroadcastRow { name: string; status: string; audienceType: string; readinessScore: number | null; totalSent: number; totalFailed: number }
-interface ReportData { generatedAt: string; totalBroadcasts: number; broadcasts: BroadcastRow[] }
+interface ReEngagementRow { channel: string; triggerReason: string; status: string; triggeredAt: string }
+interface ReportData { generatedAt: string; totalBroadcasts: number; broadcasts: BroadcastRow[]; reEngagementMessages: ReEngagementRow[] }
 
 export default function ReportTab() {
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
     fetch('/api/admin/broadcasts/report/').then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).then(setData).catch((e) => setError(String(e)));
   }, []);
+
+  const handleGenerateShareLink = async () => {
+    const res = await fetch('/api/admin/broadcasts/share-link/', { method: 'POST' });
+    const d = await res.json().catch(() => null);
+    if (d?.url) setShareUrl(d.url);
+  };
 
   if (error) return <p className={styles.error}>{error}</p>;
   if (!data) return <p>Loading…</p>;
@@ -38,6 +46,25 @@ export default function ReportTab() {
           ))}
         </tbody>
       </table>
+
+      <h4 style={{ marginTop: 'var(--space-5)' }}>Re-engagement Messages Report</h4>
+      {data.reEngagementMessages.length === 0 ? <p className={styles.empty}>No re-engagement messages triggered yet.</p> : (
+        <table className={styles.table}>
+          <thead><tr><th>Channel</th><th>Trigger Reason</th><th>Status</th><th>Triggered</th></tr></thead>
+          <tbody>
+            {data.reEngagementMessages.map((m, i) => (
+              <tr key={i}>
+                <td>{m.channel}</td><td>{m.triggerReason}</td>
+                <td><Badge variant={m.status === 'logged' ? 'success' : 'error'}>{m.status}</Badge></td>
+                <td>{new Date(m.triggeredAt).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div className={styles.formActions} style={{ marginTop: 'var(--space-4)' }}><Button onClick={handleGenerateShareLink}>Generate Client Link</Button></div>
+      {shareUrl && <p>Share this link: <code>{shareUrl}</code></p>}
     </div>
   );
 }

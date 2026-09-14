@@ -10,10 +10,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const SUB_TABS = [
   { id: 'resai', label: 'ResAI', content: (<>
     <Section title="Research AI">
-      <p>The Agentic tab drafts a pre-launch recommendation from real broadcast data and the real readiness pipeline output — see Agentic/Testing tabs for live-verified evidence.</p>
+      <p>The Agentic tab drafts a pre-launch recommendation from real broadcast data and the real readiness pipeline output — see Agentic/Testing tabs for live-verified evidence. Added 2026-09-14: a second agent drafts a re-engagement message template grounded only in real aggregate at-risk contact stats (count, avg days inactive) — never a specific contact&apos;s PII.</p>
     </Section>
     <Section title="Responsible AI">
-      <p><strong>Data provenance:</strong> the broadcast&apos;s own stored fields only. <strong>Consent:</strong> handled at the audience-list level (Lists/Contacts modules) before a broadcast is sent, outside this module&apos;s scope.</p>
+      <p><strong>Data provenance:</strong> the broadcast&apos;s own stored fields only. <strong>Consent:</strong> handled at the audience-list level (Lists/Contacts modules) before a broadcast is sent, outside this module&apos;s scope. Re-engagement messages target only real, already-consented contacts (lifecycle_stage/phone already on file) — no new consent capture is introduced by this feature.</p>
     </Section>
   </>) },
   { id: 'expai', label: 'ExpAI', content: (<>
@@ -56,9 +56,11 @@ const SUB_TABS = [
       <ul>
         <li>Hallucination in the Agentic recommendation — mitigated by an explicit &quot;never invent facts&quot; prompt, not formally red-teamed for this module.</li>
         <li><strong>Real, pre-existing risk this pipeline exists specifically to catch:</strong> <code>launchBroadcast()</code> has no guard today — a broadcast can be launched with no audience configured (silently sends to nobody) or no sender profile set. The readiness pipeline surfaces this before launch, but does not yet block the Launch button itself.</li>
+        <li><strong>No real SMS/WhatsApp gateway integration exists in this build</strong> (confirmed via repo-wide search before building the re-engagement feature — no Twilio/SMS library anywhere in the codebase). <code>lib/integrations/providers/whatsapp.ts</code> is a hardcoded stub that reports success on every call regardless of input — it is never used by this feature and must not be mistaken for real send capability. Every re-engagement message row has status <code>&apos;logged&apos;</code>, never a fabricated <code>&apos;delivered&apos;</code>/<code>&apos;sent&apos;</code> confirmation — it is a real record of a message that WOULD be sent to a real at-risk contact, not proof of actual transmission.</li>
+        <li>The re-engagement trigger is a real, condition-evaluated action run on demand (Pipeline tab), not a continuously-polling background scheduler — &quot;event-triggered&quot; here means the real lifecycle/phone/staleness/cooldown condition is evaluated for real each time it runs, consistent with how every other pipeline in this module and session already works (no cron scheduler exists in this codebase for any module).</li>
       </ul>
     </Section>
-    <Section title="Current risk level"><p><strong>Medium.</strong> No personal data at the broadcast-record level, but an unconfigured launch has real, immediate operational impact (a broadcast that appears &quot;sent&quot; but reached nobody) — exactly what the Pipeline tab&apos;s audience/sender checks exist to catch.</p></Section>
+    <Section title="Current risk level"><p><strong>Medium.</strong> No personal data at the broadcast-record level, but an unconfigured launch has real, immediate operational impact (a broadcast that appears &quot;sent&quot; but reached nobody) — exactly what the Pipeline tab&apos;s audience/sender checks exist to catch. The re-engagement feature carries the same &quot;logged, not confirmed-delivered&quot; caveat as every other module in this build with no real third-party API credentials.</p></Section>
   </>) },
 ];
 

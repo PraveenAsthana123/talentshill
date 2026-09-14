@@ -1,0 +1,40 @@
+=== 2026-09-14T16:35:24Z run-usecase-tests.sh usecase-11-broadcasts-sms-whatsapp-re-engagement ===
+--- npx tsc --noEmit ---
+tsc exit: 0
+--- npx vitest run ---
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/mnt/deepa/talentshill[39m
+
+ [32m✓[39m tests/unit/template-renderer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 881[2mms[22m[39m
+     [33m[2m✓[22m[39m should export render functions [33m 856[2mms[22m[39m
+ [32m✓[39m tests/unit/maintenance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 837[2mms[22m[39m
+     [33m[2m✓[22m[39m should export maintenance functions [33m 822[2mms[22m[39m
+ [32m✓[39m tests/unit/csv-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1080[2mms[22m[39m
+     [33m[2m✓[22m[39m should export parse function [33m 1045[2mms[22m[39m
+ [32m✓[39m tests/unit/voice-call-qualification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 290[2mms[22m[39m
+ [32m✓[39m tests/unit/brand-health-perception.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 321[2mms[22m[39m
+ [32m✓[39m tests/unit/market-opportunity-scoring.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 572[2mms[22m[39m
+     [33m[2m✓[22m[39m skips briefs missing any real opportunity-scoring input (negative case) [33m 518[2mms[22m[39m
+ [32m✓[39m tests/unit/contact-activation-lifecycle.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 492[2mms[22m[39m
+     [33m[2m✓[22m[39m writes real lifecycle_stage/activation_score/last_engaged_at from real campaign_recipients history (positive case) [33m 401[2mms[22m[39m
+ [32m✓[39m tests/unit/chat-sales-qualification.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 595[2mms[22m[39m
+     [33m[2m✓[22m[39m writes score/tier back to chat_requests without linking a contact for a cold conversation (negative case) [33m 528[2mms[22m[39m
+ [32m✓[39m tests/unit/feature-flags.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1593[2mms[22m[39m
+     [33m[2m✓[22m[39m should export cache functions [33m 1094[2mms[22m[39m
+     [33m[2m✓[22m[39m should export flag guard functions [33m 490[2mms[22m[39m
+ [32m✓[39m tests/unit/re-engagement-trigger.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 698[2mms[22m[39m
+     [33m[2m✓[22m[39m writes a real logged message for a real eligible at_risk contact with a phone (positive case) [33m 604[2mms[22m[39m
+ [32m✓[39m tests/unit/tracking.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/influencer-roi-scoring.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+ [32m✓[39m tests/unit/ad-budget-optimization.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m tests/unit/content-performance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m tests/unit/lead-scoring-and-qualification.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m tests/unit/campaign-personalization.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 743[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m      Tests [22m [1m[32m138 passed[39m[22m[90m (138)[39m
+[2m   Start at [22m 10:36:48
+[2m   Duration [22m 3.96s[2m (transform 5.07s, setup 1.60s, import 12.28s, tests 8.32s, environment 12ms)[22m
+
+vitest exit: 0
+RESULT: PASS

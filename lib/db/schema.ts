@@ -740,6 +740,32 @@ export const broadcasts = sqliteTable('broadcasts', {
   index('idx_broadcasts_status').on(table.status),
 ]);
 
+// ── SMS/WhatsApp Event-Triggered Re-engagement, added 2026-09-14 ──
+// No real SMS/WhatsApp gateway integration exists in this build --
+// confirmed by repo-wide search before building this (no Twilio/SMS
+// library; lib/integrations/providers/whatsapp.ts is a hardcoded stub
+// that always reports success, not a real API call, and is never used
+// here). Every row is a real, honestly-labeled record of a message
+// that WOULD be sent to a real contact for a real, condition-evaluated
+// reason -- status is 'logged', never a fabricated 'delivered'/'sent'.
+export const reEngagementMessages = sqliteTable('re_engagement_messages', {
+  id: text('id').primaryKey(),
+  contactId: text('contact_id').notNull().references(() => contacts.id),
+  channel: text('channel', { enum: ['sms', 'whatsapp'] }).notNull(),
+  triggerReason: text('trigger_reason').notNull(), // real, computed description (e.g. "at_risk, 32 days since last engagement")
+  messageBody: text('message_body').notNull(), // real, personalized from the admin's own template
+  phoneNumberSnapshot: text('phone_number_snapshot'), // real contact.phone at trigger time
+  status: text('status', { enum: ['logged', 'failed'] }).notNull().default('logged'),
+  failureReason: text('failure_reason'),
+  triggeredAt: integer('triggered_at', { mode: 'timestamp' }).notNull(),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_re_engagement_contact').on(table.contactId),
+  index('idx_re_engagement_channel').on(table.channel),
+  index('idx_re_engagement_triggered_at').on(table.triggeredAt),
+]);
+
 // ── Email Events (Granular Tracking) ──
 
 export const emailEvents = sqliteTable('email_events', {

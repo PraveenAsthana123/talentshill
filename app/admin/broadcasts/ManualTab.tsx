@@ -19,6 +19,7 @@ interface Broadcast {
 
 interface ListItem { id: string; name: string; memberCount: number; }
 interface RunEntry { id: string; operationName: string; status: string; triggeredBy: string | null; createdAt: string }
+interface ReEngagementMessage { id: string; channel: string; triggerReason: string; messageBody: string; status: string; triggeredAt: string }
 
 export default function ManualTab() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
@@ -27,21 +28,25 @@ export default function ManualTab() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', subject: '', htmlContent: '<html><body>{{content}}</body></html>', audienceType: 'list', audienceId: '' });
   const [runs, setRuns] = useState<RunEntry[]>([]);
+  const [reEngagementMessages, setReEngagementMessages] = useState<ReEngagementMessage[]>([]);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [bRes, lRes, rRes] = await Promise.all([
+      const [bRes, lRes, rRes, reRes] = await Promise.all([
         fetch('/api/admin/broadcasts'),
         fetch('/api/admin/lists'),
         fetch('/api/admin/operation-runs/?moduleKey=broadcasts&executionMode=manual&limit=20'),
+        fetch('/api/admin/broadcasts/re-engagement'),
       ]);
       const bData = await bRes.json();
       const lData = await lRes.json();
       const rData = await rRes.json().catch(() => ({ runs: [] }));
+      const reData = await reRes.json().catch(() => ({ items: [] }));
       setBroadcasts(bData.broadcasts || []);
       setLists(lData.lists || []);
       setRuns(rData.runs || []);
+      setReEngagementMessages(reData.items || []);
     } catch { /* empty */ }
     setLoading(false);
   };
@@ -152,6 +157,29 @@ export default function ManualTab() {
             </table>
           )}
         </div>
+      </div>
+
+      <div className={sharedStyles.subSection}>
+        <h4>SMS/WhatsApp Re-engagement Messages (real, event-triggered)</h4>
+        <p>Real, admin-triggered (Pipeline tab) messages for real at-risk contacts. No SMS/WhatsApp gateway integration exists in this build — status is always &quot;logged&quot;, never a fabricated delivery confirmation. See Governance.</p>
+        {reEngagementMessages.length === 0 ? <p className={sharedStyles.empty}>No re-engagement messages triggered yet.</p> : (
+          <div className={styles.tableWrap} style={{ marginTop: 'var(--space-3)' }}>
+            <table className={styles.table}>
+              <thead><tr><th>Channel</th><th>Trigger Reason</th><th>Message</th><th>Status</th><th>Triggered</th></tr></thead>
+              <tbody>
+                {reEngagementMessages.map((m) => (
+                  <tr key={m.id}>
+                    <td><Badge variant="default">{m.channel}</Badge></td>
+                    <td style={{ color: 'var(--color-text-secondary)' }}>{m.triggerReason}</td>
+                    <td style={{ maxWidth: '280px' }}>{m.messageBody}</td>
+                    <td><Badge variant={m.status === 'logged' ? 'success' : 'error'}>{m.status}</Badge></td>
+                    <td>{new Date(m.triggeredAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className={sharedStyles.subSection}>

@@ -18,6 +18,15 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [draftRunning, setDraftRunning] = useState(false);
+  const [draftSteps, setDraftSteps] = useState<StepRecord[] | null>(null);
+  const [draftTemplate, setDraftTemplate] = useState<string | null>(null);
+  const [draftAtRiskCount, setDraftAtRiskCount] = useState<number | null>(null);
+  const [draftAvgDays, setDraftAvgDays] = useState<number | null>(null);
+  const [draftFabricationWarning, setDraftFabricationWarning] = useState(false);
+  const [draftTokens, setDraftTokens] = useState<number | null>(null);
+  const [draftError, setDraftError] = useState('');
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=broadcasts&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -45,6 +54,22 @@ export default function AgenticTab() {
     } catch (e) { setError(String(e)); } finally { setRunning(false); }
   };
 
+  const runDraft = async () => {
+    setDraftRunning(true); setDraftError(''); setDraftSteps(null); setDraftTemplate(null);
+    try {
+      const res = await fetch('/api/admin/broadcasts/re-engagement/draft/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setDraftSteps(data.steps);
+      setDraftTemplate(data.draftTemplate);
+      setDraftAtRiskCount(data.atRiskCount);
+      setDraftAvgDays(data.avgDaysInactive);
+      setDraftFabricationWarning(data.fabricationWarning);
+      setDraftTokens(data.totalTokensUsed);
+      loadRuns();
+    } catch (e) { setDraftError(String(e)); } finally { setDraftRunning(false); }
+  };
+
   return (
     <div>
       <div className={styles.subSection}>
@@ -69,6 +94,31 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+
+      <div className={styles.subSection} style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-6)' }}>
+        <h4>Re-engagement Message Drafter (grounds copy in real at-risk aggregate stats)</h4>
+        <p>Drafts a short SMS/WhatsApp-appropriate re-engagement template grounded only in the real count of at-risk contacts and their real average days inactive — never a specific discount/offer not given to it. Paste the result into the Pipeline tab&apos;s message template field.</p>
+        <div className={styles.formActions}><Button onClick={runDraft} disabled={draftRunning}>{draftRunning ? 'Agent running (30-60s)…' : 'Draft Message'}</Button></div>
+        {draftError && <p className={styles.error}>{draftError}</p>}
+        {draftSteps && (
+          <>
+            {draftAtRiskCount !== null && <p>At-risk contacts: <strong>{draftAtRiskCount}</strong> · Avg days inactive: <strong>{draftAvgDays ?? 'unknown'}</strong> · Tokens: <strong>{draftTokens}</strong></p>}
+            {draftTemplate && (
+              <div className={styles.card} style={{ marginBottom: 'var(--space-3)' }}>
+                <div className={styles.cardHeader}><strong>Draft template</strong>{draftFabricationWarning && <Badge variant="warning">possible fabrication — verify</Badge>}</div>
+                <div className={styles.field}>{draftTemplate}</div>
+              </div>
+            )}
+            {draftSteps.map((s, i) => (
+              <div key={i} className={styles.card} style={{ marginBottom: 'var(--space-3)' }}>
+                <div className={styles.cardHeader}><strong>{i + 1}. {s.phase.toUpperCase()}</strong>{s.tokensUsed > 0 && <Badge variant="accent">{s.tokensUsed} tokens</Badge>}</div>
+                <div className={styles.field}><span>Output:</span> {s.output.slice(0, 400)}{s.output.length > 400 ? '…' : ''}</div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

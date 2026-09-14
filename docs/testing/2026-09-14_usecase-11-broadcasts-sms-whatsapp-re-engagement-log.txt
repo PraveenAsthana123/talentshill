@@ -1,0 +1,72 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  16 passed (16)
+      Tests  138 passed (138)
+
+$ curl -s -c cookies-uc11.txt -X POST http://127.0.0.1:3021/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3021/api/admin/broadcasts/re-engagement/trigger/ -d '{"channel":"sms","messageTemplate":"x"}'
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies-uc11.txt -X POST .../contacts/ -d '{"email":"__e2e_test_reengage_eligible@example.com","firstName":"Priya","phone":"+15550111"}'
+{"id":"bad379d2-..."}
+$ curl -s -b cookies-uc11.txt -X POST .../contacts/ -d '{"email":"__e2e_test_reengage_nophone@example.com","firstName":"NoPhone"}'
+{"id":"f1336eec-..."}
+$ curl -s -b cookies-uc11.txt -X POST .../contacts/ -d '{"email":"__e2e_test_reengage_engaged@example.com","firstName":"Engaged","phone":"+15550122"}'
+{"id":"51902e7d-..."}
+
+$ sqlite3 data/talentshill.db "UPDATE contacts SET lifecycle_stage='at_risk' WHERE id='bad379d2-...';"
+$ sqlite3 data/talentshill.db "UPDATE contacts SET lifecycle_stage='at_risk' WHERE id='f1336eec-...';"
+$ sqlite3 data/talentshill.db "UPDATE contacts SET lifecycle_stage='engaged' WHERE id='51902e7d-...';"
+  [simulating what the real contact-activation-pipeline would have written]
+
+$ curl -s -b cookies-uc11.txt -X POST .../broadcasts/re-engagement/trigger/ -d '{"channel":"sms","messageTemplate":"Hi {{firstName}}, we miss you at TalentsHill!","thresholdDays":14,"cooldownDays":7}'
+atRiskCount=2, triggeredCount=1, skippedCount=1
+triggered: [{"contactId":"bad379d2-...","reason":"at_risk, never engaged"}]
+  -- engaged contact correctly excluded from the at_risk query entirely (never appears in atRiskCount)
+
+$ curl -s -b cookies-uc11.txt .../broadcasts/re-engagement/
+{"items":[{"contactId":"bad379d2-...","channel":"sms","triggerReason":"at_risk, never engaged",
+  "messageBody":"Hi Priya, we miss you at TalentsHill!","phoneNumberSnapshot":"+15550111","status":"logged",...}]}
+
+$ curl -s -b cookies-uc11.txt -X POST .../broadcasts/re-engagement/trigger/ -d '{"channel":"sms","messageTemplate":"Hi {{firstName}}!","thresholdDays":14,"cooldownDays":7}'   [immediate re-run]
+triggeredCount=0, skippedCount=2
+  -- eligible contact correctly cooldown-blocked; no-phone contact still skipped
+
+$ curl -s -b cookies-uc11.txt -X POST .../broadcasts/re-engagement/draft/
+fabricationWarning: false
+atRiskCount: 2, avgDaysInactive: None (both contacts never engaged)
+draftTemplate: "Hey {{firstName}}, we've missed you! Let's catch up soon - your thoughts are always valued here at TalentsHill!"
+  -- real Ollama call, no fabricated discount/offer, uses the literal {{firstName}} placeholder as instructed
+
+$ curl -s -b cookies-uc11.txt .../broadcasts/dashboard/
+{"kpis":{"atRiskCount":2,"reEngagementTotal":1,"reEngagementLogged":1,"reEngagementFailed":0},"byReEngagementChannel":{"sms":1}}
+
+$ curl -s -b cookies-uc11.txt .../broadcasts/report/
+reEngagementMessages: [{"channel":"sms","triggerReason":"at_risk, never engaged","status":"logged",...}]
+
+$ curl -s -b cookies-uc11.txt -X POST .../broadcasts/share-link/
+{"token":"...","url":"/report/broadcasts/..."}
+$ curl -s http://127.0.0.1:3021/api/public/report/.../
+{"title":"Re-engagement Summary","data":{"totalMessages":1,"byChannel":{"sms":1},"byStatus":{"logged":1}}}
+  -- aggregate only, no message content/phone numbers
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3021/report/broadcasts/.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM re_engagement_messages WHERE contact_id IN (SELECT id FROM contacts WHERE email LIKE '__e2e_test_reengage%');"
+$ sqlite3 data/talentshill.db "DELETE FROM contacts WHERE email LIKE '__e2e_test_reengage%';"
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='broadcasts';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM contacts WHERE email LIKE '__e2e_test_reengage%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM re_engagement_messages;"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='broadcasts';"
+0
+
+$ npx tsx scripts/record-usecase11-re-engagement-tests.ts
+--- Recording SMS/WhatsApp Event-Triggered Re-engagement use-case test results ---
+Created 23, skipped 0 (already present).

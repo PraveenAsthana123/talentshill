@@ -4,8 +4,13 @@ import { useEffect, useState } from 'react';
 import styles from './BroadcastsShared.module.css';
 
 interface DashboardData {
-  kpis: { totalBroadcasts: number; draft: number; sending: number; completed: number; unscored: number; avgReadinessScore: number; totalSent: number; totalFailed: number; totalRuns: number };
+  kpis: {
+    totalBroadcasts: number; draft: number; sending: number; completed: number; unscored: number; avgReadinessScore: number;
+    totalSent: number; totalFailed: number; totalRuns: number;
+    atRiskCount: number; reEngagementTotal: number; reEngagementLogged: number; reEngagementFailed: number;
+  };
   byStatus: Record<string, number>;
+  byReEngagementChannel: Record<string, number>;
 }
 
 export default function DashboardTab() {
@@ -31,6 +36,16 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.totalFailed}</span>Total failed</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
         </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>SMS/WhatsApp re-engagement</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.atRiskCount}</span>Contacts at risk now</div>
+          <div className={styles.vizBox}><span>{data.kpis.reEngagementTotal}</span>Messages triggered</div>
+          <div className={styles.vizBox}><span>{data.kpis.reEngagementLogged}</span>Logged</div>
+          <div className={styles.vizBox}><span>{data.kpis.reEngagementFailed}</span>Failed</div>
+        </div>
+        <p>By channel: {Object.entries(data.byReEngagementChannel).map(([c, n]) => `${c}: ${n}`).join(' · ') || 'None triggered yet.'}</p>
       </div>
       <div className={styles.subSection}>
         <h4>By status</h4>
