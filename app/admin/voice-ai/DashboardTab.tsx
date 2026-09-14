@@ -4,8 +4,12 @@ import { useEffect, useState } from 'react';
 import styles from './VoiceAiShared.module.css';
 
 interface DashboardData {
-  kpis: { totalAssets: number; approved: number; unscored: number; avgReadinessScore: number; totalRuns: number };
+  kpis: {
+    totalAssets: number; approved: number; unscored: number; avgReadinessScore: number; totalRuns: number;
+    totalCalls: number; qualifiedCalls: number; hotCalls: number; contactsLinkedFromCalls: number;
+  };
   byType: Record<string, number>;
+  byCallTier: Record<string, number>;
 }
 
 export default function DashboardTab() {
@@ -30,6 +34,16 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.avgReadinessScore}</span>Avg readiness</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
         </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Voice call lead qualification</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.totalCalls}</span>Calls logged</div>
+          <div className={styles.vizBox}><span>{data.kpis.qualifiedCalls}</span>Calls scored</div>
+          <div className={styles.vizBox}><span>{data.kpis.hotCalls}</span>Hot</div>
+          <div className={styles.vizBox}><span>{data.kpis.contactsLinkedFromCalls}</span>Contacts linked from calls</div>
+        </div>
+        <p>By tier: {Object.entries(data.byCallTier).map(([t, n]) => `${t}: ${n}`).join(' · ') || 'None scored yet.'}</p>
       </div>
       <div className={styles.subSection}><h4>By type</h4><p>{Object.entries(data.byType).map(([t, n]) => `${t}: ${n}`).join(' · ') || 'None yet.'}</p></div>
     </div>

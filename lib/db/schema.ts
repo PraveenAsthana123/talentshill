@@ -1565,6 +1565,32 @@ export const voiceAssets = sqliteTable('voice_assets', {
   index('idx_voice_assets_type').on(table.type),
 ]);
 
+// ── Voice AI Lead Qualification, added 2026-09-14 ──
+// No telephony integration exists in this build (no Twilio/SIP/IVR --
+// confirmed by repo-wide search before building this). The transcript
+// is real, admin-entered text describing what was actually said on a
+// real call, the same honesty pattern as brand_mentions (branding) and
+// campaignFeedbackNotes (influencer_video) -- never a simulated or
+// auto-generated transcript.
+export const voiceCallLogs = sqliteTable('voice_call_logs', {
+  id: text('id').primaryKey(),
+  contactId: text('contact_id').references(() => contacts.id),
+  direction: text('direction', { enum: ['inbound', 'outbound'] }).notNull(),
+  phoneNumber: text('phone_number'),
+  transcript: text('transcript').notNull(), // real, admin-entered -- what was actually said
+  durationSeconds: integer('duration_seconds'),
+  callDate: integer('call_date', { mode: 'timestamp' }).notNull(),
+  qualificationScore: integer('qualification_score'), // 0-100, computed from real BANT+next-step signals in the transcript
+  qualificationTier: text('qualification_tier', { enum: ['cold', 'warm', 'hot'] }),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_voice_call_logs_contact').on(table.contactId),
+  index('idx_voice_call_logs_tier').on(table.qualificationTier),
+  index('idx_voice_call_logs_date').on(table.callDate),
+]);
+
 export const marketResearchBriefs = sqliteTable('market_research_briefs', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),

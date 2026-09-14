@@ -1,0 +1,43 @@
+=== 2026-09-14T16:19:46Z run-usecase-tests.sh usecase-10-voice-ai-lead-qualification ===
+--- npx tsc --noEmit ---
+tsc exit: 0
+--- npx vitest run ---
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/mnt/deepa/talentshill[39m
+
+ [32m✓[39m tests/unit/template-renderer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1104[2mms[22m[39m
+     [33m[2m✓[22m[39m should export render functions [33m 1092[2mms[22m[39m
+ [32m✓[39m tests/unit/maintenance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1198[2mms[22m[39m
+     [33m[2m✓[22m[39m should export maintenance functions [33m 1168[2mms[22m[39m
+ [32m✓[39m tests/unit/csv-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1349[2mms[22m[39m
+     [33m[2m✓[22m[39m should export parse function [33m 1336[2mms[22m[39m
+ [32m✓[39m tests/unit/tracking.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/lead-scoring-and-qualification.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m tests/unit/influencer-roi-scoring.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 443[2mms[22m[39m
+     [33m[2m✓[22m[39m excludes creators with zero metric entries from scoring (boundary) [33m 367[2mms[22m[39m
+ [32m✓[39m tests/unit/feature-flags.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2655[2mms[22m[39m
+     [33m[2m✓[22m[39m should export cache functions [33m 1122[2mms[22m[39m
+     [33m[2m✓[22m[39m should export flag guard functions [33m 1502[2mms[22m[39m
+ [32m✓[39m tests/unit/ad-budget-optimization.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 1253[2mms[22m[39m
+     [33m[2m✓[22m[39m excludes campaigns with zero metric entries from scoring (boundary) [33m 1156[2mms[22m[39m
+ [32m✓[39m tests/unit/voice-call-qualification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 1479[2mms[22m[39m
+     [33m[2m✓[22m[39m writes score/tier back without linking a contact for a cold call (negative case) [33m 1362[2mms[22m[39m
+ [32m✓[39m tests/unit/chat-sales-qualification.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 1501[2mms[22m[39m
+     [33m[2m✓[22m[39m writes score/tier back to chat_requests without linking a contact for a cold conversation (negative case) [33m 1402[2mms[22m[39m
+ [32m✓[39m tests/unit/market-opportunity-scoring.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 1577[2mms[22m[39m
+     [33m[2m✓[22m[39m skips briefs missing any real opportunity-scoring input (negative case) [33m 1531[2mms[22m[39m
+ [32m✓[39m tests/unit/brand-health-perception.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 1607[2mms[22m[39m
+     [33m[2m✓[22m[39m computes a real positive lift between two real snapshots (positive case) [33m 1358[2mms[22m[39m
+ [32m✓[39m tests/unit/contact-activation-lifecycle.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 1655[2mms[22m[39m
+     [33m[2m✓[22m[39m writes real lifecycle_stage/activation_score/last_engaged_at from real campaign_recipients history (positive case) [33m 1615[2mms[22m[39m
+ [32m✓[39m tests/unit/content-performance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 297[2mms[22m[39m
+ [32m✓[39m tests/unit/campaign-personalization.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 1903[2mms[22m[39m
+     [33m[2m✓[22m[39m materializes real campaign_recipients rows from a real static list, and updates audienceCount (positive case) [33m 1040[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m      Tests [22m [1m[32m125 passed[39m[22m[90m (125)[39m
+[2m   Start at [22m 10:20:56
+[2m   Duration [22m 5.06s[2m (transform 6.68s, setup 1.22s, import 14.24s, tests 18.07s, environment 10ms)[22m
+
+vitest exit: 0
+RESULT: PASS

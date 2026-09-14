@@ -8,7 +8,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const SUB_TABS = [
-  { id: 'resai', label: 'ResAI', content: (<Section title="Research AI"><p>The Agentic tab drafts a readiness recommendation from an asset&apos;s real stored fields and the real readiness pipeline output.</p></Section>) },
+  { id: 'resai', label: 'ResAI', content: (<Section title="Research AI"><p>The Agentic tab drafts a readiness recommendation from an asset&apos;s real stored fields and the real readiness pipeline output. Added 2026-09-14: the Calls sub-tab&apos;s AI summary agent generates a sales recap grounded strictly in a real, admin-entered call transcript — never a fabricated or auto-transcribed call.</p></Section>) },
   { id: 'expai', label: 'ExpAI', content: (<>
     <Section title="Explainability"><p>Pipeline readiness scoring is fully transparent (a real deterministic checklist).</p></Section>
     <Section title="Experiment"><p>Model: phi4-mini:latest via local Ollama. Single-model pilot, not compared/tuned.</p></Section>
@@ -26,6 +26,8 @@ const SUB_TABS = [
         <li>Hallucination in the Agentic recommendation — mitigated by an explicit &quot;never invent facts&quot; prompt, not formally red-teamed.</li>
         <li><strong>Honest, disclosed scope:</strong> no voice-cloning/TTS/STT API credentials exist in this build (e.g. ElevenLabs, a real transcription service). Content is manually entered text; recordings are manually referenced file paths, not generated or transcribed by this module.</li>
         <li><strong>Real, disclosed gap:</strong> no consent-tracking field exists for recordings of a real person&apos;s voice — add one before this module is used for anything beyond internal drafts/AI-generated scripts.</li>
+        <li><strong>No telephony integration exists</strong> (confirmed via repo-wide search before building the Calls feature — no Twilio/SIP/IVR anywhere in this codebase). Call transcripts are real text an admin types describing what was actually said, the same honesty pattern as branding&apos;s brand-mention logging — never a live-recorded or auto-transcribed call.</li>
+        <li>BANT qualification scoring is a fixed keyword match over the real transcript text, not a trained classifier — it will miss signals phrased in ways the 5 patterns don&apos;t match, and the auto-contact-link only fires for a real email address literally present in the transcript, never inferred.</li>
       </ul>
     </Section>
     <Section title="Current risk level"><p><strong>Low-Medium.</strong> No live third-party API calls; the consent-tracking gap is the main open item if real human voice recordings are added.</p></Section>

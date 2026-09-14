@@ -1,0 +1,25 @@
+.container { padding: var(--space-6); max-width: 900px; }
+.title { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-heading); margin-bottom: var(--space-4); }
+.loading { padding: var(--space-8); text-align: center; color: var(--color-text-muted); }
+
+.metaGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-6); }
+.metaItem { padding: var(--space-3); background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.metaLabel { display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase; margin-bottom: var(--space-1); }
+
+.section { margin-bottom: var(--space-6); }
+.sectionTitle { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-heading); margin-bottom: var(--space-3); }
+
+.transcriptBox { padding: var(--space-4); background: var(--color-surface-light); border-radius: var(--radius-md); white-space: pre-wrap; font-size: var(--font-size-sm); max-height: 300px; overflow-y: auto; }
+
+.btnRow { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); flex-wrap: wrap; }
+.btnPrimary { padding: var(--space-2) var(--space-5); background: var(--color-heading); color: white; border: none; border-radius: var(--radius-md); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); cursor: pointer; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnSecondary { padding: var(--space-2) var(--space-4); background: white; color: var(--color-text); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--font-size-sm); cursor: pointer; }
+
+.qualBox { padding: var(--space-4); background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+.signalList { list-style: none; padding: 0; margin: var(--space-2) 0 0 0; font-size: var(--font-size-sm); }
+.signalHit { color: var(--color-heading); font-weight: var(--font-weight-semibold); }
+.signalMiss { color: var(--color-text-muted); }
+
+.summaryBox { padding: var(--space-4); background: var(--color-surface-light); border-radius: var(--radius-md); margin-top: var(--space-3); white-space: pre-wrap; font-size: var(--font-size-sm); }
+.error { color: crimson; font-size: var(--font-size-sm); }

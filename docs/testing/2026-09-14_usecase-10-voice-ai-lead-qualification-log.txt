@@ -1,0 +1,75 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  15 passed (15)
+      Tests  125 passed (125)
+
+$ curl -s -c cookies-uc10.txt -X POST http://127.0.0.1:3020/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3020/api/admin/voice-ai/calls/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies-uc10.txt -X POST .../voice-ai/calls/ -d '{"direction":"outbound","transcript":"Hi just checking in, nice to chat, no real interest right now.","phoneNumber":"+15550100","durationSeconds":120}'
+{"id":"9b0d0b29-..."}
+$ curl -s -b cookies-uc10.txt -X POST .../voice-ai/calls/ -d '{"direction":"inbound","transcript":"What is the budget for this? We have a real problem with our current process and need this asap. Lets schedule a follow-up call. My email is __e2e_test_hotcall@example.com","phoneNumber":"+15550199","durationSeconds":300}'
+{"id":"2c9c5472-..."}
+
+$ curl -s -b cookies-uc10.txt -X POST .../voice-ai/calls/9b0d0b29.../qualify/
+score=0, tier=cold, contactId=None
+  hand-check: 0 signals detected -> 0 (exact match)
+
+$ curl -s -b cookies-uc10.txt -X POST .../voice-ai/calls/2c9c5472.../qualify/
+score=80, tier=hot, contactId=18a272ed-..., contactCreated=True
+detected signals: budget_mentioned, need_expressed, timeline_committed, next_step_agreed
+  hand-check: 4 signals x 20 = 80 (exact match); authority_confirmed correctly NOT detected (no decision-maker phrase present)
+
+$ curl -s -b cookies-uc10.txt -X POST .../voice-ai/calls/2c9c5472.../summarize/
+HTTP 502 (first attempt -- Ollama exceeded the 60s per-call timeout across
+  two sequential model calls, ~103s total; transient local-model load, no
+  code defect)
+
+$ curl -s -b cookies-uc10.txt -X POST .../voice-ai/calls/2c9c5472.../summarize/   [retry]
+HTTP 200, real 9.5s
+fabricationWarning: false
+summary: "The caller expressed urgency about addressing their current process
+  issues with an immediate need (\"We have a real problem...need this asap\"),
+  ... reaching out via the given contact information ... no immediate pricing
+  or budget figures were discussed in this interaction, hence lacking
+  complete BANT ... confirmation on all fronts."
+  -- correctly grounded in the real transcript, correctly hedged where the
+  transcript lacked specifics, zero fabricated figures
+
+$ curl -s -b cookies-uc10.txt .../voice-ai/calls/2c9c5472.../
+{"call":{"contactId":"18a272ed-...","qualificationScore":80,"qualificationTier":"hot",...}}
+
+$ curl -s -b cookies-uc10.txt .../voice-ai/dashboard/
+{"kpis":{"totalCalls":2,"qualifiedCalls":2,"hotCalls":1,"contactsLinkedFromCalls":1},"byCallTier":{"cold":1,"hot":1}}
+
+$ curl -s -b cookies-uc10.txt .../voice-ai/report/
+calls: [{"direction":"inbound",...,"qualificationScore":80,"qualificationTier":"hot","contactLinked":true},
+        {"direction":"outbound",...,"qualificationScore":0,"qualificationTier":"cold","contactLinked":false}]
+
+$ curl -s -b cookies-uc10.txt -X POST .../voice-ai/share-link/
+{"token":"...","url":"/report/voice-ai/..."}
+$ curl -s http://127.0.0.1:3020/api/public/report/.../
+{"title":"Voice Call Qualification Summary","data":{"totalCalls":2,"qualifiedCalls":2,"byTier":{"cold":1,"hot":1},"contactsLinkedFromCalls":1}}
+  -- aggregate only, no transcript/phone-number content
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3020/report/voice-ai/.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM voice_call_logs WHERE phone_number IN ('+15550100','+15550199');"
+$ sqlite3 data/talentshill.db "DELETE FROM contacts WHERE email='__e2e_test_hotcall@example.com';"
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='voice_ai';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM voice_call_logs WHERE phone_number IN ('+15550100','+15550199');"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM contacts WHERE email='__e2e_test_hotcall@example.com';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='voice_ai';"
+0
+
+$ npx tsx scripts/record-usecase10-voice-ai-qualification-tests.ts
+--- Recording Voice AI Lead Qualification use-case test results ---
+Created 18, skipped 0 (already present).
