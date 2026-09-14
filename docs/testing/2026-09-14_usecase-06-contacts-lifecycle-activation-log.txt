@@ -1,0 +1,73 @@
+$ npx tsc --noEmit -p tsconfig.json
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  11 passed (11)
+      Tests  94 passed (94)
+
+$ curl -s -X POST http://127.0.0.1:3016/api/admin/contacts/activation-scoring/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies.txt -X POST .../contacts/ -d '{"email":"__e2e_test_unsub@example.com","status":"unsubscribed",...}'
+{"id":"d21f327e-..."}
+$ curl -s -b cookies.txt .../contacts/d21f327e-.../
+"status": "active"   # BUG: requested unsubscribed, got active
+
+--- fixed app/api/admin/contacts/route.ts: status now destructured and forwarded ---
+
+$ curl -s -b cookies.txt -X POST .../contacts/ -d '{"email":"__e2e_test_unsub2@example.com","status":"unsubscribed",...}'
+{"id":"955a6a15-..."}
+$ curl -s -b cookies.txt .../contacts/955a6a15-.../
+"status": "unsubscribed"   # confirmed fixed
+
+$ curl -s -b cookies.txt -X POST .../lists/ -d '{"name":"__e2e_test_lifecycle_list","type":"static"}'
+{"id":"061886f0-..."}
+$ curl -s -b cookies.txt -X PATCH .../lists/061886f0-.../  -d '{"action":"add-members","contactIds":["8a498378-..."]}'
+{"success":true}
+$ curl -s -b cookies.txt -X POST .../campaigns/ -d '{"name":"__e2e_test_lifecycle_campaign","audienceType":"list","audienceId":"061886f0-...",...}'
+{"id":"b4d9850e-..."}
+$ curl -s -b cookies.txt -X POST .../campaigns/b4d9850e-.../materialize-recipients/
+{"added":1,...}
+$ sqlite3 ... "UPDATE campaign_recipients SET status='sent', sent_at=strftime('%s','now') WHERE id='146fd733-...';"
+
+$ curl -sL -o /dev/null -w "%{http_code}" http://127.0.0.1:3016/api/t/o/146fd733-...
+200
+$ curl -sL -o /dev/null -w "%{http_code}" "http://127.0.0.1:3016/api/t/c/146fd733-...?url=https://example.com"
+200
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3016/api/admin/contacts/activation-scoring/
+{"totalContacts":8,"byStage":{"new":7,"engaged":1,"at_risk":0,"churned":0}}
+# churned:0 because the FIRST unsub contact (pre-fix) has status=active still
+
+$ sqlite3 ... "SELECT email, status, lifecycle_stage, activation_score FROM contacts WHERE email LIKE '__e2e%';"
+__e2e_test_new@example.com      | active       | new     | 0
+__e2e_test_engaged@example.com  | active       | engaged | 100
+__e2e_test_unsub@example.com    | active       | new     | 0     (pre-fix artifact, expected)
+__e2e_test_unsub2@example.com   | unsubscribed | churned | 0     (post-fix, correct)
+
+$ sqlite3 ... "UPDATE contacts SET lifecycle_stage='at_risk' WHERE id='1a0da00f-...';"
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3016/api/admin/contacts/retention-segmentation/
+{"atRiskCount":1,"retentionListId":"3f7b5451-..."}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3016/api/admin/contacts/activation-scoring/agentic/
+{"narrative":"...seven new ones added...one having churned out while none are at risk currently...",...}
+# correctly re-computed ground truth (0 at-risk) rather than trusting the manual SQL flag -- confirmed correct, not a bug
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3016/api/admin/contacts/share-link/
+{"token":"QqJ07ogyf6FCd8T3nxev9Y_W-UiZoOd6Ux1K4vNwRo8",...}
+$ curl -s http://127.0.0.1:3016/api/public/report/QqJ07ogy.../
+{"data":{"total":9,"byLifecycleStage":[{"stage":"churned","count":1},{"stage":"engaged","count":1},{"stage":"new","count":7}]}}
+$ echo "$REPORT" | grep -qi "__e2e_test" && echo FAIL || echo PASS
+PASS: no PII
+
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3016/report/contacts/QqJ07ogy.../
+200
+
+$ sqlite3 ... DELETE FROM campaign_recipients/campaigns/list_members/lists/contact_events/contacts/report_share_tokens WHERE ... LIKE '__e2e%'
+$ sqlite3 ... "SELECT COUNT(*) FROM contacts WHERE email LIKE '__e2e%';"
+0
+
+$ npx tsx scripts/record-usecase6-lifecycle-activation-tests.ts
+--- Recording Lifecycle/Activation Journey Tracking use-case test results ---
+Created 21, skipped 0 (already present).

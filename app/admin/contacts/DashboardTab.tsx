@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import styles from './ContactsShared.module.css';
 
 interface DashboardData {
-  kpis: { totalContacts: number; unscored: number; active: number; unsubscribed: number; bounced: number; avgScore: number; totalRuns: number };
+  kpis: { totalContacts: number; unscored: number; active: number; unsubscribed: number; bounced: number; avgScore: number; totalRuns: number; newStage: number; engagedStage: number; atRiskStage: number; churnedStage: number; avgActivationScore: number | null };
   bySource: Record<string, number>;
 }
 
@@ -36,6 +36,16 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.active}</span>Active</div>
           <div className={styles.vizBox}><span>{data.kpis.unsubscribed}</span>Unsubscribed</div>
           <div className={styles.vizBox}><span>{data.kpis.bounced}</span>Bounced</div>
+        </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Lifecycle stage (behavioral)</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.newStage}</span>New</div>
+          <div className={styles.vizBox}><span>{data.kpis.engagedStage}</span>Engaged</div>
+          <div className={styles.vizBox}><span>{data.kpis.atRiskStage}</span>At Risk</div>
+          <div className={styles.vizBox}><span>{data.kpis.churnedStage}</span>Churned</div>
+          <div className={styles.vizBox}><span>{data.kpis.avgActivationScore ?? '—'}</span>Avg activation score</div>
         </div>
       </div>
       <div className={styles.subSection}>

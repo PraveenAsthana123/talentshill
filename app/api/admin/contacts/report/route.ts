@@ -11,6 +11,7 @@ export const GET = withPermission('contacts', 'read')(async (_request: NextReque
     contacts: contacts.map((c) => ({
       name: [c.firstName, c.lastName].filter(Boolean).join(' ') || '—',
       email: c.email, company: c.company, source: c.source, status: c.status, leadScore: c.leadScore,
+      lifecycleStage: c.lifecycleStage, activationScore: c.activationScore,
     })),
   });
 });

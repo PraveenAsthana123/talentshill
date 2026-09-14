@@ -487,12 +487,21 @@ export const contacts = sqliteTable('contacts', {
   status: text('status').notNull().default('active'), // active, unsubscribed, bounced, inactive
   subscribedAt: integer('subscribed_at', { mode: 'timestamp' }),
   unsubscribedAt: integer('unsubscribed_at', { mode: 'timestamp' }),
+  // Real behavioral lifecycle tracking, added 2026-09-14 -- distinct from
+  // leadScore, which is a static profile-completeness rubric computed by
+  // contact-completeness-pipeline.ts. lifecycleStage/activationScore are
+  // computed from real email_events/campaign_recipients engagement
+  // history (opens/clicks/recency), never from profile fields.
+  lifecycleStage: text('lifecycle_stage', { enum: ['new', 'engaged', 'at_risk', 'churned'] }).default('new'),
+  activationScore: integer('activation_score'),
+  lastEngagedAt: integer('last_engaged_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
   index('idx_contacts_email').on(table.email),
   index('idx_contacts_status').on(table.status),
   index('idx_contacts_source').on(table.source),
+  index('idx_contacts_lifecycle_stage').on(table.lifecycleStage),
 ]);
 
 export const contactEvents = sqliteTable('contact_events', {

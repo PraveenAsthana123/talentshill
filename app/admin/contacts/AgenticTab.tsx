@@ -18,6 +18,21 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [retentionRunning, setRetentionRunning] = useState(false);
+  const [retentionNarrative, setRetentionNarrative] = useState('');
+  const [retentionError, setRetentionError] = useState('');
+
+  const runRetentionAgent = async () => {
+    setRetentionRunning(true); setRetentionError(''); setRetentionNarrative('');
+    try {
+      const res = await fetch('/api/admin/contacts/activation-scoring/agentic/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setRetentionNarrative(data.narrative || '');
+      loadRuns();
+    } catch (e) { setRetentionError(String(e)); } finally { setRetentionRunning(false); }
+  };
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=contacts&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -69,6 +84,13 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+      <div className={styles.subSection}>
+        <h4>Retention narrative (behavioral lifecycle, cross-contact, Ollama)</h4>
+        <p>Distinct from the &quot;contact_engagement_advisor&quot; agent above (which narrates the static completeness score): this agent (&quot;contact_retention_advisor&quot;) runs the real behavioral activation-scoring pipeline across all contacts, then narrates the real lifecycle distribution.</p>
+        <div className={styles.formActions}><Button onClick={runRetentionAgent} disabled={retentionRunning}>{retentionRunning ? 'Agent running (30-60s)…' : 'Run Retention Agent'}</Button></div>
+        {retentionError && <p className={styles.error}>{retentionError}</p>}
+        {retentionNarrative && <div className={styles.card}><p>{retentionNarrative}</p></div>}
+      </div>
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

@@ -1,0 +1,32 @@
+=== 2026-09-14T15:13:54Z run-usecase-tests.sh contacts-verify ===
+--- npx tsc --noEmit ---
+tsc exit: 0
+--- npx vitest run ---
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/mnt/deepa/talentshill[39m
+
+ [32m✓[39m tests/unit/tracking.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 687[2mms[22m[39m
+     [33m[2m✓[22m[39m should export tracking pixel buffer [33m 323[2mms[22m[39m
+ [32m✓[39m tests/unit/maintenance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1734[2mms[22m[39m
+     [33m[2m✓[22m[39m should export maintenance functions [33m 1710[2mms[22m[39m
+ [32m✓[39m tests/unit/template-renderer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1416[2mms[22m[39m
+     [33m[2m✓[22m[39m should export render functions [33m 1369[2mms[22m[39m
+ [32m✓[39m tests/unit/csv-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1898[2mms[22m[39m
+     [33m[2m✓[22m[39m should export parse function [33m 1822[2mms[22m[39m
+ [32m✓[39m tests/unit/influencer-roi-scoring.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 177[2mms[22m[39m
+ [32m✓[39m tests/unit/ad-budget-optimization.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 206[2mms[22m[39m
+ [32m✓[39m tests/unit/content-performance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+ [32m✓[39m tests/unit/lead-scoring-and-qualification.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m tests/unit/feature-flags.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2329[2mms[22m[39m
+     [33m[2m✓[22m[39m should export cache functions [33m 1680[2mms[22m[39m
+     [33m[2m✓[22m[39m should export flag guard functions [33m 636[2mms[22m[39m
+ [32m✓[39m tests/unit/contact-activation-lifecycle.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 286[2mms[22m[39m
+ [32m✓[39m tests/unit/campaign-personalization.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 533[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[32m94 passed[39m[22m[90m (94)[39m
+[2m   Start at [22m 09:14:19
+[2m   Duration [22m 4.76s[2m (transform 9.72s, setup 1.18s, import 15.68s, tests 9.46s, environment 9ms)[22m
+
+vitest exit: 0
+RESULT: PASS

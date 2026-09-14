@@ -55,12 +55,12 @@ export async function POST(request: NextRequest, context: unknown) {
     if (!checkPermission(userId, 'contacts', 'create')) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
-    const { email, firstName, lastName, company, phone, source, tags } = body;
+    const { email, firstName, lastName, company, phone, source, tags, status } = body;
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const id = createContact({ email, firstName, lastName, company, phone, source, tags });
+    const id = createContact({ email, firstName, lastName, company, phone, source, tags, status });
 
     logOperationRun({
       moduleKey: 'contacts', operationName: 'create_contact', executionMode: 'manual', status: 'completed',
