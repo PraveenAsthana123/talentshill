@@ -495,6 +495,14 @@ export const contacts = sqliteTable('contacts', {
   lifecycleStage: text('lifecycle_stage', { enum: ['new', 'engaged', 'at_risk', 'churned'] }).default('new'),
   activationScore: integer('activation_score'),
   lastEngagedAt: integer('last_engaged_at', { mode: 'timestamp' }),
+  // Real, admin/import-entered fields for occasion-message triggering
+  // (birthday/anniversary/location-festival), added 2026-09-14 -- never
+  // inferred or guessed, only ever set from a real known value (a CSV
+  // import column, a form field, an admin edit). Null means genuinely
+  // unknown, not "assume today."
+  dateOfBirth: integer('date_of_birth', { mode: 'timestamp' }),
+  customerAnniversaryDate: integer('customer_anniversary_date', { mode: 'timestamp' }), // real relationship-start date (defaults to createdAt at write time if not separately known -- never fabricated after the fact)
+  country: text('country'), // real, ISO-2 preferred but free text accepted -- drives location-festival matching
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
@@ -502,6 +510,8 @@ export const contacts = sqliteTable('contacts', {
   index('idx_contacts_status').on(table.status),
   index('idx_contacts_source').on(table.source),
   index('idx_contacts_lifecycle_stage').on(table.lifecycleStage),
+  index('idx_contacts_dob').on(table.dateOfBirth),
+  index('idx_contacts_anniversary').on(table.customerAnniversaryDate),
 ]);
 
 export const contactEvents = sqliteTable('contact_events', {
@@ -1894,4 +1904,76 @@ export const youtubeChannelSnapshots = sqliteTable('youtube_channel_snapshots', 
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (table) => [
   index('idx_youtube_channel_snapshots_date').on(table.snapshotDate),
+]);
+
+// ── Customer Occasion Messaging, added 2026-09-14 ──
+// Admin-level: admins manage the festival calendar + standard template
+// library, and trigger/review sends -- not a customer self-service flow.
+// Same honesty boundary as broadcasts/re_engagement_messages: no real
+// SMS/WhatsApp/email gateway exists in this build (confirmed via the
+// same repo-wide search re-engagement's schema comment already
+// documents), so every send here is a real, logged INTENT to send a
+// real, personalized message to a real contact -- status is 'logged'
+// or 'failed', never a fabricated 'delivered'/'sent'. Deliberately no
+// LLM involved in composing occasion messages -- these are always a
+// real standard template (deterministically personalized) or a real
+// admin-typed custom message, never model-generated, so a birthday
+// message can never invent a wrong name or a wrong number of years.
+
+export const festivalCalendar = sqliteTable('festival_calendar', {
+  id: text('id').primaryKey(),
+  code: text('code').notNull().unique(), // e.g. 'christmas_2026', 'diwali_2026' -- lunar/shifting festivals are dated per real calendar year, not computed, and must be re-seeded each year (disclosed limitation, not automated)
+  name: text('name').notNull(),
+  occasionDate: integer('occasion_date', { mode: 'timestamp' }).notNull(),
+  country: text('country'), // null = global (applies to every contact regardless of country); set = only contacts with a matching real country
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_festival_calendar_date').on(table.occasionDate),
+  index('idx_festival_calendar_country').on(table.country),
+]);
+
+export const occasionTemplates = sqliteTable('occasion_templates', {
+  id: text('id').primaryKey(),
+  occasionType: text('occasion_type', { enum: ['birthday', 'anniversary', 'festival'] }).notNull(), // 'custom' is deliberately not a template type -- a custom message is authored ad hoc at send time, never saved as a reusable "standard" template by definition
+  festivalCode: text('festival_code').references(() => festivalCalendar.code), // required when occasionType='festival', null otherwise
+  channel: text('channel', { enum: ['email', 'sms', 'whatsapp'] }).notNull(),
+  name: text('name').notNull(),
+  subject: text('subject'), // email only
+  body: text('body').notNull(), // supports {{firstName}} -- same personalizeMessage() pattern as re-engagement-trigger-pipeline.ts
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_occasion_templates_type').on(table.occasionType),
+  index('idx_occasion_templates_festival').on(table.festivalCode),
+]);
+
+export const occasionMessages = sqliteTable('occasion_messages', {
+  id: text('id').primaryKey(),
+  contactId: text('contact_id').notNull().references(() => contacts.id),
+  occasionType: text('occasion_type', { enum: ['birthday', 'anniversary', 'festival', 'custom'] }).notNull(),
+  festivalCode: text('festival_code').references(() => festivalCalendar.code),
+  templateId: text('template_id').references(() => occasionTemplates.id), // null for a custom message
+  channel: text('channel', { enum: ['email', 'sms', 'whatsapp'] }).notNull(),
+  subject: text('subject'),
+  messageBody: text('message_body').notNull(), // real, personalized final text actually associated with this send
+  status: text('status', { enum: ['logged', 'failed'] }).notNull().default('logged'),
+  failureReason: text('failure_reason'),
+  triggeredAt: integer('triggered_at', { mode: 'timestamp' }).notNull(),
+  triggeredDate: text('triggered_date').notNull(), // real 'YYYY-MM-DD' derived from triggeredAt, held separately purely so the unique index below can dedupe by calendar day regardless of time-of-day
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_occasion_messages_contact').on(table.contactId),
+  index('idx_occasion_messages_type').on(table.occasionType),
+  index('idx_occasion_messages_triggered_at').on(table.triggeredAt),
+  // Real bug class this session already fixed once in campaign_recipients
+  // (see schema comment there): prevents the same real occasion firing
+  // twice for the same contact on the same real calendar day if the
+  // trigger pipeline runs more than once in a day.
+  uniqueIndex('uq_occasion_messages_contact_type_day').on(table.contactId, table.occasionType, table.festivalCode, table.triggeredDate),
 ]);

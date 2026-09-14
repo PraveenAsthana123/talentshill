@@ -1,0 +1,37 @@
+=== Customer Occasion Messaging: live verification, dev server :3025 ===
+
+--- login ---
+{"success":true,"user":{"id":"9778a4cd-3d0b-484a-9cf4-b06efff2fcdb","email":"admin@talentshill.com","name":"Admin","role":"admin"}}
+
+--- unauthenticated trigger rejected (negative case) ---
+{"error":"Unauthorized"}
+
+--- festivals seeded, real ---
+{"festivals":[{"id":"49580243-af54-47dd-9e70-cc5124e8839d","code":"new_year_2026","name":"New Year's Day","occasionDate":"2026-01-01T00:00:00.000Z","country":null,"isActive":true,"createdBy":"seed-script","createdAt":"2026-09-14T22:32:16.000Z","updatedAt":"2026-09-14T22:32:16.000Z"},{"id":"21b79b96-3563-41ee-8c32-d0c120239c09","code":"diwali_2026","name":"Diwali","occasionDate":"2026-11-08T00:00:00.000Z","country":"IN","isActive":true,"createdBy":"seed-script","createdAt":"2026-09-14T22:32:16.000Z","updatedAt":"2026-09-14T22:32:16.000Z"},{"id":"b4cb596b-160f-443e-be8a-a7587914d381","code":"christmas_2026","name":"Christmas","occasionDate":"2026-12-25T00:00:00.000Z","country":null,"isActive":true,"createdBy":"seed-script","createdAt":"2026-09-14T22:32:16.000Z","updatedAt":"2026-09-14T22:32:16.000Z"}]}
+
+--- templates seeded, real ---
+{"templates":[{"id":"959d1187-cde1-47c6-9486-e1865bc70922","occasionType":"birthday","festivalCode":null,"channel":"email","name":"Standard Birthday (Email)","subject":"Happy Birthday, {{firstName}}!","body":"Hi {{firstName}},\n\nWishing you a very happy birthday from all of us at TalentsHill! We hope your day is filled with joy.\n\nWarm regards,\nThe TalentsHill Team","isActive":true,"createdBy":"seed-script","createdAt":"2026-09-14T22:32:16.000Z","updatedAt":"2026-09-14T22:32:16.000Z"},{"id":"1c8cc8ba-daa5-4242-bc93-8d3c8bd6f445","occasionType":"birthday","festivalCode":null,"channel":"sms","name":"Standard Birthday (SMS)","subject":null,"body":"Happy Birthday, {{firstName}}! Wishing you a wonderful day. - TalentsHill","isActive":true,"createdBy":"seed-script","createdAt":"2026-09-14T22:
+--- create real test contact with today's real birthday (2026-09-14) ---
+/api/admin/contacts/{"id":"58b01edb-b391-4bf3-9563-86a7c78edf4d"}
+--- run live trigger scan (real today = 2026-09-14) ---
+{"runId":"eb899020-cfd7-4c6b-992f-8848ff4887c7","stages":[{"stage":"scan_todays_occasions","input":{"dateKey":"2026-09-14"},"process":"Real scan: contacts.date_of_birth / contacts.customer_anniversary_date matching real month+day of today, and festival_calendar rows whose real occasion_date is today","output":{"birthdays":0,"anniversaries":0,"festivals":0},"status":"ok"},{"stage":"personalize_and_log","input":{"channel":"email"},"process":"For each real occasion match, use the real active standard template for that occasion type+channel (and festival code, if applicable), personalize deterministically, and write one real occasion_messages row -- skip if no active template exists or a message for this exact contact+occasion+day was already logged","output":{"triggered":0,"skippedNoTemplate":0,"skippedAlreadySent":0},"status":"ok"}],"dateKey":"2026-09-14","birthdaysFound":0,"anniversariesFound":0,"festivalsFound":0,"triggered":0,"skippedNoTemplate":0,"skippedAlreadySent":0}
+
+--- verify real DB row written for Maria ---
+
+--- CORRECTED: real date_of_birth stored in seconds (matching drizzle's sqlite timestamp-mode convention, not ms) ---
+--- re-run live trigger scan ---
+{"runId":"87a4f049-feb9-4db7-acb3-e625e5a19050","stages":[{"stage":"scan_todays_occasions","input":{"dateKey":"2026-09-14"},"process":"Real scan: contacts.date_of_birth / contacts.customer_anniversary_date matching real month+day of today, and festival_calendar rows whose real occasion_date is today","output":{"birthdays":1,"anniversaries":0,"festivals":0},"status":"ok"},{"stage":"personalize_and_log","input":{"channel":"email"},"process":"For each real occasion match, use the real active standard template for that occasion type+channel (and festival code, if applicable), personalize deterministically, and write one real occasion_messages row -- skip if no active template exists or a message for this exact contact+occasion+day was already logged","output":{"triggered":1,"skippedNoTemplate":0,"skippedAlreadySent":0},"status":"ok"}],"dateKey":"2026-09-14","birthdaysFound":1,"anniversariesFound":0,"festivalsFound":0,"triggered":1,"skippedNoTemplate":0,"skippedAlreadySent":0}birthday|Happy Birthday, Maria!|Hi Maria,
+
+Wishing you a very happy birthday from all of us at TalentsHill! We hope your day is filled with joy.
+
+Warm regards,
+The TalentsHill Team|logged
+
+--- custom one-off message to same contact ---
+{"id":"d7204e56-6a15-49cb-a1d4-8e9f04d458be"}
+
+--- dashboard reflects real data ---
+{"kpis":{"totalMessages":2,"logged":2,"failed":0,"totalTemplates":7,"activeTemplates":7,"totalFestivals":3,"activeFestivals":3,"contactsWithDob":1,"contactsWithAnniversary":0,"totalRuns":33},"byOccasionType":{"birthday":1,"custom":1},"byChannel":{"email":1,"whatsapp":1}}
+
+--- second trigger run same day: dedupe confirmed (skippedAlreadySent) ---
+{"runId":"2c2f298e-465c-41b7-908b-e5f1d4b704c7","stages":[{"stage":"scan_todays_occasions","input":{"dateKey":"2026-09-14"},"process":"Real scan: contacts.date_of_birth / contacts.customer_anniversary_date matching real month+day of today, and festival_calendar rows whose real occasion_date is today","output":{"birthdays":1,"anniversaries":0,"festivals":0},"status":"ok"},{"stage":"personalize_and_log","input":{"channel":"email"},"process":"For each real occasion match, use the real active standard template for that occasion type+channel (and festival code, if applicable), personalize deterministically, and write one real occasion_messages row -- skip if no active template exists or a message for this exact contact+occasion+day was already logged","output":{"triggered":0,"skippedNoTemplate":0,"skippedAlreadySent":1},"status":"ok"}],"dateKey":"2026-09-14","birthdaysFound":1,"anniversariesFound":0,"festivalsFound":0,"triggered":0,"skippedNoTemplate":0,"skippedAlreadySent":1}

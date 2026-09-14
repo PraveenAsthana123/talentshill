@@ -74,6 +74,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/templates', label: 'Templates' },
       { href: '/admin/campaigns', label: 'Campaigns' },
       { href: '/admin/broadcasts', label: 'Broadcasts' },
+      { href: '/admin/occasions', label: 'Customer Occasions' },
     ],
   },
   {

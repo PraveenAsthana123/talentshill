@@ -32,6 +32,10 @@ const RESOURCES = [
   // not-yet-wired per module rather than faked.
   'ads_management', 'video_editing', 'voice_ai', 'market_research',
   'branding', 'influencer_video', 'reels_management', 'youtube',
+  // Customer Occasion Messaging (birthday/anniversary/festival/custom),
+  // added 2026-09-14 -- admin-level, so scoped like broadcasts/
+  // competitor_analysis rather than exposed to a lower-privilege role.
+  'occasions',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];
