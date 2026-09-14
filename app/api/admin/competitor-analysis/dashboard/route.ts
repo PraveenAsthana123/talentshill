@@ -13,6 +13,7 @@ export const GET = withPermission('competitor_analysis', 'read')(async (_request
   const servicesWithoutCoverage = services.filter((s) => !coveredServiceIds.has(s.id));
 
   const runs = db.select().from(schema.operationRun).where(eq(schema.operationRun.moduleKey, 'competitor_analysis')).all();
+  const observations = db.select().from(schema.competitorCampaignObservations).all();
 
   return NextResponse.json({
     kpis: {
@@ -26,7 +27,10 @@ export const GET = withPermission('competitor_analysis', 'read')(async (_request
       monitoring: realEntries.filter((e) => e.status === 'monitoring').length,
       totalRuns: runs.length,
       aiDraftedPendingReview: realEntries.filter((e) => (e.offeringSummary || '').startsWith('[AI-drafted')).length,
+      totalObservations: observations.length,
     },
     uncoveredServices: servicesWithoutCoverage.map((s) => ({ id: s.id, name: s.name, category: s.category })),
+    byObservationChannel: observations.reduce((acc: Record<string, number>, o) => ({ ...acc, [o.channel]: (acc[o.channel] ?? 0) + 1 }), {}),
+    byObservationType: observations.reduce((acc: Record<string, number>, o) => ({ ...acc, [o.campaignType]: (acc[o.campaignType] ?? 0) + 1 }), {}),
   });
 });

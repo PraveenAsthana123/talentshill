@@ -23,10 +23,19 @@ export const GET = withPermission('competitor_analysis', 'read')(async (_request
     })),
   }));
 
+  const observations = db.select().from(schema.competitorCampaignObservations).all();
+  const competitorNameById = new Map(entries.map((e) => [e.id, e.competitorName]));
+
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
     totalServices: services.length,
     servicesWithResearch: byService.filter((b) => b.entries.length > 0).length,
     byService,
+    campaignObservations: observations
+      .sort((a, b) => b.observedAt.getTime() - a.observedAt.getTime())
+      .map((o) => ({
+        competitorName: competitorNameById.get(o.competitorId) ?? 'unknown',
+        observedAt: o.observedAt.toISOString(), channel: o.channel, campaignType: o.campaignType, description: o.description,
+      })),
   });
 });

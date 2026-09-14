@@ -22,7 +22,7 @@ const SUB_TABS = [
     id: 'resai', label: 'ResAI', content: (
       <>
         <Section title="Research AI">
-          <p>The Agentic tab&apos;s agent (role: <code>competitor_researcher</code>) actively runs research: it plans, fetches the competitor&apos;s real public page, and drafts an analysis. Verified live — see the Agentic and Testing tabs for the actual run evidence.</p>
+          <p>The Agentic tab&apos;s agent (role: <code>competitor_researcher</code>) actively runs research: it plans, fetches the competitor&apos;s real public page, and drafts an analysis. Verified live — see the Agentic and Testing tabs for the actual run evidence. Added 2026-09-14: a second agent (role: <code>competitor_campaign_narrative_advisor</code>) summarizes a competitor&apos;s real, admin-logged campaign observation history — never inventing a promo, price, or date not actually logged.</p>
         </Section>
         <Section title="Responsible AI">
           <p><strong>Data provenance:</strong> only the competitor&apos;s own public website content (no third-party/private data sources). <strong>Consent/privacy:</strong> no personal data is collected — this module researches companies, not individuals. <strong>Bias checks:</strong> not formally run — the underlying model (phi4-mini) may carry training-data biases that haven&apos;t been evaluated for this use case. Real gap, not silently claimed as handled.</p>
@@ -106,6 +106,7 @@ const SUB_TABS = [
             <li>Website fetch failure (timeout, non-200, malformed HTML) — handled gracefully, logged as a failed stage, does not crash the run.</li>
             <li>Website ToS/robots.txt violation — not currently checked (see Compliance AI above).</li>
             <li>No rate-limiting on outbound fetches — a burst of pipeline/agentic runs could hit the same competitor site repeatedly with no backoff.</li>
+            <li><strong>Competitor Campaign Monitor observations are real, admin-entered records only</strong> (confirmed via repo-wide search before building this feature — no SEMrush/SimilarWeb/ad-library/scraping API integration exists anywhere in this codebase). An admin must have actually seen the activity being logged; nothing in this module auto-detects a competitor promo, pricing change, or new creative. The &quot;monitor scan&quot; only classifies freshness of already-logged real observations — it does not itself watch for new competitor activity.</li>
           </ul>
         </Section>
         <Section title="Current risk level">

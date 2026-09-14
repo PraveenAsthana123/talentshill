@@ -1477,6 +1477,29 @@ export const competitorAnalysis = sqliteTable('competitor_analysis', {
   index('idx_competitor_analysis_status').on(table.status),
 ]);
 
+// ── Competitor Campaign Monitor, added 2026-09-14 ──
+// No real competitive-intelligence/ad-library/scraping API integration
+// exists anywhere in this build -- confirmed via repo-wide search
+// before building this. Each row is a real, admin-entered observation
+// of a specific competitor's dated activity (a promo, a new creative,
+// a pricing change) -- never an "auto-detected" claim or a simulated
+// scrape result, same honesty discipline as the parent
+// competitor_analysis table's own schema comment.
+export const competitorCampaignObservations = sqliteTable('competitor_campaign_observations', {
+  id: text('id').primaryKey(),
+  competitorId: text('competitor_id').notNull().references(() => competitorAnalysis.id, { onDelete: 'cascade' }),
+  observedAt: integer('observed_at', { mode: 'timestamp' }).notNull(),
+  channel: text('channel', { enum: ['paid_social', 'search', 'email', 'landing_page', 'organic_social', 'pr', 'other'] }).notNull(),
+  campaignType: text('campaign_type', { enum: ['promotion', 'new_creative', 'pricing_change', 'messaging_shift', 'product_launch', 'other'] }).notNull(),
+  description: text('description').notNull(), // real, what was actually observed
+  evidenceUrl: text('evidence_url'), // real link/screenshot reference, if available
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_competitor_campaign_obs_competitor').on(table.competitorId),
+  index('idx_competitor_campaign_obs_observed_at').on(table.observedAt),
+]);
+
 // ── Email Compose Log ──
 // Compose has no persisted draft entity -- it's a one-shot send action.
 // This table gives it a real, queryable audit trail: every send

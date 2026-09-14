@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Badge, Button } from '@/components/ui';
 import { Input, Textarea, Select } from '@/components/ui/Input';
 import styles from './AdminCompetitorAnalysis.module.css';
@@ -281,6 +282,7 @@ export default function ManualTab() {
                     </div>
                     <div className={styles.cardHeaderRight}>
                       <Badge variant={STATUS_VARIANT[e.status]}>{e.status.replace('_', ' ')}</Badge>
+                      {!e.isTemplate && <Link href={`/admin/competitor-analysis/${e.id}`} className={styles.iconBtn} aria-label="Campaign observations">📋</Link>}
                       <button className={styles.iconBtn} onClick={() => startEdit(e)} aria-label="Edit">✏️</button>
                       <button className={styles.iconBtn} onClick={() => deleteEntry(e.id)} aria-label="Delete">🗑️</button>
                     </div>

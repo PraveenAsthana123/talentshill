@@ -15,8 +15,11 @@ interface DashboardData {
     monitoring: number;
     totalRuns: number;
     aiDraftedPendingReview: number;
+    totalObservations: number;
   };
   uncoveredServices: { id: string; name: string; category: string }[];
+  byObservationChannel: Record<string, number>;
+  byObservationType: Record<string, number>;
 }
 
 export default function DashboardTab() {
@@ -51,6 +54,15 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.researched}</span>Researched</div>
           <div className={styles.vizBox}><span>{data.kpis.monitoring}</span>Monitoring</div>
         </div>
+      </div>
+
+      <div className={styles.subSection}>
+        <h4>Competitor Campaign Monitor</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.totalObservations}</span>Campaign observations logged</div>
+        </div>
+        <p>By channel: {Object.entries(data.byObservationChannel).map(([c, n]) => `${c}: ${n}`).join(' · ') || 'None yet.'}</p>
+        <p>By type: {Object.entries(data.byObservationType).map(([t, n]) => `${t}: ${n}`).join(' · ') || 'None yet.'}</p>
       </div>
 
       <div className={styles.subSection}>

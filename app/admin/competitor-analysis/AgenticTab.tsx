@@ -6,6 +6,7 @@ import { Input, Select } from '@/components/ui/Input';
 import styles from './AdminCompetitorAnalysis.module.css';
 
 interface ServiceRow { id: string; name: string; category: string }
+interface CompetitorOption { id: string; competitorName: string; isTemplate: boolean }
 
 interface StepRecord {
   phase: 'plan' | 'search' | 'act' | 'execute' | 'complete';
@@ -32,6 +33,13 @@ export default function AgenticTab() {
   const [totalTokens, setTotalTokens] = useState<number | null>(null);
   const [error, setError] = useState('');
 
+  const [competitors, setCompetitors] = useState<CompetitorOption[]>([]);
+  const [narrativeCompetitorId, setNarrativeCompetitorId] = useState('');
+  const [narrativeRunning, setNarrativeRunning] = useState(false);
+  const [narrative, setNarrative] = useState<string | null>(null);
+  const [narrativeFabricationWarning, setNarrativeFabricationWarning] = useState(false);
+  const [narrativeError, setNarrativeError] = useState('');
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=competitor_analysis&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] }))
@@ -41,6 +49,9 @@ export default function AgenticTab() {
 
   useEffect(() => {
     fetch('/api/admin/services/').then((r) => (r.ok ? r.json() : { services: [] })).then((d) => setServices(d.services || [])).catch(() => {});
+    fetch('/api/admin/competitor-analysis/').then((r) => (r.ok ? r.json() : { entries: [] }))
+      .then((d) => setCompetitors((d.entries || []).filter((c: CompetitorOption) => !c.isTemplate)))
+      .catch(() => {});
     loadRuns();
   }, []);
 
@@ -68,6 +79,18 @@ export default function AgenticTab() {
     } finally {
       setRunning(false);
     }
+  };
+
+  const runNarrative = async () => {
+    if (!narrativeCompetitorId) { setNarrativeError('Select a competitor first.'); return; }
+    setNarrativeRunning(true); setNarrativeError(''); setNarrative(null);
+    try {
+      const res = await fetch(`/api/admin/competitor-analysis/${narrativeCompetitorId}/narrative/`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setNarrative(data.narrative); setNarrativeFabricationWarning(data.fabricationWarning);
+      loadRuns();
+    } catch (e) { setNarrativeError(String(e)); } finally { setNarrativeRunning(false); }
   };
 
   return (
@@ -111,6 +134,28 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+
+      <div className={styles.subSection}>
+        <h4>Campaign Activity Narrative (Competitor Campaign Monitor)</h4>
+        <p>A second real agent — grounded strictly in a competitor&apos;s real, admin-logged campaign observations (Manual tab → Campaign Observations). Never invents a promo, price, or date not actually logged.</p>
+        <Select
+          label="Competitor"
+          options={competitors.map((c) => ({ value: c.id, label: c.competitorName }))}
+          placeholder="Select a competitor..."
+          value={narrativeCompetitorId}
+          onChange={(ev) => setNarrativeCompetitorId(ev.target.value)}
+        />
+        <div className={styles.formActions}>
+          <Button onClick={runNarrative} disabled={narrativeRunning}>{narrativeRunning ? 'Agent running (30-60s)…' : 'Generate Narrative'}</Button>
+        </div>
+        {narrativeError && <p className={styles.error}>{narrativeError}</p>}
+        {narrative && (
+          <div className={styles.card} style={{ marginTop: 'var(--space-3)' }}>
+            <div className={styles.cardHeader}><strong>Narrative</strong>{narrativeFabricationWarning && <Badge variant="warning">possible fabrication — verify</Badge>}</div>
+            <div className={styles.field}>{narrative}</div>
+          </div>
+        )}
+      </div>
 
       <div className={styles.subSection}>
         <h4>Transactional history (real agent runs, timestamped, with token usage)</h4>

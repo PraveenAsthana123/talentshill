@@ -23,6 +23,8 @@ interface RunEntry {
   triggeredBy: string | null;
   createdAt: string;
 }
+interface MonitorSummary { competitorId: string; competitorName: string; observationCount: number; channelsObserved: string[]; daysSinceLastObservation: number | null; freshness: 'active' | 'stale' | 'no_data' }
+interface MonitorScanResult { staleThresholdDays: number; competitorCount: number; staleCount: number; noDataCount: number; summaries: MonitorSummary[] }
 
 export default function PipelineTab() {
   const [services, setServices] = useState<ServiceRow[]>([]);
@@ -31,6 +33,10 @@ export default function PipelineTab() {
   const [running, setRunning] = useState(false);
   const [stages, setStages] = useState<StageResult[] | null>(null);
   const [error, setError] = useState('');
+
+  const [monitorRunning, setMonitorRunning] = useState(false);
+  const [monitorResult, setMonitorResult] = useState<MonitorScanResult | null>(null);
+  const [monitorError, setMonitorError] = useState('');
 
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=competitor_analysis&executionMode=pipeline&limit=20')
@@ -67,6 +73,17 @@ export default function PipelineTab() {
     } finally {
       setRunning(false);
     }
+  };
+
+  const runMonitorScan = async () => {
+    setMonitorRunning(true); setMonitorError(''); setMonitorResult(null);
+    try {
+      const res = await fetch('/api/admin/competitor-analysis/monitor-scan/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setMonitorResult(data);
+      loadRuns();
+    } catch (e) { setMonitorError(String(e)); } finally { setMonitorRunning(false); }
   };
 
   return (
@@ -116,6 +133,32 @@ export default function PipelineTab() {
       <div className={styles.subSection}>
         <h4>Output</h4>
         <p className={styles.empty}>Pipeline-created entries appear in the Manual tab's list alongside manually-created ones, with status <code>needs_research</code>.</p>
+      </div>
+
+      <div className={styles.subSection}>
+        <h4>Competitor Campaign Monitor Scan</h4>
+        <p>Scans every real (non-template) competitor and classifies real freshness from their real logged campaign observations — surfaces which competitors haven&apos;t had a real activity check logged recently (&quot;stale&quot;) or have zero observations at all (&quot;no_data&quot;). Never guesses activity that wasn&apos;t actually logged.</p>
+        <div className={styles.formActions}><Button onClick={runMonitorScan} disabled={monitorRunning}>{monitorRunning ? 'Scanning…' : 'Run Monitor Scan'}</Button></div>
+        {monitorError && <p className={styles.error}>{monitorError}</p>}
+        {monitorResult && (
+          <>
+            <p>{monitorResult.competitorCount} competitors · <strong>{monitorResult.staleCount} stale</strong> (&gt;{monitorResult.staleThresholdDays} days) · <strong>{monitorResult.noDataCount} no data</strong></p>
+            <table className={styles.table}>
+              <thead><tr><th>Competitor</th><th>Observations</th><th>Channels</th><th>Days Since Last</th><th>Freshness</th></tr></thead>
+              <tbody>
+                {monitorResult.summaries.map((s) => (
+                  <tr key={s.competitorId}>
+                    <td>{s.competitorName}</td>
+                    <td>{s.observationCount}</td>
+                    <td>{s.channelsObserved.join(', ') || '—'}</td>
+                    <td>{s.daysSinceLastObservation ?? '—'}</td>
+                    <td><Badge variant={s.freshness === 'active' ? 'success' : s.freshness === 'stale' ? 'warning' : 'default'}>{s.freshness}</Badge></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
       </div>
 
       <div className={styles.subSection}>

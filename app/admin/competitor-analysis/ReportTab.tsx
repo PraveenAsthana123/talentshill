@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import styles from './AdminCompetitorAnalysis.module.css';
 
 interface Entry {
@@ -16,16 +16,20 @@ interface ServiceBlock {
   entries: Entry[];
 }
 
+interface ObservationRow { competitorName: string; observedAt: string; channel: string; campaignType: string; description: string }
+
 interface ReportData {
   generatedAt: string;
   totalServices: number;
   servicesWithResearch: number;
   byService: ServiceBlock[];
+  campaignObservations: ObservationRow[];
 }
 
 export default function ReportTab() {
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
     fetch('/api/admin/competitor-analysis/report/')
@@ -33,6 +37,12 @@ export default function ReportTab() {
       .then(setData)
       .catch((e) => setError(String(e)));
   }, []);
+
+  const handleGenerateShareLink = async () => {
+    const res = await fetch('/api/admin/competitor-analysis/share-link/', { method: 'POST' });
+    const d = await res.json().catch(() => null);
+    if (d?.url) setShareUrl(d.url);
+  };
 
   if (error) return <p className={styles.error}>{error}</p>;
   if (!data) return <p>Loading…</p>;
@@ -60,6 +70,25 @@ export default function ReportTab() {
           ))}
         </div>
       ))}
+
+      <div className={styles.subSection}>
+        <h4>Campaign Observations (Competitor Campaign Monitor)</h4>
+        {data.campaignObservations.length === 0 ? <p className={styles.empty}>No campaign observations logged yet.</p> : (
+          <table className={styles.table}>
+            <thead><tr><th>Competitor</th><th>Date</th><th>Channel</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              {data.campaignObservations.map((o, i) => (
+                <tr key={i}>
+                  <td>{o.competitorName}</td><td>{new Date(o.observedAt).toLocaleDateString()}</td>
+                  <td>{o.channel}</td><td>{o.campaignType}</td><td>{o.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <div className={styles.formActions} style={{ marginTop: 'var(--space-4)' }}><Button onClick={handleGenerateShareLink}>Generate Client Link</Button></div>
+        {shareUrl && <p>Share this link: <code>{shareUrl}</code></p>}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,80 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  20 passed (20)
+      Tests  173 passed (173)
+
+$ curl -s -c cookies-uc15.txt -X POST http://127.0.0.1:3025/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3025/api/admin/competitor-analysis/fake-id/observations/ -d '{"observedAt":"2026-01-01","channel":"paid_social","campaignType":"promotion","description":"x"}'
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies-uc15.txt -X POST .../competitor-analysis/ -d '{"serviceId":"marketing-analytics","competitorName":"__e2e_test_competitor_AcmeAnalytics"}'
+{"entry":{"id":"cde8a22f-...", ...}}
+
+$ curl -s -b cookies-uc15.txt -X POST .../competitor-analysis/cde8a22f.../observations/ -d '{"observedAt":"2026-09-10","channel":"paid_social","campaignType":"promotion","description":"__e2e_test observed a 20% off launch promo on Instagram ads"}'
+{"id":"454208de-..."}
+$ curl -s -b cookies-uc15.txt -X POST .../competitor-analysis/cde8a22f.../observations/ -d '{"observedAt":"2026-09-13","channel":"landing_page","campaignType":"messaging_shift","description":"__e2e_test updated homepage headline to emphasize AI-powered reporting"}'
+{"id":"ade53806-..."}
+
+$ curl -s -b cookies-uc15.txt -X POST .../competitor-analysis/ -d '{"serviceId":"marketing-analytics","competitorName":"__e2e_test_competitor_NoDataCo"}'
+{"entry":{"id":"d6174a10-...", ...}}   [deliberately left with zero observations]
+
+$ curl -s -b cookies-uc15.txt -X POST .../competitor-analysis/monitor-scan/ -d '{}'
+competitorCount=2, staleCount=0, noDataCount=1
+  AcmeAnalytics: observationCount=2, channelsObserved=[landing_page, paid_social], daysSinceLastObservation=1, freshness=active
+  NoDataCo: observationCount=0, channelsObserved=[], daysSinceLastObservation=None, freshness=no_data
+  -- exact hand-verified match (today 2026-09-14, most recent real obs 2026-09-13 -> 1 day)
+
+$ curl -s -b cookies-uc15.txt -X POST .../competitor-analysis/cde8a22f.../narrative/
+fabricationWarning: True
+observationCount: 2
+narrative: "[AI GENERATION WARNING...] The recorded competitive activities show that __e2e_test focuses on
+  digital marketing efforts: ...updated their homepage headline to emphasize AI-powered reporting
+  (recently) and launched Instagram ads with significant discounts-20% off during this promotional
+  period earlier in September 2026. A suggested next check would be monitoring...on both Facebook Ads
+  and Instagram posts..."
+
+  HONEST FINDING #1: fabricationWarning=true was triggered by the literal string "20%" in the model's
+  output -- but "20%" was REAL, present verbatim in the logged observation ("...a 20% off launch
+  promo..."). This is a FALSE POSITIVE of the regex-based fabrication-guard (it cannot distinguish an
+  invented percentage from a correctly-cited real one already given to it) -- a disclosed limitation
+  of the shared backstop, not a new defect.
+
+  HONEST FINDING #2: the model's speculative "next check" suggestion mentions "Facebook Ads" -- this
+  channel was NOT in either real logged observation (only "Instagram ads" / paid_social and
+  landing_page were logged). A minor real overreach in the advisory-recommendation portion of the
+  output, not a claim about what was actually observed.
+
+$ curl -s -b cookies-uc15.txt .../competitor-analysis/dashboard/
+totalObservations: 2
+byObservationChannel: {'paid_social': 1, 'landing_page': 1}
+
+$ curl -s -b cookies-uc15.txt .../competitor-analysis/report/
+campaignObservations (filtered to __e2e_test): 2 real rows, correct competitor/date/channel/type/description
+
+$ curl -s -b cookies-uc15.txt -X POST .../competitor-analysis/share-link/
+{"token":"...","url":"/report/competitor-analysis/..."}
+$ curl -s http://127.0.0.1:3025/api/public/report/.../
+{"title":"Competitor Campaign Monitor Summary","data":{"totalCompetitors":2,"totalObservations":2,
+  "byChannel":{"paid_social":1,"landing_page":1},"byType":{"promotion":1,"messaging_shift":1},
+  "recentObservations":[...2 real rows...]}}
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3025/report/competitor-analysis/.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM competitor_campaign_observations WHERE competitor_id IN (SELECT id FROM competitor_analysis WHERE competitor_name LIKE '__e2e_test%');"
+$ sqlite3 data/talentshill.db "DELETE FROM competitor_analysis WHERE competitor_name LIKE '__e2e_test%';"
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='competitor_analysis';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM competitor_analysis WHERE competitor_name LIKE '__e2e_test%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM competitor_campaign_observations WHERE description LIKE '__e2e_test%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='competitor_analysis';"
+0
+
+$ npx tsx scripts/record-usecase15-competitor-campaign-monitor-tests.ts
+--- Recording Competitor Campaign Monitor use-case test results ---
+Created 16, skipped 0 (already present).
