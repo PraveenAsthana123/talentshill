@@ -11,6 +11,7 @@ interface Campaign {
   budget: number | null; spend: number | null; readinessScore: number | null; createdAt: string;
 }
 interface RunEntry { id: string; operationName: string; status: string; triggeredBy: string | null; createdAt: string }
+interface MetricEntry { id: string; recordedDate: string; impressions: number; clicks: number; conversions: number; revenue: number; spendForPeriod: number }
 
 const PLATFORMS = ['google', 'meta', 'linkedin', 'tiktok', 'other'];
 
@@ -23,6 +24,15 @@ export default function ManualTab() {
   const [objective, setObjective] = useState('');
   const [budget, setBudget] = useState('');
   const [runs, setRuns] = useState<RunEntry[]>([]);
+
+  const [metricsCampaignId, setMetricsCampaignId] = useState('');
+  const [metricEntries, setMetricEntries] = useState<MetricEntry[]>([]);
+  const [impressions, setImpressions] = useState('');
+  const [clicks, setClicks] = useState('');
+  const [conversions, setConversions] = useState('');
+  const [revenue, setRevenue] = useState('');
+  const [spendForPeriod, setSpendForPeriod] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   const fetchItems = async () => {
     setLoading(true);
@@ -55,6 +65,37 @@ export default function ManualTab() {
     if (!confirm('Delete this campaign?')) return;
     await fetch(`/api/admin/ads-management/${id}`, { method: 'DELETE' });
     fetchItems(); loadRuns();
+  };
+
+  const loadMetrics = async (campaignId: string) => {
+    if (!campaignId) { setMetricEntries([]); return; }
+    const res = await fetch(`/api/admin/ads-management/metrics/?campaignId=${campaignId}`);
+    const data = await res.json().catch(() => ({ entries: [] }));
+    setMetricEntries(data.entries || []);
+  };
+
+  const handleLogMetrics = async () => {
+    if (!metricsCampaignId) return;
+    await fetch('/api/admin/ads-management/metrics/', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        campaignId: metricsCampaignId,
+        recordedDate: new Date().toISOString(),
+        impressions: impressions ? Number(impressions) : 0,
+        clicks: clicks ? Number(clicks) : 0,
+        conversions: conversions ? Number(conversions) : 0,
+        revenue: revenue ? Number(revenue) : 0,
+        spendForPeriod: spendForPeriod ? Number(spendForPeriod) : 0,
+      }),
+    });
+    setImpressions(''); setClicks(''); setConversions(''); setRevenue(''); setSpendForPeriod('');
+    loadMetrics(metricsCampaignId);
+  };
+
+  const handleGenerateShareLink = async () => {
+    const res = await fetch('/api/admin/ads-management/share-link/', { method: 'POST' });
+    const data = await res.json().catch(() => null);
+    if (data?.url) setShareUrl(data.url);
   };
 
   return (
@@ -107,6 +148,43 @@ export default function ManualTab() {
             </tbody>
           </table>
         )}
+      </div>
+
+      <div className={sharedStyles.subSection} style={{ marginTop: 'var(--space-6)' }}>
+        <h4>Log real campaign performance metrics</h4>
+        <p>Manually entered from the ad platform&apos;s own reporting UI — no live sync exists. These figures ground the Budget Optimization pipeline (Pipeline / Agentic tabs); campaigns with no entries here are excluded from ranking, never scored with invented numbers.</p>
+        <select className={styles.formInput} value={metricsCampaignId} onChange={(e) => { setMetricsCampaignId(e.target.value); loadMetrics(e.target.value); }}>
+          <option value="">Select a campaign...</option>
+          {items.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.platform})</option>)}
+        </select>
+        {metricsCampaignId && (
+          <>
+            <div className={styles.formGrid} style={{ marginTop: 'var(--space-3)' }}>
+              <div><label className={styles.formLabel}>Impressions</label><input className={styles.formInput} type="number" value={impressions} onChange={(e) => setImpressions(e.target.value)} /></div>
+              <div><label className={styles.formLabel}>Clicks</label><input className={styles.formInput} type="number" value={clicks} onChange={(e) => setClicks(e.target.value)} /></div>
+              <div><label className={styles.formLabel}>Conversions</label><input className={styles.formInput} type="number" value={conversions} onChange={(e) => setConversions(e.target.value)} /></div>
+              <div><label className={styles.formLabel}>Revenue ($)</label><input className={styles.formInput} type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} /></div>
+              <div><label className={styles.formLabel}>Spend for period ($)</label><input className={styles.formInput} type="number" value={spendForPeriod} onChange={(e) => setSpendForPeriod(e.target.value)} /></div>
+            </div>
+            <div className={styles.formActions}><Button onClick={handleLogMetrics}>Log Metrics Entry</Button></div>
+            <table className={sharedStyles.table} style={{ marginTop: 'var(--space-3)' }}>
+              <thead><tr><th>Date</th><th>Impressions</th><th>Clicks</th><th>Conversions</th><th>Revenue</th><th>Spend</th></tr></thead>
+              <tbody>
+                {metricEntries.length === 0 && <tr><td colSpan={6} className={sharedStyles.empty}>No metric entries yet for this campaign.</td></tr>}
+                {metricEntries.map((m) => (
+                  <tr key={m.id}><td>{new Date(m.recordedDate).toLocaleDateString()}</td><td>{m.impressions}</td><td>{m.clicks}</td><td>{m.conversions}</td><td>${m.revenue}</td><td>${m.spendForPeriod}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
+
+      <div className={sharedStyles.subSection}>
+        <h4>Customer self-service report link</h4>
+        <p>Generates a token-gated, read-only budget-optimization report a client can open without an admin login. No customer-account system exists yet — this is a shareable link, not a client portal.</p>
+        <div className={styles.formActions}><Button onClick={handleGenerateShareLink}>Generate Client Link</Button></div>
+        {shareUrl && <p>Share this link: <code>{shareUrl}</code></p>}
       </div>
 
       <div className={sharedStyles.subSection} style={{ marginTop: 'var(--space-6)' }}>

@@ -1,0 +1,85 @@
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-6, 2rem) var(--space-4, 1rem);
+}
+
+.header {
+  margin-bottom: var(--space-5, 1.5rem);
+}
+
+.meta {
+  color: var(--color-text-secondary, #666);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.summaryRow {
+  display: flex;
+  gap: var(--space-4, 1rem);
+  margin-bottom: var(--space-5, 1.5rem);
+}
+
+.summaryBox {
+  flex: 1;
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-4, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.summaryLabel {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-secondary, #666);
+}
+
+.summaryValue {
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: 600;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  border-bottom: 1px solid var(--color-border, #e2e2e2);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.increase {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.decrease {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.hold {
+  color: var(--color-text-secondary, #666);
+}
+
+.empty {
+  color: var(--color-text-secondary, #666);
+}
+
+.disclosure {
+  margin-top: var(--space-5, 1.5rem);
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-secondary, #666);
+}
+
+.errorCard {
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-5, 1.5rem);
+}

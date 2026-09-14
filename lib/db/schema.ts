@@ -1422,6 +1422,45 @@ export const adCampaigns = sqliteTable('ad_campaigns', {
   index('idx_ad_campaigns_status').on(table.status),
 ]);
 
+// Real, manually-entered performance metrics per campaign per period. No
+// ad-platform API sync exists (disclosed in ads_management Governance/
+// monitoring) -- these rows are entered by a human from the actual ad
+// platform's own reporting UI, same honesty boundary as adCampaigns.spend.
+export const adCampaignMetrics = sqliteTable('ad_campaign_metrics', {
+  id: text('id').primaryKey(),
+  campaignId: text('campaign_id').notNull().references(() => adCampaigns.id, { onDelete: 'cascade' }),
+  recordedDate: integer('recorded_date', { mode: 'timestamp' }).notNull(),
+  impressions: integer('impressions').default(0),
+  clicks: integer('clicks').default(0),
+  conversions: integer('conversions').default(0),
+  revenue: real('revenue').default(0),
+  spendForPeriod: real('spend_for_period').default(0),
+  enteredBy: text('entered_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_ad_campaign_metrics_campaign').on(table.campaignId),
+  index('idx_ad_campaign_metrics_date').on(table.recordedDate),
+]);
+
+// Shared customer-self-service infrastructure, reused across every module.
+// TalentsHill has no customer-login portal -- a token gates a read-only
+// report view instead of a customer account. Tokens are opaque random
+// strings (32+ bytes), never sequential IDs, and can be revoked/expired.
+export const reportShareTokens = sqliteTable('report_share_tokens', {
+  id: text('id').primaryKey(),
+  token: text('token').notNull().unique(),
+  moduleKey: text('module_key').notNull(),
+  reportType: text('report_type').notNull(),
+  entityId: text('entity_id'),
+  createdBy: text('created_by'),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+  revoked: integer('revoked', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_report_share_tokens_token').on(table.token),
+  index('idx_report_share_tokens_module').on(table.moduleKey),
+]);
+
 export const videoProjects = sqliteTable('video_projects', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),

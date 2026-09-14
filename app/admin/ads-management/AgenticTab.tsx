@@ -18,6 +18,21 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [optRunning, setOptRunning] = useState(false);
+  const [narrative, setNarrative] = useState('');
+  const [optError, setOptError] = useState('');
+
+  const runBudgetOptimizationAgent = async () => {
+    setOptRunning(true); setOptError(''); setNarrative('');
+    try {
+      const res = await fetch('/api/admin/ads-management/budget-optimization/agentic/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setNarrative(data.narrative || '');
+      loadRuns();
+    } catch (e) { setOptError(String(e)); } finally { setOptRunning(false); }
+  };
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=ads_management&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -69,6 +84,13 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+      <div className={styles.subSection}>
+        <h4>Budget optimization narrative (cross-campaign, Ollama)</h4>
+        <p>Runs the deterministic budget-optimization pipeline, then asks the local model to turn the real per-campaign numbers into a short prioritized narrative. The model is instructed to never invent a campaign, number, or metric not given to it.</p>
+        <div className={styles.formActions}><Button onClick={runBudgetOptimizationAgent} disabled={optRunning}>{optRunning ? 'Agent running (30-60s)…' : 'Run Budget Optimization Agent'}</Button></div>
+        {optError && <p className={styles.error}>{optError}</p>}
+        {narrative && <div className={styles.card}><p>{narrative}</p></div>}
+      </div>
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

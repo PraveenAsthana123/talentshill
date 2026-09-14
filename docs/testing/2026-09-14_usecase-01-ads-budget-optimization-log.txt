@@ -1,0 +1,67 @@
+$ npx tsc --noEmit -p tsconfig.json
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  6 passed (6)
+      Tests  32 passed (32)
+
+$ curl -s http://127.0.0.1:3011/api/admin/ads-management/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -c cookies.txt -X POST http://127.0.0.1:3011/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-3d0b-484a-9cf4-b06efff2fcdb","email":"admin@talentshill.com","name":"Admin","role":"admin"}}
+HTTP 200
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3011/api/admin/ads-management/ -d '{"name":"__e2e_test_campaign","platform":"google","objective":"leads","budget":1000}'
+{"id":"03f7b8cf-fb2a-4313-aa33-d997d208a86d"}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3011/api/admin/ads-management/metrics/ -d '{"campaignId":"03f7b8cf-fb2a-4313-aa33-d997d208a86d","recordedDate":"2026-09-14T00:00:00Z","impressions":1000,"clicks":80,"conversions":10,"revenue":900,"spendForPeriod":200}'
+{"id":"6f7ac452-e277-4fdf-a04f-56a835898cac"}
+HTTP 201
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3011/api/admin/ads-management/budget-optimization/
+{"runId":"...","scoredCampaigns":1,"unscoredCampaigns":0,"suggestions":[{"campaignId":"03f7b8cf-...","name":"__e2e_test_campaign","platform":"google","currentBudget":1000,"roas":4.5,"cpa":20,"action":"hold","suggestedDeltaPct":0,"reason":"ROAS 4.50 is in the bottom half but not losing money"}]}
+HTTP 200
+# NOTE: this run predates the classifyBudgetAction n=1 fix -- "hold" was wrong, fixed immediately after
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3011/api/admin/ads-management/budget-optimization/agentic/  [after fix]
+{"runId":"4a437e97-96c2-4675-bb43-e58f16c13090","agentCount":1,"totalTokensUsed":370,
+ "pipelineResult":{"scoredCampaigns":1,"suggestions":[{"campaignId":"03f7b8cf-...","roas":4.5,"action":"increase","suggestedDeltaPct":15,"reason":"ROAS 4.50 is in the top half of scored campaigns (rank 1 of 1)"}]},
+ "narrative":"The 'e2e_test_campaign' for Google should be given our highest priority based on its impressive metrics: a substantial increase by action (15%) and an outstanding ROAS at 4.50, which places it as rank number one among all the evaluated real ad campaigns..."}
+HTTP 200
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3011/api/admin/ads-management/share-link/
+{"token":"I0KIWG4ZEp9wXxolsvaJNU4dPPp1k5xgJKY7KPFGg08","url":"/report/I0KIWG4ZEp9wXxolsvaJNU4dPPp1k5xgJKY7KPFGg08"}
+HTTP 201
+
+$ curl -s http://127.0.0.1:3011/api/public/report/I0KIWG4ZEp9wXxolsvaJNU4dPPp1k5xgJKY7KPFGg08/   [no cookie]
+{"title":"Ad Budget Optimization Report","generatedAt":"2026-09-14T06:38:02.556Z","data":{"scoredCampaigns":1,"unscoredCampaigns":0,"suggestions":[{"campaignId":"03f7b8cf-...","name":"__e2e_test_campaign","platform":"google","roas":4.5,"action":"increase","suggestedDeltaPct":15,"reason":"ROAS 4.50 is in the top half of scored campaigns (rank 1 of 1)"}]}}
+HTTP 200
+
+$ curl -s http://127.0.0.1:3011/api/public/report/not-a-real-token/
+{"error":"Report not found"}
+HTTP 404
+
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3011/report/I0KIWG4ZEp9wXxolsvaJNU4dPPp1k5xgJKY7KPFGg08/
+200
+
+$ curl -s -b cookies.txt -X DELETE http://127.0.0.1:3011/api/admin/ads-management/03f7b8cf-fb2a-4313-aa33-d997d208a86d/
+{"success":true}
+HTTP 200
+
+$ curl -s -b cookies.txt http://127.0.0.1:3011/api/admin/ads-management/03f7b8cf-fb2a-4313-aa33-d997d208a86d/
+{"error":"Not found"}
+HTTP 404
+
+$ curl -s http://127.0.0.1:3011/api/public/report/I0KIWG4ZEp9wXxolsvaJNU4dPPp1k5xgJKY7KPFGg08/   [after campaign delete, token not yet revoked]
+{"title":"Ad Budget Optimization Report","generatedAt":"2026-09-14T06:38:21.685Z","data":{"scoredCampaigns":0,"unscoredCampaigns":0,"suggestions":[]}}
+
+$ sqlite3 data/talentshill.db "UPDATE report_share_tokens SET revoked=1 WHERE token='I0KIWG4ZEp9wXxolsvaJNU4dPPp1k5xgJKY7KPFGg08';"
+$ curl -s http://127.0.0.1:3011/api/public/report/I0KIWG4ZEp9wXxolsvaJNU4dPPp1k5xgJKY7KPFGg08/
+{"error":"This link has been revoked."}
+HTTP 410
+
+$ npx tsx scripts/record-usecase1-ad-budget-optimization-tests.ts
+--- Recording Ad Budget Optimization use-case test results ---
+Created 18, skipped 0 (already present).

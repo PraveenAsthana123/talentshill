@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui';
 import styles from './AdsManagementShared.module.css';
 
 interface CampaignRow { name: string; platform: string; status: string; budget: number | null; spend: number | null; readinessScore: number | null }
-interface ReportData { generatedAt: string; totalCampaigns: number; campaigns: CampaignRow[] }
+interface BudgetSuggestion { campaignId: string; name: string; platform: string; roas: number | null; action: string; suggestedDeltaPct: number; reason: string }
+interface ReportData { generatedAt: string; totalCampaigns: number; campaigns: CampaignRow[]; budgetOptimization: { scoredCampaigns: number; unscoredCampaigns: number; suggestions: BudgetSuggestion[] } }
 
 export default function ReportTab() {
   const [data, setData] = useState<ReportData | null>(null);
@@ -38,6 +39,22 @@ export default function ReportTab() {
           ))}
         </tbody>
       </table>
+
+      <h4 style={{ marginTop: 'var(--space-5)' }}>Budget Optimization Summary</h4>
+      <p>{data.budgetOptimization.scoredCampaigns} campaign(s) with real logged metrics, {data.budgetOptimization.unscoredCampaigns} awaiting data.</p>
+      {data.budgetOptimization.suggestions.length === 0 ? <p className={styles.empty}>No scored campaigns yet.</p> : (
+        <table className={styles.table}>
+          <thead><tr><th>Campaign</th><th>Platform</th><th>ROAS</th><th>Recommendation</th></tr></thead>
+          <tbody>
+            {data.budgetOptimization.suggestions.map((s) => (
+              <tr key={s.campaignId}>
+                <td>{s.name}</td><td>{s.platform}</td><td>{s.roas === null ? 'No data' : s.roas.toFixed(2)}</td>
+                <td><Badge variant={s.action === 'increase' ? 'success' : s.action === 'decrease' ? 'warning' : 'default'}>{s.action} {s.suggestedDeltaPct !== 0 ? `${s.suggestedDeltaPct}%` : ''}</Badge></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

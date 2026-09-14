@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import styles from './AdsManagementShared.module.css';
 
 interface DashboardData {
-  kpis: { totalCampaigns: number; active: number; totalBudget: number; totalSpend: number; unscored: number; avgReadinessScore: number; totalRuns: number };
+  kpis: { totalCampaigns: number; active: number; totalBudget: number; totalSpend: number; unscored: number; avgReadinessScore: number; totalRuns: number; campaignsWithMetrics: number; avgRoas: number | null };
   byPlatform: Record<string, number>;
 }
 
@@ -30,6 +30,13 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>${data.kpis.totalSpend}</span>Total spend</div>
           <div className={styles.vizBox}><span>{data.kpis.avgReadinessScore}</span>Avg readiness</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
+        </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Budget optimization coverage</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.campaignsWithMetrics}</span>Campaigns with real metrics</div>
+          <div className={styles.vizBox}><span>{data.kpis.avgRoas ?? '—'}</span>Avg ROAS (scored campaigns)</div>
         </div>
       </div>
       <div className={styles.subSection}>
