@@ -7,3 +7,4 @@ import '@/lib/report-share/resolvers/influencer-video';
 import '@/lib/report-share/resolvers/content';
 import '@/lib/report-share/resolvers/campaigns';
 import '@/lib/report-share/resolvers/contacts';
+import '@/lib/report-share/resolvers/branding';

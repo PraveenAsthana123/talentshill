@@ -18,6 +18,37 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [healthRunning, setHealthRunning] = useState(false);
+  const [healthNarrative, setHealthNarrative] = useState('');
+  const [healthError, setHealthError] = useState('');
+  const [campaignId, setCampaignId] = useState('');
+  const [liftResult, setLiftResult] = useState<{ preSnapshot: { healthScore: number } | null; postSnapshot: { healthScore: number } | null; lift: number | null } | null>(null);
+  const [liftError, setLiftError] = useState('');
+
+  const runHealthAgent = async () => {
+    setHealthRunning(true); setHealthError(''); setHealthNarrative('');
+    try {
+      const res = await fetch('/api/admin/branding/health-snapshot/agentic/', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'agentic snapshot', campaignId: campaignId || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setHealthNarrative(data.narrative || '');
+      loadRuns();
+    } catch (e) { setHealthError(String(e)); } finally { setHealthRunning(false); }
+  };
+
+  const checkLift = async () => {
+    if (!campaignId) { setLiftError('Enter a campaign ID first.'); return; }
+    setLiftError(''); setLiftResult(null);
+    try {
+      const res = await fetch(`/api/admin/branding/campaign-lift/?campaignId=${campaignId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setLiftResult(data);
+    } catch (e) { setLiftError(String(e)); }
+  };
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=branding&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -67,6 +98,24 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+      <div className={styles.subSection}>
+        <h4>Brand health narrative &amp; campaign lift (cross-mention, Ollama)</h4>
+        <p>Runs the deterministic health-snapshot pipeline, then asks the local model to turn the real numbers into a strategic narrative. Optionally tag a campaign ID to measure real before/after lift (requires two real snapshots taken with the same campaign ID, one before and one after the campaign).</p>
+        <input style={{ display: 'block', width: '100%', padding: 'var(--space-2)', marginBottom: 'var(--space-2)' }} placeholder="Campaign ID (optional)" value={campaignId} onChange={(e) => setCampaignId(e.target.value)} />
+        <div className={styles.formActions}>
+          <Button onClick={runHealthAgent} disabled={healthRunning}>{healthRunning ? 'Agent running (30-60s)…' : 'Run Health Narrative Agent'}</Button>
+          <Button onClick={checkLift}>Check Campaign Lift</Button>
+        </div>
+        {healthError && <p className={styles.error}>{healthError}</p>}
+        {healthNarrative && <div className={styles.card}><p>{healthNarrative}</p></div>}
+        {liftError && <p className={styles.error}>{liftError}</p>}
+        {liftResult && (
+          <p>
+            Pre: {liftResult.preSnapshot ? `${liftResult.preSnapshot.healthScore}/100` : 'no snapshot yet'} → Post: {liftResult.postSnapshot ? `${liftResult.postSnapshot.healthScore}/100` : 'no post-campaign snapshot yet'}
+            {liftResult.lift !== null && <> — Lift: <Badge variant={liftResult.lift >= 0 ? 'success' : 'warning'}>{liftResult.lift >= 0 ? '+' : ''}{liftResult.lift}</Badge></>}
+          </p>
+        )}
+      </div>
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

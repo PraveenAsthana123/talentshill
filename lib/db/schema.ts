@@ -1590,6 +1590,50 @@ export const brandAssets = sqliteTable('brand_assets', {
   index('idx_brand_assets_category').on(table.category),
 ]);
 
+// ── AI Brand Perception Dashboard ──
+// Real, manually-entered mention data -- no social-listening/news/review
+// API integration exists in this environment (same honesty boundary as
+// every other "no third-party data source" disclosure this session). An
+// admin logs a real excerpt they found; sentiment is then computed from
+// that real text via Ollama, never fabricated from nothing.
+export const brandMentions = sqliteTable('brand_mentions', {
+  id: text('id').primaryKey(),
+  source: text('source', { enum: ['social', 'review', 'news', 'survey'] }).notNull(),
+  sourceName: text('source_name'), // e.g. "Twitter", "Google Reviews", "TechCrunch"
+  excerpt: text('excerpt').notNull(),
+  url: text('url'),
+  collectedAt: integer('collected_at', { mode: 'timestamp' }).notNull(),
+  sentiment: text('sentiment', { enum: ['positive', 'neutral', 'negative'] }),
+  sentimentExplanation: text('sentiment_explanation'),
+  topics: text('topics'), // JSON array, real-extracted, nullable until scored
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_brand_mentions_source').on(table.source),
+  index('idx_brand_mentions_sentiment').on(table.sentiment),
+]);
+
+// A point-in-time real aggregate over brandMentions -- campaignId links
+// a snapshot to a real campaign for before/after lift measurement (two
+// snapshots, one pre- and one post-campaign, diffed by the pipeline;
+// this table does not compute lift itself).
+export const brandHealthSnapshots = sqliteTable('brand_health_snapshots', {
+  id: text('id').primaryKey(),
+  snapshotDate: integer('snapshot_date', { mode: 'timestamp' }).notNull(),
+  healthScore: integer('health_score').notNull(),
+  totalMentions: integer('total_mentions').notNull().default(0),
+  positiveMentions: integer('positive_mentions').notNull().default(0),
+  neutralMentions: integer('neutral_mentions').notNull().default(0),
+  negativeMentions: integer('negative_mentions').notNull().default(0),
+  competitorsTracked: integer('competitors_tracked').notNull().default(0),
+  campaignId: text('campaign_id').references(() => campaigns.id),
+  label: text('label'), // e.g. "pre-campaign", "post-campaign", or free text
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_brand_health_snapshots_campaign').on(table.campaignId),
+]);
+
 export const influencerCampaigns = sqliteTable('influencer_campaigns', {
   id: text('id').primaryKey(),
   influencerName: text('influencer_name').notNull(),

@@ -1,0 +1,60 @@
+$ npx tsc --noEmit -p tsconfig.json
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  12 passed (12)
+      Tests  103 passed (103)
+
+$ curl -s -X POST http://127.0.0.1:3017/api/admin/branding/mentions/
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies.txt -X POST .../branding/mentions/ -d '{"source":"review","sourceName":"Google Reviews","excerpt":"TalentsHill completely transformed how we handle our marketing..."}'
+{"id":"44f927a0-..."}
+$ curl -s -b cookies.txt -X POST .../branding/mentions/ -d '{"source":"social","sourceName":"Twitter","excerpt":"Pretty disappointed with the slow response times..."}'
+{"id":"99ed1385-..."}
+
+$ curl -s -b cookies.txt -X POST .../branding/mentions/44f927a0-.../sentiment/
+sentiment: positive
+$ curl -s -b cookies.txt -X POST .../branding/mentions/99ed1385-.../sentiment/
+sentiment: negative
+
+$ curl -s -b cookies.txt -X POST .../branding/health-snapshot/ -d '{"label":"__e2e_test_snapshot"}'
+{"healthScore":50,"totalMentions":2,"scoredMentions":2,"positiveMentions":1,"neutralMentions":0,"negativeMentions":1,"competitorsTracked":1,...}
+
+$ curl -s -b cookies.txt -X POST .../branding/health-snapshot/agentic/ -d '{"label":"__e2e_test_agentic_snapshot"}'
+{"narrative":"Given the current health score is at 50 with mixed sentiments — one positive and one negative feedback..."}
+
+$ curl -s -b cookies.txt -X POST .../campaigns/ -d '{"name":"__e2e_test_brand_lift_campaign"}'
+{"id":"1612c961-..."}
+$ curl -s -b cookies.txt -X POST .../branding/health-snapshot/ -d '{"label":"pre","campaignId":"1612c961-..."}'
+pre score: 50
+
+$ curl -s -b cookies.txt -X POST .../branding/mentions/ -d '{"source":"news","excerpt":"placeholder"}'   [unscored, left as-is]
+$ curl -s -b cookies.txt -X POST .../branding/mentions/ -d '{"source":"survey","excerpt":"Customers overwhelmingly loved the new campaign..."}'
+{"id":"<M3_ID>"}
+$ curl -s -b cookies.txt -X POST .../branding/mentions/<M3_ID>/sentiment/
+sentiment: positive
+
+$ curl -s -b cookies.txt -X POST .../branding/health-snapshot/ -d '{"label":"post","campaignId":"1612c961-..."}'
+post score: 67
+
+$ curl -s -b cookies.txt "http://127.0.0.1:3017/api/admin/branding/campaign-lift/?campaignId=1612c961-..."
+{"preSnapshot":{"healthScore":50,...},"postSnapshot":{"healthScore":67,...},"lift":17}
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3017/api/admin/branding/share-link/
+{"token":"kLT-UqucsxwpnRwJvPAg459W2GIss692ov5EJ_6XX50",...}
+$ curl -s http://127.0.0.1:3017/api/public/report/kLT-Uquc.../
+{"data":{"latestSnapshots":[...4 real snapshots with correct scores...]}}
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3017/report/branding/kLT-Uquc.../
+200
+
+$ sqlite3 ... DELETE FROM brand_health_snapshots WHERE label LIKE '__e2e%' OR label IN ('pre','post');
+$ sqlite3 ... DELETE FROM brand_mentions WHERE excerpt LIKE '%TalentsHill completely%' OR ... ;
+$ sqlite3 ... DELETE FROM campaigns WHERE name LIKE '__e2e%';
+$ sqlite3 ... "SELECT COUNT(*) FROM brand_mentions WHERE excerpt LIKE '%TalentsHill completely%';"
+0
+
+$ npx tsx scripts/record-usecase7-brand-perception-tests.ts
+--- Recording AI Brand Perception Dashboard use-case test results ---
+Created 19, skipped 0 (already present).

@@ -18,6 +18,23 @@ export default function PipelineTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [healthRunning, setHealthRunning] = useState(false);
+  const [healthResult, setHealthResult] = useState<{ healthScore: number | null; scoredMentions: number; totalMentions: number; positiveMentions: number; neutralMentions: number; negativeMentions: number; competitorsTracked: number } | null>(null);
+  const [healthError, setHealthError] = useState('');
+
+  const runHealthSnapshot = async () => {
+    setHealthRunning(true); setHealthError(''); setHealthResult(null);
+    try {
+      const res = await fetch('/api/admin/branding/health-snapshot/', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'manual snapshot' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setHealthResult(data);
+      loadRuns();
+    } catch (e) { setHealthError(String(e)); } finally { setHealthRunning(false); }
+  };
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=branding&executionMode=pipeline&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -65,6 +82,24 @@ export default function PipelineTab() {
           </table>
         </div>
       )}
+      <div className={styles.subSection}>
+        <h4>Brand health snapshot (cross-mention, deterministic)</h4>
+        <p>Aggregates all real, sentiment-scored mentions (Manual tab) into a 0-100 health score: <code>round(((positive-negative)/scored + 1) / 2 * 100)</code>. Unscored mentions and a real competitor-tracked count are reported alongside, never folded into a fabricated competitive score.</p>
+        <div className={styles.formActions}><Button onClick={runHealthSnapshot} disabled={healthRunning}>{healthRunning ? 'Snapshotting…' : 'Run Health Snapshot'}</Button></div>
+        {healthError && <p className={styles.error}>{healthError}</p>}
+        {healthResult && (
+          healthResult.healthScore === null ? <p className={styles.empty}>No scored mentions yet.</p> : (
+            <table className={styles.table}>
+              <thead><tr><th>Health Score</th><th>Positive</th><th>Neutral</th><th>Negative</th><th>Unscored</th><th>Competitors Tracked</th></tr></thead>
+              <tbody><tr>
+                <td><Badge variant="accent">{healthResult.healthScore}/100</Badge></td>
+                <td>{healthResult.positiveMentions}</td><td>{healthResult.neutralMentions}</td><td>{healthResult.negativeMentions}</td>
+                <td>{healthResult.totalMentions - healthResult.scoredMentions}</td><td>{healthResult.competitorsTracked}</td>
+              </tr></tbody>
+            </table>
+          )
+        )}
+      </div>
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No pipeline runs yet.</p>}
