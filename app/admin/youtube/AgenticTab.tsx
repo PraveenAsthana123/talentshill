@@ -18,6 +18,13 @@ export default function AgenticTab() {
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
 
+  const [growthRunning, setGrowthRunning] = useState(false);
+  const [growthSteps, setGrowthSteps] = useState<StepRecord[] | null>(null);
+  const [growthNarrative, setGrowthNarrative] = useState<string | null>(null);
+  const [growthTokens, setGrowthTokens] = useState<number | null>(null);
+  const [growthFabricationWarning, setGrowthFabricationWarning] = useState(false);
+  const [growthError, setGrowthError] = useState('');
+
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=youtube&executionMode=agentic&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
@@ -41,6 +48,17 @@ export default function AgenticTab() {
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setSteps(data.steps); setTotalTokens(data.totalTokensUsed); loadRuns();
     } catch (e) { setError(String(e)); } finally { setRunning(false); }
+  };
+
+  const runGrowthNarrative = async () => {
+    setGrowthRunning(true); setGrowthError(''); setGrowthSteps(null); setGrowthNarrative(null);
+    try {
+      const res = await fetch('/api/admin/youtube/channel-growth/agentic/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setGrowthSteps(data.steps); setGrowthNarrative(data.narrative); setGrowthTokens(data.totalTokensUsed); setGrowthFabricationWarning(data.fabricationWarning);
+      loadRuns();
+    } catch (e) { setGrowthError(String(e)); } finally { setGrowthRunning(false); }
   };
 
   return (
@@ -67,6 +85,31 @@ export default function AgenticTab() {
           ))}
         </div>
       )}
+
+      <div className={styles.subSection} style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-6)' }}>
+        <h4>Channel Growth Narrative</h4>
+        <p>Runs the real channel-growth pipeline, then drafts a strategic recap referencing only the real computed subscriber/view deltas — flagged automatically if it references any figure not given to it.</p>
+        <div className={styles.formActions}><Button onClick={runGrowthNarrative} disabled={growthRunning}>{growthRunning ? 'Agent running (30-60s)…' : 'Run Growth Narrative'}</Button></div>
+        {growthError && <p className={styles.error}>{growthError}</p>}
+        {growthSteps && (
+          <>
+            {growthTokens !== null && <p>Total tokens used: <strong>{growthTokens}</strong></p>}
+            {growthNarrative && (
+              <div className={styles.card} style={{ marginBottom: 'var(--space-3)' }}>
+                <div className={styles.cardHeader}><strong>Narrative</strong>{growthFabricationWarning && <Badge variant="warning">possible fabrication — verify</Badge>}</div>
+                <div className={styles.field}>{growthNarrative}</div>
+              </div>
+            )}
+            {growthSteps.map((s, i) => (
+              <div key={i} className={styles.card} style={{ marginBottom: 'var(--space-3)' }}>
+                <div className={styles.cardHeader}><strong>{i + 1}. {s.phase.toUpperCase()}</strong>{s.tokensUsed > 0 && <Badge variant="accent">{s.tokensUsed} tokens</Badge>}</div>
+                <div className={styles.field}><span>Output:</span> {s.output.slice(0, 400)}{s.output.length > 400 ? '…' : ''}</div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No agent runs yet.</p>}

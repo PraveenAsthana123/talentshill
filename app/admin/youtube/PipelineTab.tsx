@@ -8,6 +8,8 @@ import styles from './YoutubeShared.module.css';
 interface VideoOption { id: string; title: string; status: string }
 interface StageResult { stage: string; input: unknown; process: string; output: unknown; status: string }
 interface RunEntry { id: string; status: string; createdAt: string; triggeredBy: string | null }
+interface GrowthDelta { daysBetween: number; subscriberDelta: number; viewsDelta: number; watchTimeMinutesDelta: number | null; subscribersPerDay: number | null }
+interface GrowthResult { hasEnoughData: boolean; previousSnapshot: { snapshotDate: string; subscriberCount: number; totalViews: number } | null; currentSnapshot: { snapshotDate: string; subscriberCount: number; totalViews: number } | null; delta: GrowthDelta | null }
 
 export default function PipelineTab() {
   const [videos, setVideos] = useState<VideoOption[]>([]);
@@ -17,6 +19,10 @@ export default function PipelineTab() {
   const [score, setScore] = useState<number | null>(null);
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [error, setError] = useState('');
+
+  const [growthRunning, setGrowthRunning] = useState(false);
+  const [growthResult, setGrowthResult] = useState<GrowthResult | null>(null);
+  const [growthError, setGrowthError] = useState('');
 
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=youtube&executionMode=pipeline&limit=20')
@@ -43,6 +49,17 @@ export default function PipelineTab() {
     } catch (e) { setError(String(e)); } finally { setRunning(false); }
   };
 
+  const runGrowth = async () => {
+    setGrowthRunning(true); setGrowthError(''); setGrowthResult(null);
+    try {
+      const res = await fetch('/api/admin/youtube/channel-growth/', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setGrowthResult(data);
+      loadRuns();
+    } catch (e) { setGrowthError(String(e)); } finally { setGrowthRunning(false); }
+  };
+
   return (
     <div>
       <div className={styles.subSection}>
@@ -65,6 +82,28 @@ export default function PipelineTab() {
           </table>
         </div>
       )}
+
+      <div className={styles.subSection} style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-6)' }}>
+        <h4>Channel Growth (real diff between two real snapshots)</h4>
+        <p>Computes a real diff between the two most recent real channel snapshots (Manual tab). Never a fabricated or interpolated trend — reports &quot;not enough data&quot; instead of guessing when fewer than 2 real snapshots exist.</p>
+        <div className={styles.formActions}><Button onClick={runGrowth} disabled={growthRunning}>{growthRunning ? 'Computing…' : 'Run Growth Analysis'}</Button></div>
+        {growthError && <p className={styles.error}>{growthError}</p>}
+        {growthResult && (
+          <div style={{ marginTop: 'var(--space-3)' }}>
+            {!growthResult.hasEnoughData ? (
+              <p>Not enough data yet — log at least 2 real channel snapshots to compute a growth delta.</p>
+            ) : (
+              <p>
+                Over <strong>{growthResult.delta!.daysBetween}</strong> days: subscribers <strong>{growthResult.delta!.subscriberDelta >= 0 ? '+' : ''}{growthResult.delta!.subscriberDelta}</strong>,
+                {' '}views <strong>{growthResult.delta!.viewsDelta >= 0 ? '+' : ''}{growthResult.delta!.viewsDelta}</strong>
+                {growthResult.delta!.watchTimeMinutesDelta !== null && <> · watch time <strong>{growthResult.delta!.watchTimeMinutesDelta >= 0 ? '+' : ''}{growthResult.delta!.watchTimeMinutesDelta}min</strong></>}
+                {growthResult.delta!.subscribersPerDay !== null && <> ({growthResult.delta!.subscribersPerDay}/day)</>}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className={styles.subSection}>
         <h4>Transactional history</h4>
         {runs.length === 0 && <p className={styles.empty}>No pipeline runs yet.</p>}

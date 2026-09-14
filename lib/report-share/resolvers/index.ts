@@ -14,3 +14,4 @@ import '@/lib/report-share/resolvers/voice-ai';
 import '@/lib/report-share/resolvers/broadcasts';
 import '@/lib/report-share/resolvers/appointments';
 import '@/lib/report-share/resolvers/video-editing';
+import '@/lib/report-share/resolvers/youtube';

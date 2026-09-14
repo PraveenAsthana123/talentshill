@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import styles from './YoutubeShared.module.css';
 
 interface DashboardData {
-  kpis: { totalVideos: number; published: number; syncedToRealChannel: number; unscored: number; avgReadinessScore: number; totalRuns: number };
+  kpis: {
+    totalVideos: number; published: number; syncedToRealChannel: number; unscored: number; avgReadinessScore: number; totalRuns: number;
+    totalSnapshots: number; latestSubscriberCount: number | null; latestTotalViews: number | null; latestSnapshotDate: string | null;
+  };
   byStatus: Record<string, number>;
 }
 
@@ -30,6 +33,15 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.avgReadinessScore}</span>Avg readiness</div>
           <div className={styles.vizBox}><span>{data.kpis.totalRuns}</span>Total operation runs</div>
         </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Channel Growth Engine</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.totalSnapshots}</span>Channel snapshots</div>
+          <div className={styles.vizBox}><span>{data.kpis.latestSubscriberCount ?? '—'}</span>Latest subscribers</div>
+          <div className={styles.vizBox}><span>{data.kpis.latestTotalViews ?? '—'}</span>Latest total views</div>
+        </div>
+        {data.kpis.latestSnapshotDate && <p>Latest snapshot: {new Date(data.kpis.latestSnapshotDate).toLocaleDateString()}</p>}
       </div>
       <div className={styles.subSection}><h4>By status</h4><p>{Object.entries(data.byStatus).map(([s, n]) => `${s}: ${n}`).join(' · ') || 'None yet.'}</p></div>
     </div>

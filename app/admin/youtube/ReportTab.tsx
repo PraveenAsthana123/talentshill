@@ -1,19 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import styles from './YoutubeShared.module.css';
 
 interface VideoRow { title: string; status: string; externalVideoId: string | null; readinessScore: number | null }
-interface ReportData { generatedAt: string; totalVideos: number; videos: VideoRow[] }
+interface SnapshotRow { snapshotDate: string; subscriberCount: number; totalViews: number; totalWatchTimeMinutes: number | null; notes: string | null }
+interface ReportData { generatedAt: string; totalVideos: number; videos: VideoRow[]; channelSnapshots: SnapshotRow[] }
 
 export default function ReportTab() {
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
     fetch('/api/admin/youtube/report/').then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).then(setData).catch((e) => setError(String(e)));
   }, []);
+
+  const handleGenerateShareLink = async () => {
+    const res = await fetch('/api/admin/youtube/share-link/', { method: 'POST' });
+    const d = await res.json().catch(() => null);
+    if (d?.url) setShareUrl(d.url);
+  };
 
   if (error) return <p className={styles.error}>{error}</p>;
   if (!data) return <p>Loading…</p>;
@@ -36,6 +44,26 @@ export default function ReportTab() {
           ))}
         </tbody>
       </table>
+
+      <h4 style={{ marginTop: 'var(--space-5)' }}>Channel Growth Report</h4>
+      {data.channelSnapshots.length === 0 ? <p className={styles.empty}>No channel snapshots yet.</p> : (
+        <table className={styles.table}>
+          <thead><tr><th>Date</th><th>Subscribers</th><th>Total Views</th><th>Watch Time (min)</th></tr></thead>
+          <tbody>
+            {data.channelSnapshots.map((s, i) => (
+              <tr key={i}>
+                <td>{new Date(s.snapshotDate).toLocaleDateString()}</td>
+                <td>{s.subscriberCount.toLocaleString()}</td>
+                <td>{s.totalViews.toLocaleString()}</td>
+                <td>{s.totalWatchTimeMinutes ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div className={styles.formActions} style={{ marginTop: 'var(--space-4)' }}><Button onClick={handleGenerateShareLink}>Generate Client Link</Button></div>
+      {shareUrl && <p>Share this link: <code>{shareUrl}</code></p>}
     </div>
   );
 }

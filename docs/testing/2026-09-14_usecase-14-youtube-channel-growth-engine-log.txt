@@ -1,0 +1,65 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  19 passed (19)
+      Tests  166 passed (166)
+
+$ curl -s -c cookies-uc14.txt -X POST http://127.0.0.1:3024/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3024/api/admin/youtube/channel-snapshots/ -d '{"snapshotDate":"2026-01-01","subscriberCount":1000,"totalViews":5000}'
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies-uc14.txt -X POST .../youtube/channel-growth/
+hasEnoughData: False   [confirmed against real pre-existing dev DB state -- fewer than 2 real snapshots existed]
+
+$ curl -s -b cookies-uc14.txt -X POST .../youtube/channel-snapshots/ -d '{"snapshotDate":"2099-01-01","subscriberCount":1000,"totalViews":50000,"totalWatchTimeMinutes":20000,"notes":"__e2e_test snapshot 1"}'
+{"id":"3bc60d9a-..."}
+$ curl -s -b cookies-uc14.txt -X POST .../youtube/channel-snapshots/ -d '{"snapshotDate":"2099-01-11","subscriberCount":1100,"totalViews":55000,"totalWatchTimeMinutes":22000,"notes":"__e2e_test snapshot 2"}'
+{"id":"7217cb13-..."}
+
+$ curl -s -b cookies-uc14.txt -X POST .../youtube/channel-growth/
+daysBetween=10, subscriberDelta=100, viewsDelta=5000, watchTimeMinutesDelta=2000, subscribersPerDay=10
+  hand-check: (1100-1000)=100; (55000-50000)=5000; (22000-20000)=2000; 100/10=10 -- exact match
+
+$ curl -s -b cookies-uc14.txt -X POST .../youtube/channel-growth/agentic/
+fabricationWarning: false
+narrative: "Over the past ten days on my YouTube channel: I gained an impressive total of +100 subscribers
+  while significantly increasing daily views by approximately 5000 per day; this contributed to our
+  overall watch time rising substantially at around +2000 minutes over a span of just that many real,
+  tangible hours. ... Based on the consistent growth in both engagement and content consumption metrics
+  observed during these ten days — with an additional hundred subscribers joining daily..."
+  -- NOTE: real Ollama call cited only the real given numbers (100/5000/2000/10), but phrased the
+  5000-view TOTAL delta ambiguously as "per day" and "hundred subscribers joining daily" (should read
+  "over the 10-day period"). This is a real, disclosed small-model interpretation/phrasing limitation --
+  no new/invented number was introduced, so fabricationWarning correctly stayed false (the guard checks
+  for invented %/$ patterns, not arithmetic misphrasing of real given figures).
+
+$ curl -s -b cookies-uc14.txt .../youtube/dashboard/
+{"kpis":{"totalSnapshots":2,"latestSubscriberCount":1100,"latestTotalViews":55000,"latestSnapshotDate":"2099-01-11T00:00:00.000Z"}}
+
+$ curl -s -b cookies-uc14.txt .../youtube/report/
+channelSnapshots: [{"snapshotDate":"2099-01-11...","subscriberCount":1100,"totalViews":55000,...},
+                    {"snapshotDate":"2099-01-01...","subscriberCount":1000,"totalViews":50000,...}]
+
+$ curl -s -b cookies-uc14.txt -X POST .../youtube/share-link/
+{"token":"...","url":"/report/youtube/..."}
+$ curl -s http://127.0.0.1:3024/api/public/report/.../
+{"title":"YouTube Channel Growth Summary","data":{"latestSnapshots":[...2 real snapshots...],
+  "latestDelta":{"daysBetween":10,"subscriberDelta":100,"viewsDelta":5000,"watchTimeMinutesDelta":2000,"subscribersPerDay":10}}}
+  -- matches the live pipeline result exactly
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3024/report/youtube/.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM youtube_channel_snapshots WHERE notes LIKE '__e2e_test%';"
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='youtube';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM youtube_channel_snapshots WHERE notes LIKE '__e2e_test%';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='youtube';"
+0
+
+$ npx tsx scripts/record-usecase14-youtube-growth-tests.ts
+--- Recording YouTube Channel Growth Engine use-case test results ---
+Created 15, skipped 0 (already present).

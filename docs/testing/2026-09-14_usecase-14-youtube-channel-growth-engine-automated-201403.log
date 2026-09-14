@@ -1,0 +1,47 @@
+=== 2026-09-14T20:14:03Z run-usecase-tests.sh usecase-14-youtube-channel-growth-engine ===
+--- npx tsc --noEmit ---
+tsc exit: 0
+--- npx vitest run ---
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/mnt/deepa/talentshill[39m
+
+ [32m✓[39m tests/unit/template-renderer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1210[2mms[22m[39m
+     [33m[2m✓[22m[39m should export render functions [33m 1196[2mms[22m[39m
+ [32m✓[39m tests/unit/maintenance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1493[2mms[22m[39m
+     [33m[2m✓[22m[39m should export maintenance functions [33m 1477[2mms[22m[39m
+ [32m✓[39m tests/unit/csv-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1718[2mms[22m[39m
+     [33m[2m✓[22m[39m should export parse function [33m 1686[2mms[22m[39m
+ [32m✓[39m tests/unit/youtube-channel-growth.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 506[2mms[22m[39m
+     [33m[2m✓[22m[39m reports hasEnoughData=false with fewer than 2 real snapshots (negative case) [33m 415[2mms[22m[39m
+ [32m✓[39m tests/unit/feature-flags.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2053[2mms[22m[39m
+     [33m[2m✓[22m[39m should export cache functions [33m 1495[2mms[22m[39m
+     [33m[2m✓[22m[39m should export flag guard functions [33m 544[2mms[22m[39m
+ [32m✓[39m tests/unit/market-opportunity-scoring.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 494[2mms[22m[39m
+     [33m[2m✓[22m[39m skips briefs missing any real opportunity-scoring input (negative case) [33m 358[2mms[22m[39m
+ [32m✓[39m tests/unit/re-engagement-trigger.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 583[2mms[22m[39m
+     [33m[2m✓[22m[39m writes a real logged message for a real eligible at_risk contact with a phone (positive case) [33m 411[2mms[22m[39m
+ [32m✓[39m tests/unit/brand-health-perception.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 620[2mms[22m[39m
+     [33m[2m✓[22m[39m excludes unscored mentions from the health-score calculation (boundary) [33m 447[2mms[22m[39m
+ [32m✓[39m tests/unit/webinar-pipeline-conversion.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 733[2mms[22m[39m
+     [33m[2m✓[22m[39m does not push a cold no-show registrant into the leads pipeline (negative case) [33m 587[2mms[22m[39m
+ [32m✓[39m tests/unit/contact-activation-lifecycle.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 561[2mms[22m[39m
+     [33m[2m✓[22m[39m writes real lifecycle_stage/activation_score/last_engaged_at from real campaign_recipients history (positive case) [33m 459[2mms[22m[39m
+ [32m✓[39m tests/unit/campaign-personalization.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 917[2mms[22m[39m
+     [33m[2m✓[22m[39m materializes real campaign_recipients rows from a real static list, and updates audienceCount (positive case) [33m 355[2mms[22m[39m
+ [32m✓[39m tests/unit/tracking.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32m✓[39m tests/unit/content-performance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32m✓[39m tests/unit/voice-call-qualification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 345[2mms[22m[39m
+ [32m✓[39m tests/unit/ad-budget-optimization.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 121[2mms[22m[39m
+ [32m✓[39m tests/unit/video-clip-plan-pipeline.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 377[2mms[22m[39m
+ [32m✓[39m tests/unit/chat-sales-qualification.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 456[2mms[22m[39m
+     [33m[2m✓[22m[39m writes score/tier back to chat_requests without linking a contact for a cold conversation (negative case) [33m 369[2mms[22m[39m
+ [32m✓[39m tests/unit/influencer-roi-scoring.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 83[2mms[22m[39m
+ [32m✓[39m tests/unit/lead-scoring-and-qualification.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m      Tests [22m [1m[32m166 passed[39m[22m[90m (166)[39m
+[2m   Start at [22m 14:15:45
+[2m   Duration [22m 7.85s[2m (transform 12.92s, setup 2.55s, import 28.47s, tests 12.50s, environment 14ms)[22m
+
+vitest exit: 0
+RESULT: PASS

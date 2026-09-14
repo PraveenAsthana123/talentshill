@@ -8,6 +8,7 @@ import sharedStyles from './YoutubeShared.module.css';
 
 interface Video { id: string; title: string; status: string; description: string | null; externalVideoId: string | null; readinessScore: number | null; createdAt: string }
 interface RunEntry { id: string; operationName: string; status: string; triggeredBy: string | null; createdAt: string }
+interface Snapshot { id: string; snapshotDate: string; subscriberCount: number; totalViews: number; totalWatchTimeMinutes: number | null; notes: string | null }
 
 export default function ManualTab() {
   const [items, setItems] = useState<Video[]>([]);
@@ -17,16 +18,43 @@ export default function ManualTab() {
   const [description, setDescription] = useState('');
   const [runs, setRuns] = useState<RunEntry[]>([]);
 
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [showSnapshotForm, setShowSnapshotForm] = useState(false);
+  const [snapshotForm, setSnapshotForm] = useState({ snapshotDate: new Date().toISOString().slice(0, 10), subscriberCount: '', totalViews: '', totalWatchTimeMinutes: '', notes: '' });
+
   const fetchItems = async () => {
     setLoading(true);
     try { const res = await fetch('/api/admin/youtube'); const data = await res.json(); setItems(data.items || []); } catch { /* empty */ }
     setLoading(false);
   };
+  const fetchSnapshots = async () => {
+    try { const res = await fetch('/api/admin/youtube/channel-snapshots'); const data = await res.json(); setSnapshots(data.items || []); } catch { /* empty */ }
+  };
   const loadRuns = () => {
     fetch('/api/admin/operation-runs/?moduleKey=youtube&executionMode=manual&limit=20')
       .then((r) => (r.ok ? r.json() : { runs: [] })).then((d) => setRuns(d.runs || [])).catch(() => {});
   };
-  useEffect(() => { fetchItems(); loadRuns(); }, []);
+  useEffect(() => { fetchItems(); fetchSnapshots(); loadRuns(); }, []);
+
+  const handleCreateSnapshot = async () => {
+    if (!snapshotForm.snapshotDate || !snapshotForm.subscriberCount || !snapshotForm.totalViews) return;
+    await fetch('/api/admin/youtube/channel-snapshots', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        snapshotDate: snapshotForm.snapshotDate, subscriberCount: Number(snapshotForm.subscriberCount), totalViews: Number(snapshotForm.totalViews),
+        totalWatchTimeMinutes: snapshotForm.totalWatchTimeMinutes ? Number(snapshotForm.totalWatchTimeMinutes) : undefined,
+        notes: snapshotForm.notes.trim() || undefined,
+      }),
+    });
+    setSnapshotForm({ snapshotDate: new Date().toISOString().slice(0, 10), subscriberCount: '', totalViews: '', totalWatchTimeMinutes: '', notes: '' });
+    setShowSnapshotForm(false);
+    fetchSnapshots(); loadRuns();
+  };
+  const handleDeleteSnapshot = async (id: string) => {
+    if (!confirm('Delete this snapshot?')) return;
+    await fetch(`/api/admin/youtube/channel-snapshots/${id}`, { method: 'DELETE' });
+    fetchSnapshots(); loadRuns();
+  };
 
   const handleCreate = async () => {
     if (!title.trim()) return;
@@ -83,6 +111,45 @@ export default function ManualTab() {
                   <td>{v.externalVideoId || '—'}</td>
                   <td>{v.readinessScore ?? '—'}</td>
                   <td><button className={`${styles.actionBtn} ${styles.actionDelete}`} onClick={() => handleDelete(v.id)}>Delete</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className={sharedStyles.subSection} style={{ marginTop: 'var(--space-6)' }}>
+        <h4>Channel Snapshots (YouTube Channel Growth Engine)</h4>
+        <p>Real, admin-entered point-in-time snapshots copied from your real YouTube Studio dashboard. No YouTube Data API/OAuth integration exists in this build — growth is always a real diff between two real snapshots, computed in the Pipeline tab.</p>
+        <div className={styles.toolbar}>
+          <Button size="sm" onClick={() => setShowSnapshotForm((v) => !v)}>{showSnapshotForm ? 'Cancel' : 'New Snapshot'}</Button>
+        </div>
+        {showSnapshotForm && (
+          <div className={styles.formCard}>
+            <div className={styles.formGrid}>
+              <div><label className={styles.formLabel}>Snapshot date</label><input className={styles.formInput} type="date" value={snapshotForm.snapshotDate} onChange={(e) => setSnapshotForm((p) => ({ ...p, snapshotDate: e.target.value }))} /></div>
+              <div><label className={styles.formLabel}>Subscriber count</label><input className={styles.formInput} type="number" min={0} value={snapshotForm.subscriberCount} onChange={(e) => setSnapshotForm((p) => ({ ...p, subscriberCount: e.target.value }))} /></div>
+              <div><label className={styles.formLabel}>Total views</label><input className={styles.formInput} type="number" min={0} value={snapshotForm.totalViews} onChange={(e) => setSnapshotForm((p) => ({ ...p, totalViews: e.target.value }))} /></div>
+              <div><label className={styles.formLabel}>Total watch time (minutes, optional)</label><input className={styles.formInput} type="number" min={0} value={snapshotForm.totalWatchTimeMinutes} onChange={(e) => setSnapshotForm((p) => ({ ...p, totalWatchTimeMinutes: e.target.value }))} /></div>
+            </div>
+            <div style={{ marginTop: 'var(--space-3)' }}>
+              <label className={styles.formLabel}>Notes</label>
+              <textarea className={styles.formInput} rows={2} value={snapshotForm.notes} onChange={(e) => setSnapshotForm((p) => ({ ...p, notes: e.target.value }))} />
+            </div>
+            <div className={styles.formActions}><Button onClick={handleCreateSnapshot} disabled={!snapshotForm.snapshotDate || !snapshotForm.subscriberCount || !snapshotForm.totalViews}>Create Snapshot</Button></div>
+          </div>
+        )}
+        {snapshots.length === 0 ? <p className={sharedStyles.empty}>No channel snapshots yet.</p> : (
+          <table className={styles.table}>
+            <thead><tr><th>Date</th><th>Subscribers</th><th>Total Views</th><th>Watch Time (min)</th><th>Actions</th></tr></thead>
+            <tbody>
+              {snapshots.map((s) => (
+                <tr key={s.id}>
+                  <td>{new Date(s.snapshotDate).toLocaleDateString()}</td>
+                  <td>{s.subscriberCount.toLocaleString()}</td>
+                  <td>{s.totalViews.toLocaleString()}</td>
+                  <td>{s.totalWatchTimeMinutes ?? '—'}</td>
+                  <td><button className={`${styles.actionBtn} ${styles.actionDelete}`} onClick={() => handleDeleteSnapshot(s.id)}>Delete</button></td>
                 </tr>
               ))}
             </tbody>

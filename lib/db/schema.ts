@@ -1850,3 +1850,25 @@ export const youtubeVideos = sqliteTable('youtube_videos', {
 }, (table) => [
   index('idx_youtube_videos_status').on(table.status),
 ]);
+
+// ── YouTube Channel Growth Engine, added 2026-09-14 ──
+// No real YouTube Data API/OAuth integration exists anywhere in this
+// build -- confirmed via repo-wide search before building this (every
+// existing mention of "YouTube Data API" in the codebase is a
+// disclosure that it's absent). Channel-level metrics are real,
+// admin-entered snapshots copied from the admin's own real YouTube
+// Studio dashboard -- never a live API fetch, never a simulated
+// number. Growth is always a deterministic diff between two real
+// snapshots, never a fabricated trend.
+export const youtubeChannelSnapshots = sqliteTable('youtube_channel_snapshots', {
+  id: text('id').primaryKey(),
+  snapshotDate: integer('snapshot_date', { mode: 'timestamp' }).notNull(),
+  subscriberCount: integer('subscriber_count').notNull(),
+  totalViews: integer('total_views').notNull(),
+  totalWatchTimeMinutes: integer('total_watch_time_minutes'),
+  notes: text('notes'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_youtube_channel_snapshots_date').on(table.snapshotDate),
+]);
