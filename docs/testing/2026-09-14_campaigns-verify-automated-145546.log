@@ -1,0 +1,31 @@
+=== 2026-09-14T14:55:46Z run-usecase-tests.sh campaigns-verify ===
+--- npx tsc --noEmit ---
+tsc exit: 0
+--- npx vitest run ---
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/mnt/deepa/talentshill[39m
+
+ [32m✓[39m tests/unit/tracking.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 269[2mms[22m[39m
+ [32m✓[39m tests/unit/template-renderer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1281[2mms[22m[39m
+     [33m[2m✓[22m[39m should export render functions [33m 1264[2mms[22m[39m
+ [32m✓[39m tests/unit/csv-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1500[2mms[22m[39m
+     [33m[2m✓[22m[39m should export parse function [33m 1481[2mms[22m[39m
+ [32m✓[39m tests/unit/maintenance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1433[2mms[22m[39m
+     [33m[2m✓[22m[39m should export maintenance functions [33m 1354[2mms[22m[39m
+ [32m✓[39m tests/unit/lead-scoring-and-qualification.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m tests/unit/ad-budget-optimization.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m tests/unit/influencer-roi-scoring.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+ [32m✓[39m tests/unit/content-performance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 100[2mms[22m[39m
+ [32m✓[39m tests/unit/feature-flags.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1825[2mms[22m[39m
+     [33m[2m✓[22m[39m should export cache functions [33m 1468[2mms[22m[39m
+     [33m[2m✓[22m[39m should export flag guard functions [33m 348[2mms[22m[39m
+ [32m✓[39m tests/unit/campaign-personalization.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 781[2mms[22m[39m
+     [33m[2m✓[22m[39m materializes real campaign_recipients rows from a real static list, and updates audienceCount (positive case) [33m 435[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m10 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[32m81 passed[39m[22m[90m (81)[39m
+[2m   Start at [22m 08:56:19
+[2m   Duration [22m 4.69s[2m (transform 5.78s, setup 1.59s, import 11.18s, tests 7.40s, environment 7ms)[22m
+
+vitest exit: 0
+RESULT: PASS

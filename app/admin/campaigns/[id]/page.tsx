@@ -10,10 +10,61 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const [variants, setVariants] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
 
-  useEffect(() => {
-    fetch(`/api/admin/campaigns/${id}`).then(r => r.json()).then(setCampaign);
+  const [materializing, setMaterializing] = useState(false);
+  const [materializeResult, setMaterializeResult] = useState('');
+  const [generatingVariant, setGeneratingVariant] = useState(false);
+  const [variantResult, setVariantResult] = useState('');
+  const [segmenting, setSegmenting] = useState(false);
+  const [segmentResult, setSegmentResult] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
+
+  const refresh = () => {
+    fetch(`/api/admin/campaigns/${id}`).then(r => r.json()).then((d) => { setCampaign(d.campaign || d); setVariants(d.variants || []); });
     fetch(`/api/admin/campaigns/${id}/recipients`).then(r => r.json()).then(d => setRecipients(Array.isArray(d) ? d : d.recipients || []));
-  }, [id]);
+  };
+
+  useEffect(() => { refresh(); }, [id]);
+
+  const handleMaterialize = async () => {
+    setMaterializing(true); setMaterializeResult('');
+    try {
+      const res = await fetch(`/api/admin/campaigns/${id}/materialize-recipients/`, { method: 'POST' });
+      const d = await res.json();
+      setMaterializeResult(`${d.added} recipient(s) added, ${d.totalRecipients} total.`);
+      refresh();
+    } catch (e) { setMaterializeResult(String(e)); } finally { setMaterializing(false); }
+  };
+
+  const handleGenerateVariant = async () => {
+    setGeneratingVariant(true); setVariantResult('');
+    try {
+      const res = await fetch(`/api/admin/campaigns/${id}/generate-variant/`, { method: 'POST' });
+      const d = await res.json();
+      setVariantResult(d.fabricationWarning
+        ? `Variant B created: "${d.variantBSubject}" -- WARNING: possible fabricated statistic, review before launch.`
+        : `Variant B created: "${d.variantBSubject}"`);
+      refresh();
+    } catch (e) { setVariantResult(String(e)); } finally { setGeneratingVariant(false); }
+  };
+
+  const handleBehavioralSegmentation = async () => {
+    setSegmenting(true); setSegmentResult('');
+    try {
+      const res = await fetch(`/api/admin/campaigns/${id}/behavioral-segmentation/`, { method: 'POST' });
+      const d = await res.json();
+      setSegmentResult(d.nurtureListId
+        ? `${d.nonOpenerCount} non-opener(s) segmented into a new nurture list.`
+        : `${d.nonOpenerCount} non-opener(s) -- no list created.`);
+    } catch (e) { setSegmentResult(String(e)); } finally { setSegmenting(false); }
+  };
+
+  const handleShareLink = async () => {
+    const res = await fetch('/api/admin/campaigns/share-link/', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ campaignId: id }),
+    });
+    const d = await res.json().catch(() => null);
+    if (d?.url) setShareUrl(d.url);
+  };
 
   if (!campaign) return <div className={styles.loading}>Loading...</div>;
 
@@ -62,6 +113,34 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           <span className={styles.rateValue}>{clickRate}%</span>
           <span className={styles.rateLabel}>Click Rate</span>
         </div>
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>AI Personalized Email Campaign actions</h2>
+        </div>
+        <p>1. Materialize recipients from the audience (required before Launch actually sends to anyone). 2. Generate an AI A/B variant. 3. After sending, segment non-openers for a nurture follow-up. 4. Share a client-facing report link.</p>
+        <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', margin: 'var(--space-3) 0' }}>
+          <button onClick={handleMaterialize} disabled={materializing}>{materializing ? 'Materializing…' : 'Materialize Recipients'}</button>
+          <button onClick={handleGenerateVariant} disabled={generatingVariant}>{generatingVariant ? 'Generating (30-60s)…' : 'Generate AI Variant B'}</button>
+          <button onClick={handleBehavioralSegmentation} disabled={segmenting}>{segmenting ? 'Segmenting…' : 'Segment Non-Openers'}</button>
+          <button onClick={handleShareLink}>Generate Client Link</button>
+        </div>
+        {materializeResult && <p>{materializeResult}</p>}
+        {variantResult && <p>{variantResult}</p>}
+        {segmentResult && <p>{segmentResult}</p>}
+        {shareUrl && <p>Share this link: <code>{shareUrl}</code></p>}
+
+        {variants.length > 0 && (
+          <table className={styles.table}>
+            <thead><tr><th>Variant</th><th>Subject</th><th>Recipients</th><th>Opens</th><th>Clicks</th></tr></thead>
+            <tbody>
+              {variants.map((v: any) => (
+                <tr key={v.id}><td>{v.name}</td><td>{v.subject ?? '—'}</td><td>{v.recipientCount ?? 0}</td><td>{v.openCount ?? 0}</td><td>{v.clickCount ?? 0}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className={styles.section}>

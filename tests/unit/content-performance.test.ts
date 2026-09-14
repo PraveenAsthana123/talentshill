@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { createContent, deleteContent } from '@/lib/db/marketing-content-queries';
 import { createEngagementEntry, getPerformanceAggregateForAllContent } from '@/lib/db/content-engagement-queries';
 import { classifyContentAction } from '@/lib/pipelines/content-performance-pipeline';
-import { containsSuspiciousStatistics } from '@/lib/agents/content-generation-agent';
+import { containsSuspiciousStatistics } from '@/lib/agents/fabrication-guard';
 
 describe('containsSuspiciousStatistics (fabrication-detection backstop)', () => {
   it('flags a fabricated percentage claim (regression: caught live 2026-09-14 -- phi4-mini invented stats despite being told not to)', () => {

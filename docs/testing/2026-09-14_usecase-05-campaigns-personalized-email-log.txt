@@ -1,0 +1,106 @@
+$ npx tsc --noEmit -p tsconfig.json   (rechecked after every fix, all clean)
+$ npx vitest run
+ Test Files  10 passed (10)
+      Tests  81 passed (81)
+
+$ curl -s -b cookies.txt -X POST .../contacts/ -d '{"email":"__e2e_test_c1@example.com","firstName":"Alice","lastName":"Test","status":"active"}'
+{"id":"b07e55f7-..."}
+$ curl -s -b cookies.txt -X POST .../contacts/ -d '{"email":"__e2e_test_c2@example.com","firstName":"Bob",...}'
+{"id":"3f8f50ea-..."}
+
+$ curl -s -b cookies.txt -X POST .../lists/ -d '{"name":"__e2e_test_list","type":"static"}'
+{"id":"7eb7789d-..."}
+$ curl -s -b cookies.txt -X PATCH .../lists/7eb7789d-.../ -d '{"action":"add-members","contactIds":[...]}'
+{"success":true}
+
+$ curl -s -b cookies.txt -X POST .../templates/ -d '{"name":"__e2e_test_template","subject":"Hi {{firstName}}!","htmlContent":"...{{firstName}} {{lastName}}...{{company}}...","variables":[...]}'
+{"id":"532c61c3-..."}
+
+$ curl -s -b cookies.txt -X POST .../campaigns/ -d '{"name":"__e2e_test_campaign","audienceType":"list","audienceId":"7eb7789d-...","templateId":"532c61c3-...","subject":"Hi {{firstName}}!","throttlePerMinute":600}'
+{"id":"873120c6-..."}
+
+$ curl -s -b cookies.txt -X POST .../campaigns/873120c6-.../materialize-recipients/
+{"added":2,"totalRecipients":2,...}
+
+$ curl -s -b cookies.txt -X POST .../campaigns/873120c6-.../generate-variant/
+{"totalTokensUsed":490,"variantBSubject":"Discover How Our Services Can Transform You","fabricationWarning":false,...}
+# body preserved {{firstName}}/{{company}}, no % or $ pattern
+
+$ curl -s -b cookies.txt -X POST .../campaigns/873120c6-.../launch/
+{"success":true,"message":"Campaign launched"}
+
+$ curl -s -b cookies.txt .../api/admin/health/
+{"jobRunner":true,...}   # confirms the poll-based job runner is active in this process
+
+$ sleep ~20s, job transitions pending -> completed
+$ sqlite3 ... "SELECT status FROM jobs WHERE type='campaign_send' ORDER BY created_at DESC LIMIT 1;"
+completed
+
+$ sqlite3 ... "SELECT contact_id, status, error FROM campaign_recipients WHERE campaign_id='873120c6-...';"
+3f8f50ea-...|failed|Send failed
+b07e55f7-...|failed|Send failed
+$ grep EMAIL\ ERROR dev.log
+[EMAIL ERROR] [Error: getaddrinfo ENOTFOUND smtp.example.com]   # same pre-existing env gap as use case 2
+
+$ sqlite3 ... "SELECT contact_id FROM unsubscribe_tokens WHERE campaign_id='873120c6-...';"
+3f8f50ea-...
+b07e55f7-...
+# proves personalization/tracking code ran before the (unrelated) SMTP failure
+
+$ npx tsx scripts/verify-personalization-render.ts   (one-off, deleted after use)
+--- after renderTemplate ---
+<html><body><p>Hello Alice Test, this is a test email for Acme Co.</p>...
+--- after injectTrackingPixel ---
+...<img src="http://localhost:3000/api/t/o/recipient-abc123" .../>...
+--- after rewriteLinks ---
+...<a href="http://localhost:3000/api/t/c/recipient-abc123?url=...">...
+--- after injectUnsubscribeLink ---
+...<a href="http://localhost:3000/unsubscribe?token=unsub-token-xyz">Unsubscribe</a>...
+
+$ curl -sL -o /dev/null -w "%{http_code}" http://127.0.0.1:3015/api/t/o/73741d43-...
+200
+$ sqlite3 ... "SELECT status, opened_at FROM campaign_recipients WHERE id='73741d43-...';"
+opened|1789397209
+
+$ curl -sL -o /dev/null -w "%{http_code}" "http://127.0.0.1:3015/api/t/c/73741d43-...?url=..."
+404   (redirect target unreachable in sandbox, DB write already happened)
+$ sqlite3 ... "SELECT status, clicked_at FROM campaign_recipients WHERE id='73741d43-...';"
+clicked|1789397217
+
+$ curl -s -b cookies.txt .../campaigns/873120c6-.../
+totalOpened: 0   # BUG: real click happened, counter never moved
+
+--- fixed lib/db/tracking-queries.ts: logOpenEvent/logClickEvent now increment campaign counters ---
+
+$ curl -sL -o /dev/null "http://127.0.0.1:3015/api/t/o/2c978fe8-..."  (a different, still-failed recipient)
+$ curl -s -b cookies.txt .../campaigns/873120c6-.../
+totalOpened: 1   # confirmed fixed
+
+$ curl -s -b cookies.txt -X POST .../campaigns/873120c6-.../behavioral-segmentation/
+{"nonOpenerCount":0,"nurtureListId":null,"stages":[{"stage":"fetch_sent_recipients","output":"0 recipients",...}]}
+# BUG: the one real 'clicked' recipient should count as sent -- reported 0
+
+--- fixed lib/pipelines/campaign-behavioral-segmentation-pipeline.ts: status filter now includes opened/clicked ---
+
+$ curl -s -b cookies.txt -X POST .../campaigns/873120c6-.../behavioral-segmentation/
+{"nonOpenerCount":0,"nurtureListId":null,"stages":[{"stage":"fetch_sent_recipients","output":"1 recipients",...}]}
+# confirmed fixed: clicked recipient now counted, and correctly has 0 non-openers since they opened
+
+$ curl -s -b cookies.txt -X POST .../campaigns/share-link/ -d '{"campaignId":"873120c6-..."}'
+{"token":"n8KDgS7yNyOXuaOVKRHCfnko_2ySrwmw_NR6h2yPi4c",...}
+$ curl -s http://127.0.0.1:3015/api/public/report/n8KDgS7y.../
+{"data":{"name":"__e2e_test_campaign","status":"completed","audienceCount":2,"totalOpened":0,...,"variants":[{"name":"A",...},{"name":"B","subject":"Discover How Our Services Can Transform You",...}]}}
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3015/report/campaigns/n8KDgS7y.../
+200
+
+$ curl -s .../campaigns/873120c6-.../materialize-recipients/ -X POST
+{"error":"Unauthorized"}
+HTTP 401
+
+$ sqlite3 ... DELETE FROM unsubscribe_tokens/campaign_variants/campaign_recipients/campaigns/email_templates/list_members/lists/contact_events/contacts/report_share_tokens WHERE ... LIKE '__e2e%'
+$ sqlite3 ... "SELECT COUNT(*) FROM campaigns WHERE name LIKE '__e2e%';"
+0
+
+$ npx tsx scripts/record-usecase5-personalized-campaigns-tests.ts
+--- Recording AI Personalized Email Campaigns use-case test results ---
+Created 21, skipped 0 (already present).

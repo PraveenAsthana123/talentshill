@@ -5,3 +5,4 @@ import '@/lib/report-share/resolvers/ads-management';
 import '@/lib/report-share/resolvers/leads';
 import '@/lib/report-share/resolvers/influencer-video';
 import '@/lib/report-share/resolvers/content';
+import '@/lib/report-share/resolvers/campaigns';

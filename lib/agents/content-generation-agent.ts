@@ -5,6 +5,7 @@ import { getPersonaById } from '@/lib/db/content-persona-queries';
 import { createContent } from '@/lib/db/marketing-content-queries';
 import { logOperationRun, updateOperationRunStatus } from '@/lib/operation-run';
 import { ollamaChat } from './ollama-client';
+import { containsSuspiciousStatistics } from './fabrication-guard';
 
 export interface AgentStepRecord { phase: string; agentRole: string; input: string; output: string; tokensUsed: number }
 export interface ContentGenerationResult {
@@ -15,21 +16,6 @@ export interface ContentGenerationResult {
   topicId: string | null;
   generatedContentId: string | null;
   fabricationWarning: boolean;
-}
-
-// The system/user prompt below explicitly forbids inventing statistics
-// or named-customer claims. Verified live 2026-09-14 that the local
-// model (phi4-mini) does NOT reliably follow this instruction -- it
-// fabricated specific percentages and invented a "TalentsHill customer"
-// case study anyway. Prompting alone is not a sufficient safeguard for
-// this model size, so this is a deterministic backstop: flag any
-// generated draft containing a percentage or dollar figure so a human
-// reviewer is explicitly warned, rather than trusting model compliance.
-// This does not block generation (a human still reviews every draft
-// before publish via the existing marketingContent status gate) -- it
-// makes the specific risk visible instead of silent.
-export function containsSuspiciousStatistics(text: string): boolean {
-  return /\d+(\.\d+)?\s*%/.test(text) || /\$\s?\d/.test(text);
 }
 
 function logStep(runId: string, stepIndex: number, phase: string, agentRole: string, input: string, output: string, tokensUsed: number) {

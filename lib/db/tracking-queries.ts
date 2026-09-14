@@ -1,6 +1,7 @@
 import { db, schema } from './index';
 import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { updateCampaignCounters } from './campaign-queries';
 
 const { emailMessages, unsubscribeTokens, campaignRecipients, contacts, contactEvents, emailEvents } = schema;
 
@@ -118,7 +119,17 @@ export function markUnsubscribed(token: string) {
 export function logOpenEvent(recipientId: string) {
   const now = new Date();
 
-  // Update campaign recipient
+  // Real bug fixed 2026-09-14: this function updated the per-recipient
+  // row but never incremented campaigns.total_opened, so the campaign-
+  // level Dashboard/Report/share-link views always showed 0 opens even
+  // for a campaign with real, individually-tracked opens. Only count a
+  // FIRST open per recipient toward the campaign total (repeat pixel
+  // loads from the same email client re-opening the message should not
+  // inflate the count) -- checked via openedAt being null before this
+  // update, not just "does a row exist."
+  const before = db.select().from(campaignRecipients).where(eq(campaignRecipients.id, recipientId)).get();
+  const isFirstOpen = !!before && before.openedAt === null;
+
   db.update(campaignRecipients).set({
     status: 'opened',
     openedAt: now,
@@ -129,6 +140,10 @@ export function logOpenEvent(recipientId: string) {
     .where(eq(campaignRecipients.id, recipientId)).get();
 
   if (recipient) {
+    if (isFirstOpen && recipient.campaignId) {
+      updateCampaignCounters(recipient.campaignId, 'totalOpened', 1);
+    }
+
     // Log contact event
     db.insert(contactEvents).values({
       id: randomUUID(),
@@ -153,7 +168,11 @@ export function logOpenEvent(recipientId: string) {
 export function logClickEvent(recipientId: string, url: string) {
   const now = new Date();
 
-  // Update campaign recipient
+  // Same real-counter fix as logOpenEvent: only a first click per
+  // recipient counts toward campaigns.total_clicked.
+  const before = db.select().from(campaignRecipients).where(eq(campaignRecipients.id, recipientId)).get();
+  const isFirstClick = !!before && before.clickedAt === null;
+
   db.update(campaignRecipients).set({
     status: 'clicked',
     clickedAt: now,
@@ -164,6 +183,10 @@ export function logClickEvent(recipientId: string, url: string) {
     .where(eq(campaignRecipients.id, recipientId)).get();
 
   if (recipient) {
+    if (isFirstClick && recipient.campaignId) {
+      updateCampaignCounters(recipient.campaignId, 'totalClicked', 1);
+    }
+
     // Log contact event
     db.insert(contactEvents).values({
       id: randomUUID(),

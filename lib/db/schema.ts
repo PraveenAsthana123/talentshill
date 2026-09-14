@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, primaryKey, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const blogAuthors = sqliteTable('blog_authors', {
   id: text('id').primaryKey(),
@@ -603,6 +603,13 @@ export const campaignRecipients = sqliteTable('campaign_recipients', {
   index('idx_campaign_recipients_campaign').on(table.campaignId),
   index('idx_campaign_recipients_contact').on(table.contactId),
   index('idx_campaign_recipients_status').on(table.status),
+  // Real bug fixed 2026-09-14: addCampaignRecipients() calls
+  // onConflictDoNothing(), but with no unique constraint on
+  // (campaignId, contactId) and a fresh random `id` generated every
+  // call, nothing could ever conflict -- re-running recipient
+  // materialization would silently duplicate rows for the same contact,
+  // which campaign-sender.ts's send loop would then email twice.
+  uniqueIndex('uq_campaign_recipients_campaign_contact').on(table.campaignId, table.contactId),
 ]);
 
 export const campaignVariants = sqliteTable('campaign_variants', {
