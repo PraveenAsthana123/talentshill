@@ -7,6 +7,8 @@ interface DashboardData {
   kpis: {
     totalLeads: number; unscored: number; hot: number; warm: number; cool: number; cold: number;
     newStatus: number; contacted: number; qualified: number; closed: number; totalRuns: number;
+    unqualified: number; mql: number; sql: number; opportunity: number; customer: number;
+    alertsSent: number; hotWithoutAlert: number;
   };
 }
 
@@ -38,6 +40,23 @@ export default function DashboardTab() {
           <div className={styles.vizBox}><span>{data.kpis.warm}</span>Warm</div>
           <div className={styles.vizBox}><span>{data.kpis.cool}</span>Cool</div>
           <div className={styles.vizBox}><span>{data.kpis.cold}</span>Cold</div>
+        </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Qualification pipeline</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.unqualified}</span>Unqualified</div>
+          <div className={styles.vizBox}><span>{data.kpis.mql}</span>MQL</div>
+          <div className={styles.vizBox}><span>{data.kpis.sql}</span>SQL</div>
+          <div className={styles.vizBox}><span>{data.kpis.opportunity}</span>Opportunity</div>
+          <div className={styles.vizBox}><span>{data.kpis.customer}</span>Customer</div>
+        </div>
+      </div>
+      <div className={styles.subSection}>
+        <h4>Alerting</h4>
+        <div className={styles.vizRow}>
+          <div className={styles.vizBox}><span>{data.kpis.alertsSent}</span>Alerts sent</div>
+          <div className={styles.vizBox}><span>{data.kpis.hotWithoutAlert}</span>Hot leads awaiting alert</div>
         </div>
       </div>
       <div className={styles.subSection}>

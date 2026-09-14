@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import styles from './LeadsShared.module.css';
 
 interface LeadRow { fullName: string; company: string; industry: string; leadScore: number; leadTier: string; status: string }
@@ -10,10 +10,17 @@ interface ReportData { generatedAt: string; totalLeads: number; topLeads: LeadRo
 export default function ReportTab() {
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
     fetch('/api/admin/leads/report/').then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).then(setData).catch((e) => setError(String(e)));
   }, []);
+
+  const handleGenerateShareLink = async () => {
+    const res = await fetch('/api/admin/leads/share-link/', { method: 'POST' });
+    const d = await res.json().catch(() => null);
+    if (d?.url) setShareUrl(d.url);
+  };
 
   if (error) return <p className={styles.error}>{error}</p>;
   if (!data) return <p>Loading…</p>;
@@ -22,6 +29,9 @@ export default function ReportTab() {
     <div className={styles.subSection}>
       <h4>Top Leads Report (by score)</h4>
       <p>Generated {new Date(data.generatedAt).toLocaleString()} — {data.totalLeads} total leads.</p>
+      <p>Customer self-service: an aggregate-only qualification summary (no PII) can be shared without an admin login.</p>
+      <div className={styles.formActions}><Button onClick={handleGenerateShareLink}>Generate Client Link</Button></div>
+      {shareUrl && <p>Share this link: <code>{shareUrl}</code></p>}
       {data.topLeads.length === 0 && <p className={styles.empty}>No leads yet.</p>}
       <table className={styles.table}>
         <thead><tr><th>Name</th><th>Company</th><th>Industry</th><th>Score</th><th>Tier</th><th>Status</th></tr></thead>

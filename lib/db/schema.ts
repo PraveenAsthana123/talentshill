@@ -112,6 +112,9 @@ export const contactSubmissions = sqliteTable('contact_submissions', {
   consent: integer('consent', { mode: 'boolean' }).notNull().default(false),
   leadScore: integer('lead_score').default(0),
   leadTier: text('lead_tier', { enum: ['hot', 'warm', 'cool', 'cold'] }).default('cold'),
+  qualificationStage: text('qualification_stage', { enum: ['unqualified', 'mql', 'sql', 'opportunity', 'customer'] }).default('unqualified'),
+  assignedTo: text('assigned_to'),
+  alertSentAt: integer('alert_sent_at', { mode: 'timestamp' }),
   status: text('status', { enum: ['new', 'contacted', 'qualified', 'closed'] }).notNull().default('new'),
   ipHash: text('ip_hash'),
   userAgent: text('user_agent'),
@@ -120,6 +123,7 @@ export const contactSubmissions = sqliteTable('contact_submissions', {
 }, (table) => [
   index('idx_contact_status').on(table.status),
   index('idx_contact_lead_tier').on(table.leadTier),
+  index('idx_contact_qualification_stage').on(table.qualificationStage),
   index('idx_contact_industry').on(table.industry),
   index('idx_contact_created_at').on(table.createdAt),
 ]);

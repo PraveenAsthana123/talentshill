@@ -21,6 +21,13 @@ export const GET = withPermission('leads', 'read')(async (_request: NextRequest,
       qualified: all.filter((l) => l.status === 'qualified').length,
       closed: all.filter((l) => l.status === 'closed').length,
       totalRuns: runs.length,
+      unqualified: all.filter((l) => (l.qualificationStage || 'unqualified') === 'unqualified').length,
+      mql: all.filter((l) => l.qualificationStage === 'mql').length,
+      sql: all.filter((l) => l.qualificationStage === 'sql').length,
+      opportunity: all.filter((l) => l.qualificationStage === 'opportunity').length,
+      customer: all.filter((l) => l.qualificationStage === 'customer').length,
+      alertsSent: all.filter((l) => l.alertSentAt !== null).length,
+      hotWithoutAlert: all.filter((l) => l.leadTier === 'hot' && l.alertSentAt === null).length,
     },
   });
 });

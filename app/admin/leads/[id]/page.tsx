@@ -21,9 +21,14 @@ interface Submission {
   message: string;
   leadScore: number;
   leadTier: string;
+  qualificationStage: string;
+  assignedTo: string | null;
+  alertSentAt: string | null;
   status: string;
   createdAt: string;
 }
+
+const QUALIFICATION_STAGES = ['unqualified', 'mql', 'sql', 'opportunity', 'customer'];
 
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -55,6 +60,41 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       }
     } catch {
       addToast({ type: 'error', message: 'Failed to update' });
+    }
+    setUpdating(false);
+  };
+
+  const handleQualificationChange = async (field: 'qualificationStage' | 'assignedTo', value: string) => {
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${id}/qualification`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value || null }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLead(data.submission);
+        addToast({ type: 'success', message: field === 'qualificationStage' ? 'Stage updated' : 'Assignment updated' });
+      }
+    } catch {
+      addToast({ type: 'error', message: 'Failed to update' });
+    }
+    setUpdating(false);
+  };
+
+  const handleSendAlert = async () => {
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${id}/send-alert`, { method: 'POST' });
+      const data = await res.json();
+      addToast({ type: data.sent ? 'success' : 'info', message: data.reason });
+      if (data.sent) {
+        const refreshed = await fetch(`/api/admin/leads/${id}`).then((r) => r.json());
+        setLead(refreshed.submission);
+      }
+    } catch {
+      addToast({ type: 'error', message: 'Failed to send alert' });
     }
     setUpdating(false);
   };
@@ -192,6 +232,37 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 <option value="qualified">Qualified</option>
                 <option value="closed">Closed</option>
               </select>
+            </div>
+
+            <div className={styles.detailSection}>
+              <div className={styles.detailTitle}>Qualification</div>
+              <select
+                className={styles.statusSelect}
+                value={lead.qualificationStage || 'unqualified'}
+                onChange={(e) => handleQualificationChange('qualificationStage', e.target.value)}
+                disabled={updating}
+              >
+                {QUALIFICATION_STAGES.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+              </select>
+              <div className={styles.detailRow} style={{ marginTop: 'var(--space-3)' }}>
+                <span className={styles.detailLabel}>Assigned to</span>
+                <input
+                  className={styles.statusSelect}
+                  defaultValue={lead.assignedTo || ''}
+                  placeholder="Salesperson name/email"
+                  onBlur={(e) => { if (e.target.value !== (lead.assignedTo || '')) handleQualificationChange('assignedTo', e.target.value); }}
+                  disabled={updating}
+                />
+              </div>
+              <div className={styles.detailRow} style={{ marginTop: 'var(--space-3)' }}>
+                <span className={styles.detailLabel}>Alert</span>
+                <span className={styles.detailValue}>{lead.alertSentAt ? `Sent ${new Date(lead.alertSentAt).toLocaleString()}` : 'Not sent'}</span>
+              </div>
+              {lead.leadTier === 'hot' && !lead.alertSentAt && (
+                <button className={styles.statusSelect} onClick={handleSendAlert} disabled={updating} style={{ marginTop: 'var(--space-2)', cursor: 'pointer' }}>
+                  Send Hot-Lead Alert
+                </button>
+              )}
             </div>
 
             <div className={styles.detailSection}>

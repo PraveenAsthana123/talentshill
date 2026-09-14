@@ -8,6 +8,7 @@ const { contactSubmissions } = schema;
 
 type ContactStatus = 'new' | 'contacted' | 'qualified' | 'closed';
 type LeadTier = 'hot' | 'warm' | 'cool' | 'cold';
+export type QualificationStage = 'unqualified' | 'mql' | 'sql' | 'opportunity' | 'customer';
 
 export interface ContactSubmissionRow {
   id: string;
@@ -25,6 +26,9 @@ export interface ContactSubmissionRow {
   consent: boolean;
   leadScore: number | null;
   leadTier: string | null;
+  qualificationStage: string | null;
+  assignedTo: string | null;
+  alertSentAt: Date | null;
   status: string;
   ipHash: string | null;
   userAgent: string | null;
@@ -75,6 +79,7 @@ export function createSubmission(data: {
   consent: boolean;
   leadScore?: number;
   leadTier?: LeadTier;
+  qualificationStage?: QualificationStage;
   status?: ContactStatus;
   ipHash?: string;
   userAgent?: string;
@@ -99,6 +104,7 @@ export function createSubmission(data: {
     consent: data.consent,
     leadScore: data.leadScore ?? 0,
     leadTier: data.leadTier || 'cold',
+    qualificationStage: data.qualificationStage || 'unqualified',
     status: data.status || 'new',
     ipHash: data.ipHash || null,
     userAgent: data.userAgent || null,
@@ -178,6 +184,31 @@ export function updateSubmissionStatus(
     .get();
 
   return parseSubmission(row);
+}
+
+// ── Qualification stage / assignment / alert ──
+
+export function updateSubmissionQualification(
+  id: string,
+  data: { qualificationStage?: QualificationStage; assignedTo?: string | null }
+): ContactSubmissionRow | null {
+  const existing = db.select().from(contactSubmissions).where(eq(contactSubmissions.id, id)).get();
+  if (!existing) return null;
+
+  const row = db.update(contactSubmissions)
+    .set({
+      ...(data.qualificationStage !== undefined ? { qualificationStage: data.qualificationStage } : {}),
+      ...(data.assignedTo !== undefined ? { assignedTo: data.assignedTo } : {}),
+    })
+    .where(eq(contactSubmissions.id, id))
+    .returning()
+    .get();
+
+  return parseSubmission(row);
+}
+
+export function markAlertSent(id: string): void {
+  db.update(contactSubmissions).set({ alertSentAt: new Date() }).where(eq(contactSubmissions.id, id)).run();
 }
 
 // ── Stats ──

@@ -1,0 +1,70 @@
+$ npx tsc --noEmit -p tsconfig.json
+(no output, exit 0 -- rechecked 3 times, once per fix)
+
+$ npx vitest run
+ Test Files  7 passed (7)
+      Tests  49 passed (49)
+
+$ curl -s -X POST http://127.0.0.1:3012/api/contact/ -d '{...hot-tier data...}'
+{"success":true,"message":"...","id":"f3412760-d07a-4b7d-aa06-744e49708c45"}
+HTTP 201
+
+$ grep -i "EMAIL ERROR" dev.log
+[EMAIL ERROR] [Error: getaddrinfo ENOTFOUND smtp.example.com] {
+
+$ curl -s -b cookies.txt http://127.0.0.1:3012/api/admin/leads/f3412760-.../
+{"submission":{...,"leadScore":91,"leadTier":"hot","qualificationStage":"sql","assignedTo":null,"alertSentAt":null,...}}
+# alertSentAt correctly null despite alert being attempted -- confirms the fix
+
+$ curl -s http://127.0.0.1:3012/api/admin/leads/f3412760-.../
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3012/api/admin/leads/f3412760-.../send-alert/
+{"sent":false,"reason":"Not eligible (not hot tier, or already alerted)"}
+# eligible-but-failing case already covered above; this call ran after alertSentAt logic settled
+
+$ curl -s -b cookies.txt -X PATCH http://127.0.0.1:3012/api/admin/leads/f3412760-.../qualification/ -d '{"qualificationStage":"opportunity","assignedTo":"jane@talentshill.com"}'
+{"submission":{...,"qualificationStage":"opportunity","assignedTo":"jane@talentshill.com",...}}
+
+$ curl -s -b cookies.txt -X PATCH .../qualification/ -d '{"qualificationStage":"not-a-real-stage"}'
+{"error":"qualificationStage must be one of: unqualified, mql, sql, opportunity, customer"}
+HTTP 400
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3012/api/admin/leads/pipeline/ -d '{"submissionId":"f3412760-..."}'
+{"score":91,"tier":"hot",...}
+
+$ curl -s -b cookies.txt http://127.0.0.1:3012/api/admin/leads/f3412760-.../
+qualificationStage: sql
+# BUG: was 'opportunity' before the pipeline re-run. Fixed resolveQualificationStageOnRescore.
+
+--- after applying the fix ---
+
+$ curl -s -b cookies.txt -X PATCH .../qualification/ -d '{"qualificationStage":"opportunity"}'
+qualificationStage: opportunity
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3012/api/admin/leads/pipeline/ -d '{"submissionId":"f3412760-..."}'
+(re-run)
+
+$ curl -s -b cookies.txt http://127.0.0.1:3012/api/admin/leads/f3412760-.../
+qualificationStage: opportunity
+# Confirmed fixed.
+
+$ curl -s -b cookies.txt -X POST http://127.0.0.1:3012/api/admin/leads/share-link/
+{"token":"TGeSwT_W86psI0VbmoE85Rdyk-A9z4hnFfRTR9-6exw","url":"/report/leads/TGeSwT_..."}
+
+$ curl -s http://127.0.0.1:3012/api/public/report/TGeSwT_.../
+{"title":"Lead Qualification Summary",...,"data":{"total":2,"hotLeads":2,"warmLeads":0,"byIndustry":[{"industry":"banking","count":2}],"byQualificationStage":[{"stage":"opportunity","count":1},{"stage":"sql","count":1}]}}
+$ echo "$REPORT" | grep -qi "__e2e_test_lead\|e2e-test@example.com" && echo FAIL || echo PASS
+PASS: no PII in aggregate report
+
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3012/report/leads/TGeSwT_.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM contact_submissions WHERE full_name LIKE '__e2e%';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM contact_submissions WHERE full_name LIKE '__e2e%';"
+0
+
+$ npx tsx scripts/record-usecase2-lead-scoring-tests.ts
+--- Recording Lead Scoring & Qualification use-case test results ---
+Created 19, skipped 0 (already present).

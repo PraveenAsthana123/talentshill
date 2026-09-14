@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { contactSchema } from '@/features/forms/types/schemas';
 import { createSubmission } from '@/lib/db/contact-queries';
 import { calculateLeadScore } from '@/lib/contact/lead-scoring';
+import { classifyQualificationStage } from '@/lib/contact/lead-qualification-stage';
+import { sendHotLeadAlertIfNeeded } from '@/lib/contact/lead-alert';
 import { contactLimiter, getClientIp } from '@/lib/security/rate-limiter';
 import { sanitizeText, normalizeEmail, hashIp } from '@/lib/security/sanitize';
 import { sendEmail } from '@/lib/email/mailer';
@@ -60,15 +62,22 @@ export async function POST(request: NextRequest) {
       industry: sanitized.industry,
     });
 
+    const qualificationStage = classifyQualificationStage(tier);
+
     // Save to DB
     const submission = createSubmission({
       ...sanitized,
       leadScore: score,
       leadTier: tier,
+      qualificationStage,
       ipHash: hashIp(ip),
       userAgent: request.headers.get('user-agent') || undefined,
       sourcePage: request.headers.get('referer') || '/contact',
     });
+
+    // Dedicated hot-lead alert, distinct from the generic admin email
+    // below -- fire and forget, same pattern as the existing emails.
+    sendHotLeadAlertIfNeeded(submission, qualificationStage).catch(() => {});
 
     // Send emails (fire and forget — don't block response)
     const adminTemplate = buildContactAdminTemplate({
