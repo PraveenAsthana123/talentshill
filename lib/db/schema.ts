@@ -1618,6 +1618,35 @@ export const videoProjects = sqliteTable('video_projects', {
   index('idx_video_projects_status').on(table.status),
 ]);
 
+// ── Video Repurposing Factory, added 2026-09-14 ──
+// No real video-processing/transcoding integration (e.g. FFmpeg)
+// exists anywhere in this codebase -- confirmed via repo-wide search
+// before building this. A clip plan is a real, admin-entered planning
+// record (which real timestamp range of a real source video, for
+// which real target platform/aspect ratio) -- never a fabricated
+// render/transcode. status is limited to planning states; 'delivered'
+// means an admin manually attached a real outputUrl they produced
+// externally, never an automatic "processing complete."
+export const videoClipPlans = sqliteTable('video_clip_plans', {
+  id: text('id').primaryKey(),
+  sourceProjectId: text('source_project_id').notNull().references(() => videoProjects.id),
+  title: text('title').notNull(),
+  startSeconds: integer('start_seconds').notNull(),
+  endSeconds: integer('end_seconds').notNull(),
+  targetPlatform: text('target_platform', { enum: ['instagram_reels', 'tiktok', 'youtube_shorts', 'linkedin', 'other'] }).notNull(),
+  targetAspectRatio: text('target_aspect_ratio', { enum: ['9:16', '1:1', '16:9', '4:5'] }).notNull(),
+  status: text('status', { enum: ['planned', 'ready_for_edit', 'delivered'] }).notNull().default('planned'),
+  outputUrl: text('output_url'), // real, admin-entered -- only meaningful once status='delivered'
+  notes: text('notes'),
+  readinessScore: integer('readiness_score'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_video_clip_plans_source').on(table.sourceProjectId),
+  index('idx_video_clip_plans_status').on(table.status),
+]);
+
 export const voiceAssets = sqliteTable('voice_assets', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),

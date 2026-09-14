@@ -1,0 +1,69 @@
+$ npx tsc --noEmit
+(no output, exit 0)
+
+$ npx vitest run
+ Test Files  18 passed (18)
+      Tests  161 passed (161)
+
+$ curl -s -c cookies-uc13.txt -X POST http://127.0.0.1:3023/api/auth/login/ -d '{"email":"admin@talentshill.com","password":"admin123"}'
+{"success":true,"user":{"id":"9778a4cd-...","role":"admin"}}
+
+$ curl -s -X POST http://127.0.0.1:3023/api/admin/video-editing/fake-id/clips/ -d '{"title":"x"}'
+{"error":"Unauthorized"}
+HTTP 401
+
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/ -d '{"title":"__e2e_test_source_video Webinar Recording","tool":"adobe_premiere","strategyNotes":"Long-form webinar on AI marketing tactics","durationSeconds":120}'
+{"id":"cff4ae06-..."}
+
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/cff4ae06.../clips/ -d '{"title":"Hook clip","startSeconds":0,"endSeconds":30,"targetPlatform":"tiktok","targetAspectRatio":"9:16","notes":"Strong opening hook"}'
+{"id":"531b90d8-..."}
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/cff4ae06.../clips/ -d '{"title":"OOB clip","startSeconds":100,"endSeconds":200,"targetPlatform":"instagram_reels","targetAspectRatio":"9:16"}'
+{"id":"243e1579-..."}
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/cff4ae06.../clips/ -d '{"title":"CTA clip","startSeconds":40,"endSeconds":70,"targetPlatform":"youtube_shorts","targetAspectRatio":"9:16","notes":"call to action"}'
+{"id":"920001ed-..."}
+
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/clips/531b90d8.../readiness/
+score=100, rangeValid=True
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/clips/243e1579.../readiness/
+score=50, rangeValid=False
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/clips/920001ed.../readiness/
+score=100, rangeValid=True
+  -- hand-check: clip1/3 = range(25)+target(25)+notes(25)+output(25,n/a)=100; clip2 = range(0,invalid)+target(25)+notes(0)+output(25,n/a)=50
+
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/cff4ae06.../coverage/
+clipCount=3, totalClipSeconds=60, coverageRatio=0.5, invalidRangeCount=1, sourceDurationSeconds=120
+  -- hand-check: 30(clip1)+30(clip3)=60 valid seconds (clip2 excluded, out of range); 60/120=0.5
+
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/cff4ae06.../ideas/
+fabricationWarning: false
+ideas: "...Suggestion 1: AI Tools and Marketing Automation (00:00 - 01:30)...Suggestion 2: Personalized Content Creation with AI (01:31 - 03:00)...A human editor should verify the exact content to ensure it aligns with your requirements before repurposing these clips!"
+  -- real Ollama call, explicitly disclosed it has not watched the footage, asked for human verification, no invented quotes/statistics
+
+$ curl -s -b cookies-uc13.txt .../video-editing/dashboard/
+{"kpis":{"totalClipPlans":3,"deliveredClips":0,"avgClipReadinessScore":83},"byClipStatus":{"planned":3},"byClipPlatform":{"tiktok":1,"instagram_reels":1,"youtube_shorts":1}}
+  -- hand-check: round((100+50+100)/3) = round(83.33) = 83
+
+$ curl -s -b cookies-uc13.txt .../video-editing/report/
+clipPlans: [{"title":"Hook clip",...,"readinessScore":100},{"title":"CTA clip",...,"readinessScore":100},{"title":"OOB clip",...,"readinessScore":50}]
+
+$ curl -s -b cookies-uc13.txt -X POST .../video-editing/share-link/
+{"token":"...","url":"/report/video-editing/..."}
+$ curl -s http://127.0.0.1:3023/api/public/report/.../
+{"title":"Video Repurposing Summary","data":{"totalProjects":1,"totalClipPlans":3,"deliveredClips":0,"byClipStatus":{"planned":3},"byClipPlatform":{"tiktok":1,"instagram_reels":1,"youtube_shorts":1}}}
+  -- aggregate only, no clip notes/output URLs
+$ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3023/report/video-editing/.../
+200
+
+$ sqlite3 data/talentshill.db "DELETE FROM video_clip_plans WHERE source_project_id='cff4ae06-...';"
+$ sqlite3 data/talentshill.db "DELETE FROM video_projects WHERE id='cff4ae06-...';"
+$ sqlite3 data/talentshill.db "DELETE FROM report_share_tokens WHERE module_key='video_editing';"
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM video_clip_plans WHERE source_project_id='cff4ae06-...';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM video_projects WHERE id='cff4ae06-...';"
+0
+$ sqlite3 data/talentshill.db "SELECT COUNT(*) FROM report_share_tokens WHERE module_key='video_editing';"
+0
+
+$ npx tsx scripts/record-usecase13-video-repurposing-tests.ts
+--- Recording Video Repurposing Factory use-case test results ---
+Created 25, skipped 0 (already present).

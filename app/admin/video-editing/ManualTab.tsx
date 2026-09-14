@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { Badge } from '@/components/ui';
 import styles from './AdminVideoEditing.module.css';
@@ -107,7 +108,10 @@ export default function ManualTab() {
                   <td>{p.tool}</td>
                   <td><Badge variant={p.status === 'published' ? 'success' : 'default'}>{p.status}</Badge></td>
                   <td>{p.readinessScore ?? '—'}</td>
-                  <td><button className={`${styles.actionBtn} ${styles.actionDelete}`} onClick={() => handleDelete(p.id)}>Delete</button></td>
+                  <td>
+                    <Link href={`/admin/video-editing/${p.id}`} className={styles.actionBtn}>Clips</Link>
+                    <button className={`${styles.actionBtn} ${styles.actionDelete}`} onClick={() => handleDelete(p.id)}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
