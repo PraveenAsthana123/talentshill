@@ -91,6 +91,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Strategic Layer',
     items: [
       { href: '/admin/evidence', label: 'Evidence Ledger' },
+      { href: '/admin/kpi-engine', label: 'KPI Engine' },
     ],
   },
   {

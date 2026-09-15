@@ -2001,3 +2001,24 @@ export const evidenceRecord = sqliteTable('evidence_record', {
   index('idx_evidence_record_class').on(table.claimClass),
   index('idx_evidence_record_source').on(table.sourceRef),
 ]);
+
+// ── KPI Engine, added 2026-09-14 -- gap-analysis backlog #2/25 ──
+// Real, explainable KPI dimensions computed from real tables (contact_submissions,
+// campaign_recipients, webinar_registrants, ad_campaign_metrics, operation_run).
+// Every snapshot carries its own real sampleSize and a confidence derived
+// from it (see lib/kpi/kpi-engine.ts's confidenceForSampleSize) -- a
+// dimension with zero real samples is NULL, never a fabricated 0.
+export const kpiSnapshot = sqliteTable('kpi_snapshot', {
+  id: text('id').primaryKey(),
+  dimension: text('dimension', { enum: ['lead_generation', 'lead_quality', 'email_engagement', 'webinar_engagement', 'ad_efficiency', 'operational_health'] }).notNull(),
+  periodStart: integer('period_start', { mode: 'timestamp' }).notNull(),
+  periodEnd: integer('period_end', { mode: 'timestamp' }).notNull(),
+  value: real('value'), // null when sampleSize is 0 -- never fabricated
+  sampleSize: integer('sample_size').notNull().default(0),
+  confidence: text('confidence', { enum: ['unknown', 'low', 'medium', 'high'] }).notNull().default('unknown'),
+  unit: text('unit').notNull(), // e.g. 'percent', 'count', 'score_0_100', 'ratio'
+  computedAt: integer('computed_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_kpi_snapshot_dimension').on(table.dimension),
+  index('idx_kpi_snapshot_period').on(table.periodStart, table.periodEnd),
+]);
