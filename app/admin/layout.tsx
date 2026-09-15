@@ -95,6 +95,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/opportunities', label: 'Opportunities' },
       { href: '/admin/growth-readiness', label: 'Growth Readiness' },
       { href: '/admin/business-diagnostic', label: 'Business Diagnostic' },
+      { href: '/admin/geo-visibility', label: 'GEO Visibility' },
     ],
   },
   {

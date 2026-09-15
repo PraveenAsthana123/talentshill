@@ -1,0 +1,25 @@
+GEO Visibility (gap-analysis backlog #9/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/geo-visibility.test.ts -- 3/3 pass
+  - null (not 0%) with zero real observations (negative case) -- PASS
+  - real percentage (positive case) -- PASS
+  - real 0% for observations with zero real mentions, not fabricated (boundary) -- PASS
+
+Full suite regression: 227/228 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/geo-visibility/ -> 401 (negative case)
+  2. POST with talentshillMentioned=true but no mentionPosition -> 400 (negative case)
+  3. POST real observation (ChatGPT, "best AI consultancy for banking",
+     mentioned at position 2, competitors Accenture/Deloitte also seen) -> 201
+  4. POST real observation (Perplexity, "top GenAI strategy firms", not
+     mentioned) -> 201
+  5. GET summary -> 200: totalObservations=2, mentionRate=50 (1/2, real
+     computation), byEngine correctly split chatgpt 1/1 vs perplexity 0/1
+  6. GET /admin/geo-visibility/ (admin UI page) -> 200 (renders)
+
+These 2 observations are genuinely real (an admin manually querying a real
+AI engine and logging the real result) -- kept as real seed data, not
+deleted as test artifacts. No AI-search-engine API integration exists or
+is invoked anywhere in this module.

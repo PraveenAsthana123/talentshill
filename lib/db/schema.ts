@@ -2105,3 +2105,24 @@ export const growthReadinessSnapshot = sqliteTable('growth_readiness_snapshot', 
 }, (table) => [
   index('idx_growth_readiness_computed').on(table.computedAt),
 ]);
+
+// ── GEO Visibility, added 2026-09-14 -- backlog #9/25 ──
+// Real, admin-observed AI-answer-engine mention tracking. No AI-search-engine
+// API integration exists or is invoked here -- confirmed absent via repo
+// search before building. An admin manually runs a real query against a
+// real AI engine and logs what they actually saw.
+export const geoMentionObservation = sqliteTable('geo_mention_observation', {
+  id: text('id').primaryKey(),
+  engine: text('engine', { enum: ['chatgpt', 'perplexity', 'gemini', 'copilot', 'other'] }).notNull(),
+  queryText: text('query_text').notNull(), // the real prompt the admin actually typed
+  talentshillMentioned: integer('talentshill_mentioned', { mode: 'boolean' }).notNull(),
+  mentionPosition: integer('mention_position'), // real 1-indexed position in the answer, null if not mentioned
+  competitorsAlsoMentioned: text('competitors_also_mentioned'), // JSON array of real competitor names seen in the same answer
+  notes: text('notes'),
+  observedAt: integer('observed_at', { mode: 'timestamp' }).notNull(),
+  observedBy: text('observed_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_geo_mention_engine').on(table.engine),
+  index('idx_geo_mention_observed').on(table.observedAt),
+]);
