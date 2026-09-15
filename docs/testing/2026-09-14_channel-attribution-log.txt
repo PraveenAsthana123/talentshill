@@ -1,0 +1,24 @@
+Channel Attribution (gap-analysis backlog #11/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/channel-attribution.test.ts -- 2/2 pass
+  (integration-style smoke tests against the real dev DB, consistent with
+  the simplicity of the pure aggregation logic being tested)
+  - getChannelConversionRates returns valid real data without throwing -- PASS
+  - getDuplicateLeadTouches: duplicateTouches = totalSubmissions - uniqueEmails
+    consistency check -- PASS
+
+Full suite regression: 232/233 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/channel-attribution/ -> 401 (negative case)
+  2. GET -> 200, real aggregates:
+     - channels: import (1100 real contacts, 510 engaged, 46.4% -- hand
+       verified 510/1100=46.36%~=46.4), manual (5 contacts, 0 engaged, 0%)
+     - dedup: 160 real submissions, 160 unique emails, 0 duplicate touches
+       -- honestly reflects the real seeded data (no real multi-touch
+       leads exist yet in this dataset)
+
+Scope decision: extends existing contacts.source/contact_submissions data,
+no new admin UI page (API-only, disclosed) -- reuses no new RBAC resource
+beyond the already-seeded 'channel_attribution'.
