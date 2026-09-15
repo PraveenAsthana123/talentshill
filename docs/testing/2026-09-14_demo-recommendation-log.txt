@@ -1,0 +1,18 @@
+Demo Recommendation Engine (gap-analysis backlog #16/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/demo-recommendation.test.ts -- 1/1 pass
+  (integration-style smoke test against the real dev DB)
+  - resolves the top real opportunity to a real, existing module (consistency) -- PASS
+
+Full suite regression: 242/243 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/demo-recommendation/ -> 401 (negative case)
+  2. GET -> 200, real recommendation: moduleKey="leads", moduleName="Leads",
+     reason exactly matches Opportunity Engine's (#3) real top-ranked
+     candidate rationale -- confirms real resolution against module_registry
+     (not a fabricated module name) and genuine composition, not duplicated
+     logic.
+
+No test-data cleanup needed -- read-only composition over already-real data.
