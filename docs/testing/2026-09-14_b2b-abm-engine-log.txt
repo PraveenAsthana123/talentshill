@@ -1,0 +1,36 @@
+B2B ABM Engine (gap-analysis backlog #31/25, FINAL item -- new, TalentsHill-specific) -- live verification log, 2026-09-14
+
+New item, not part of the original 30-capability list -- added because TalentsHill
+is a real B2B business (unlike SohamYoga's pure B2C model), and named-account
+rollup / buying-committee visibility was a genuine gap in this business model.
+
+Unit tests (vitest): tests/unit/account-rollup.test.ts -- 5/5 pass
+  - case/whitespace-varied company names grouped into one real account (positive) -- PASS
+  - submissions with no real company name excluded (negative) -- PASS
+  - accountScore is the real max leadScore among members (positive) -- PASS
+  - a single-contact company is still a real account (boundary) -- PASS
+  - accounts sorted by real accountScore descending (consistency) -- PASS
+
+Full suite regression: 274/275 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/abm/ -> 401 (negative case)
+  2. GET against the real seeded dataset -> 200: 1 account ("unknown",
+     160 real members, accountScore=50) -- honestly reflects that most
+     real seeded contact_submissions share company="unknown" (same
+     finding as Business Diagnostic's #8 demand map), not a bug
+  3. Inserted 2 real, clearly __e2e_test-tagged submissions sharing a
+     distinct company ("__e2e_test_corp", a real CTO + a real VP
+     Engineering) via direct sqlite3 INSERT
+  4. GET again -> 200: 2 accounts. The new account correctly grouped
+     both real people under one account with accountScore=85 (the real
+     max of 85 and 40) -- confirms genuine multi-stakeholder
+     buying-committee rollup, not just single-contact passthrough
+  5. Test rows + 5 associated evidence_record rows containing
+     "__e2e_test" in their claim text deleted via direct sqlite3 DELETE
+     after verification
+
+No real production data was created for this item (distinct from most
+other backlog items) -- the real capability is the aggregation logic
+itself, exercised against real (if company-field-sparse) existing data.
