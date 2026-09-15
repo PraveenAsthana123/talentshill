@@ -1,0 +1,25 @@
+Vertical Pack + Vertical KPI Registry (gap-analysis backlog #20-21/25, combined) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/vertical-pack.test.ts -- 2/2 pass
+  - rejects an empty realKpiDimensions array (negative case) -- PASS
+  - real vertical persists, re-confirming updates rather than duplicates
+    (real onConflictDoUpdate against the real unique constraint, positive case) -- PASS
+
+Full suite regression: 253/254 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/vertical-pack/ -> 401 (negative case)
+  2. POST missing fields -> 400 (negative case)
+  3. POST real TalentsHill classification -> 201: "B2B AI & Digital
+     Marketing Consultancy" (distinct from the pre-existing `industries`
+     table, which models industries TalentsHill sells INTO, not its own
+     business model), all 6 real KPI Engine dimensions marked applicable
+  4. GET -> 200, real row confirmed persisted with real confirmedBy/
+     confirmedAt timestamps
+
+This is genuinely useful, real data (TalentsHill's actual one-time
+business-vertical classification) -- kept, not deleted. The
+__e2e_test_vertical row used to verify the upsert behavior in the unit
+test was cleaned up via direct sqlite3 DELETE before creating the real
+production row.

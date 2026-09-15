@@ -2181,3 +2181,20 @@ export const growthBrief = sqliteTable('growth_brief', {
 }, (table) => [
   index('idx_growth_brief_generated').on(table.generatedAt),
 ]);
+
+// ── Vertical Pack + Vertical KPI Registry, added 2026-09-14 -- backlog
+// #20-21/25 (combined, same treatment as SohamYoga) ── Real, one-time
+// admin-confirmed classification of TalentsHill's OWN business vertical
+// (distinct from the `industries` table, which models industries
+// TalentsHill sells INTO) plus which real KPI Engine (#2) dimensions
+// apply to it. Never auto-classified.
+export const verticalPack = sqliteTable('vertical_pack', {
+  id: text('id').primaryKey(),
+  verticalKey: text('vertical_key').notNull().unique(),
+  verticalName: text('vertical_name').notNull(),
+  description: text('description').notNull(),
+  realKpiDimensions: text('real_kpi_dimensions').notNull(), // JSON array of kpi_snapshot.dimension values that apply
+  confirmedBy: text('confirmed_by').notNull(),
+  confirmedAt: integer('confirmed_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
