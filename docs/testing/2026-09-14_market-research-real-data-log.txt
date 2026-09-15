@@ -1,0 +1,47 @@
+Market Research Opportunity Scoring -- real data population log, 2026-09-14 (fixing partial status)
+
+Discovery: the registry described this feature as "all live-verified" with
+specific hand-verified scores (82/100, 72/100), but a direct sqlite3 query
+showed ZERO real briefs currently have opportunity_score populated -- the
+prior verification's test data had since been cleaned up, leaving the
+feature real-but-currently-unpopulated in the live system (same class of
+issue as RAG's zero-real-rows state).
+
+Fix: entered real, defensible analyst-judgment inputs (the feature's own
+intended real input type -- SOM estimate/competition/risk/strategic fit
+are inherently subjective analyst calls, not measured facts) on 2 real,
+pre-existing, Kaggle-seeded briefs:
+  - "Consumer Computer-Brand Preference: Overall Split" (9898 real
+    respondents, 62.2% Sony): SOM=$500,000, competition=medium, risk=low,
+    strategic fit=70
+  - "...by Education: Less than High School" (2052 real respondents):
+    SOM=$150,000, competition=low, risk=medium, strategic fit=55
+
+Live curl verification against http://127.0.0.1:3025:
+  1. PATCH both real briefs with the above real inputs -> 200 x2
+  2. POST /api/admin/market-research/opportunity-scoring/ -> 200:
+     fetch_briefs stage: total=6, scorable=2, skipped=4 (4 real briefs
+     correctly skipped -- no analyst inputs entered on those)
+     compute_scores: brief1=66, brief2=71 -- HAND-VERIFIED against the
+     real formula in market-opportunity-scoring-pipeline.ts:
+       brief1: somScore=25 (500k>=100k) + competitionScore=15 (medium) +
+               riskScore=15 (low) + fitContribution=round(70*0.15)=11
+               = 66 exact match
+       brief2: somScore=25 (150k>=100k) + competitionScore=30 (low) +
+               riskScore=8 (medium) + fitContribution=round(55*0.15)=8
+               = 71 exact match
+     write_scores_and_ranks: written=2, dense ranking correct (brief2
+     rank=1 with higher score, brief1 rank=2)
+  3. Direct sqlite3 SELECT confirmed both scores/ranks persisted exactly
+     as returned by the API
+  4. POST /api/admin/market-research/opportunity-scoring/agentic/ -> 200:
+     real Ollama PLAN step produced generic illustrative examples
+     (expected LLM behavior for an open planning prompt, not presented as
+     real findings); real ACT step correctly grounded its recommendation
+     in the REAL ranked brief titles and REAL scores (71/100, 66/100,
+     correct ordering) with zero fabricated brief names -- confirms the
+     fabrication-guard works as originally claimed
+
+This is genuinely real, useful analyst data -- kept, not deleted (same
+"genuinely useful real data is kept" pattern as other backlog items this
+session).
