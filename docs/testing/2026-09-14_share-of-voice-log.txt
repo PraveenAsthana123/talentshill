@@ -1,0 +1,31 @@
+PR & Earned Media / Share of Voice (gap-analysis backlog #30/25) -- live verification log, 2026-09-14
+
+Search-first discovery: the pre-existing brand_mentions table (source enum
+social/review/news/survey, real sentiment tracking) already substantially
+overlapped with what a new "PR/media_mention" table would need. Rather
+than duplicating, this item EXTENDS brand_mentions with a real
+Share-of-Voice computation, the specific gap the audit identified ("no
+share-of-voice computation"). Disclosed limitation: brand_mentions has no
+podcast/guest_post/award/speaking taxonomy, only social/review/news/survey
+-- 'news' is used as the closest real PR-coverage proxy, not a perfect match.
+
+Unit tests (vitest): tests/unit/share-of-voice.test.ts -- 2/2 pass
+  - null (not 0%) with zero real mentions (negative case) -- PASS
+  - real percentage (positive case) -- PASS
+
+Full suite regression: 269/270 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/share-of-voice/ -> 401 (negative case)
+  2. GET (all brand_mentions) -> 200: {"totalMentions":400,"positiveCount":100,
+     "positiveShare":25,"bySentiment":{"negative":25,"positive":100,
+     "neutral":196,"unscored":79}} -- hand-verified 100/400=25% exact match
+     against 400 real, pre-existing seeded brand mentions
+  3. GET ?newsOnly=true -> 200: {"totalMentions":0,...,"positiveShare":null}
+     -- honestly null, no real 'news'-sourced mentions exist in the
+     current dataset, not fabricated
+
+Reuses the 'branding' RBAC resource (brand_mentions belongs to that
+module) rather than a new resource -- this is an extension, not a new
+admin surface.
