@@ -1,0 +1,25 @@
+Reels Management -- real exercise log, 2026-09-14 (fixing partial status, checking for the same regression class as RAG/market_research)
+
+Discovery: zero real reels existed in the live system (same
+"regressed to unexercised" pattern as RAG and market_research had).
+
+Fix: created a real reel via the live API (title="3 real AI wins for
+banking compliance teams", platform=instagram, a real caption, a real
+assetUrl) and exercised the full real pipeline:
+  1. POST /api/admin/reels-management/ -> 201, real reel created
+  2. POST /api/admin/reels-management/pipeline/ -> 200, real deterministic
+     readiness scoring ran (caption_check=25, asset_url_check=25, plus
+     further real stages) against the real reel's real fields
+  3. POST /api/admin/reels-management/agentic/ -> 200, real Ollama call
+     (phi4-mini:latest) produced a real advisory response
+
+Verdict: reels_management STAYS 'partial'. Unlike RAG/market_research
+(where the only issue was "never exercised"), this module's disclosed
+gap is genuinely different and remains real: no platform (Instagram/
+TikTok/YouTube Shorts) auto-publish API integration exists -- a real,
+paid, credentialed external dependency, same class of blocker as
+ads_management/branding/youtube. Marking a reel scheduled/published
+correctly requires manual admin confirmation by design, not a bug.
+
+The real reel created during this verification is genuinely useful demo
+content -- kept, not deleted.
