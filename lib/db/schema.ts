@@ -1713,6 +1713,12 @@ export const voiceCallLogs = sqliteTable('voice_call_logs', {
   callDate: integer('call_date', { mode: 'timestamp' }).notNull(),
   qualificationScore: integer('qualification_score'), // 0-100, computed from real BANT+next-step signals in the transcript
   qualificationTier: text('qualification_tier', { enum: ['cold', 'warm', 'hot'] }),
+  // Real consent tracking, added 2026-09-14 (fixing a disclosed gap) --
+  // whether the real caller was informed/consented to the call being
+  // logged, a real admin-entered fact, never inferred or defaulted to
+  // true. null means genuinely unrecorded, not "assume consent."
+  consentRecorded: integer('consent_recorded', { mode: 'boolean' }),
+  consentNotes: text('consent_notes'),
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),

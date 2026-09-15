@@ -1,0 +1,24 @@
+Voice AI consent-tracking field (fixing a disclosed partial-status gap) -- live verification log, 2026-09-14
+
+Added real consentRecorded (boolean, nullable) and consentNotes (text)
+fields to voice_call_logs -- whether the real caller was informed/
+consented to the call being logged, a real admin-entered fact, never
+inferred or defaulted to true.
+
+Type-check: clean (npx tsc --noEmit, no errors).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. POST /api/admin/voice-ai/calls/ with consentRecorded=true and a real
+     consentNotes string -> 201
+  2. POST again with no consent fields at all -> 201
+  3. Direct sqlite3 SELECT confirmed: call 1 persisted
+     consent_recorded=1 with the real notes text; call 2 persisted
+     consent_recorded=NULL (honestly unrecorded, not a fabricated
+     default of true or false)
+
+Test rows deleted after verification via direct sqlite3 DELETE.
+
+Module status: voice_ai STAYS 'partial' -- this fix closes only the
+consent-tracking sub-gap. The real, unaddressed blocker remains no
+telephony integration (no Twilio/SIP/IVR), which requires a real paid
+provider and is out of scope for a code-only fix.

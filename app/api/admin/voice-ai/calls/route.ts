@@ -27,6 +27,8 @@ export const POST = withPermission('voice_ai', 'create')(async (request: NextReq
       contactId: body.contactId, phoneNumber: body.phoneNumber, durationSeconds: body.durationSeconds,
       callDate: body.callDate ? new Date(body.callDate) : undefined,
       createdBy: userId ?? undefined,
+      consentRecorded: typeof body.consentRecorded === 'boolean' ? body.consentRecorded : undefined,
+      consentNotes: body.consentNotes,
     });
     logOperationRun({ moduleKey: 'voice_ai', operationName: 'manual_create_call_log', executionMode: 'manual', status: 'completed', inputPayload: { id, direction }, triggeredBy: userId });
     return NextResponse.json({ id }, { status: 201 });

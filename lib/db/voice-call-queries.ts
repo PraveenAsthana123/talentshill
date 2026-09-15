@@ -12,6 +12,8 @@ export function createVoiceCallLog(data: {
   durationSeconds?: number;
   callDate?: Date;
   createdBy?: string;
+  consentRecorded?: boolean;
+  consentNotes?: string;
 }) {
   const id = randomUUID();
   const now = new Date();
@@ -24,6 +26,8 @@ export function createVoiceCallLog(data: {
     durationSeconds: data.durationSeconds ?? null,
     callDate: data.callDate ?? now,
     createdBy: data.createdBy,
+    consentRecorded: data.consentRecorded ?? null,
+    consentNotes: data.consentNotes ?? null,
     createdAt: now,
     updatedAt: now,
   }).run();
