@@ -1,0 +1,24 @@
+Growth Scenario Simulator (gap-analysis backlog #18/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/growth-scenario.test.ts -- 4/4 pass
+  - month 0 returns the exact real current value for all 3 rates (boundary) -- PASS
+  - compounds correctly at the disclosed 2%/5%/10% rates (positive case) -- PASS
+  - aggressive > moderate > conservative beyond month 0 (consistency) -- PASS
+  - produces months+1 points (consistency) -- PASS
+
+Full suite regression: 249/250 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/growth-scenario/ -> 401 (negative case)
+  2. GET ?months=3 -> 200, real projections from real current KPI values:
+     lead_generation (currentValue=160) month-1: conservative=163.2
+     (160*1.02), moderate=168 (160*1.05), aggressive=176 (160*1.10) --
+     hand-verified exact match. lead_quality (currentValue=49.8) projected
+     correctly too. Dimensions with no real data (webinar_engagement,
+     ad_efficiency) correctly excluded from projections, not fabricated
+     from a 0 baseline.
+
+No test-data cleanup needed -- read-only projection over already-real
+KPI data. SCENARIO_RATES (2%/5%/10%) are disclosed hardcoded editorial
+assumptions, not derived from historical growth data.
