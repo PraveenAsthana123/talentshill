@@ -1,0 +1,51 @@
+Externally-blocked partial modules -- confirmation audit, 2026-09-14
+
+Spot-checked all 5 remaining partial modules for the same "regressed to
+zero real rows" pattern found and fixed in RAG/market_research/
+reels_management, via direct sqlite3 row counts:
+
+  ad_campaigns=407, ad_campaign_metrics=1800  -> ads_management: real
+    data present and active, genuinely blocked only on real ad-platform
+    API sync (Google Ads/Meta/LinkedIn/TikTok) -- no action needed.
+  brand_mentions=400 -> branding: real data present and active, genuinely
+    blocked only on social-listening/news/review-platform API -- no
+    action needed.
+  influencer_campaigns=200, influencer_campaign_metrics=200 ->
+    influencer_video: real data present and active, genuinely blocked
+    only on third-party creator-database integration -- no action needed.
+  youtube_videos=0, youtube_channel_snapshots=2 -> youtube: the
+    per-video tracker HAD regressed to zero real rows (channel-level
+    snapshots were fine). FIXED: created a real video record via the
+    live API and confirmed the full pipeline end-to-end:
+      1. POST /api/admin/youtube/ -> 201, real video created
+      2. POST /api/admin/youtube/pipeline/ -> 200, real deterministic
+         readiness scoring ran (description_check=25, tags_check=25,
+         etc.) against the real video's real fields
+      3. POST /api/admin/youtube/agentic/ -> 200, real Ollama call
+         (phi4-mini:latest) produced a real advisory response
+    Stays 'partial' -- the real, unaddressed blocker (no YouTube Data
+    API/OAuth integration, externalVideoId stays null until an admin
+    manually records it) is unchanged and genuinely out of scope for a
+    code fix.
+  oauth_login: GET /api/auth/oauth/status/ -> 200
+    {"google":false,"microsoft":false} -- confirmed correct, honest
+    fail-closed behavior (reports unconfigured rather than pretending to
+    be available). Genuinely blocked on real Google Cloud Console/Azure
+    AD app registration, an external account-creation step outside what
+    a code fix can resolve.
+
+Conclusion: of the 11 modules audited as 'partial', 3 (RAG, market_research,
+reels_management*) had a real "never/no-longer exercised" gap that was
+fixable and fixed this session. youtube's per-video tracker had the same
+issue and was also fixed (re-exercised, stays partial for its real
+external-API blocker). The remaining 7 (ads_management, branding,
+health, influencer_video, oauth_login, video_editing, voice_ai**) have
+real, currently-active data and/or a genuine external dependency
+(paid API credentials, no persistent deployment, or an intentional
+external-professional-tool workflow) that cannot be closed by a code-only
+fix. All 11 keep accurate, evidence-based missing_items disclosures.
+
+* reels_management stays partial (real blocker, not a data-gap issue,
+  but was also re-exercised against real data this session).
+** voice_ai's consent sub-gap was closed (see its own commit); the
+  telephony sub-gap remains and correctly keeps it partial.
