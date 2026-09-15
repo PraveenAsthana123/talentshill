@@ -4,6 +4,7 @@ import { logOperationRun, updateOperationRunStatus } from '@/lib/operation-run';
 import { calculateLeadScore } from '@/lib/contact/lead-scoring';
 import { classifyQualificationStage, resolveQualificationStageOnRescore, type QualificationStage } from '@/lib/contact/lead-qualification-stage';
 import { sendHotLeadAlertIfNeeded } from '@/lib/contact/lead-alert';
+import { recordEvidence } from '@/lib/evidence/evidence-ledger';
 
 export interface ScoringStageResult {
   stage: string;
@@ -62,6 +63,20 @@ export function runLeadScoringPipeline(params: { submissionId: string; triggered
   for (const s of result.stages) {
     stages.push({ stage: s.stage, input: s.input, process: 'Real weighted-rubric lookup, see lib/contact/lead-scoring.ts', output: s.points, status: 'ok' });
   }
+
+  // Real evidence row: the score is a deterministic rubric computation
+  // over this real submission's real fields, so it's a FACT (not an
+  // ESTIMATE/INFERENCE) with high confidence -- traceable back to the
+  // exact submission it was computed from.
+  recordEvidence({
+    moduleKey: 'leads',
+    claimClass: 'fact',
+    claimText: `Lead scored ${result.score} (${result.tier} tier) via the real weighted rubric.`,
+    sourceRef: `contact_submissions:${submission.id}`,
+    sourceTable: 'contact_submissions',
+    confidence: 'high',
+    createdBy: params.triggeredBy ?? 'system',
+  });
 
   const autoClassified = classifyQualificationStage(result.tier);
   const qualificationStage = resolveQualificationStageOnRescore((submission.qualificationStage || 'unqualified') as QualificationStage, autoClassified);

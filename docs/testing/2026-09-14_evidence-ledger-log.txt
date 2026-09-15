@@ -1,0 +1,42 @@
+Evidence Ledger (gap-analysis backlog #1/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/evidence-ledger.test.ts -- 7/7 pass
+  - recordEvidence rejects empty sourceRef (negative) -- PASS
+  - recordEvidence rejects empty claimText (negative) -- PASS
+  - recordEvidence writes a real, listable row (positive) -- PASS
+  - getEvidenceSummary returns zero counts for a module with no evidence, not fabricated (negative) -- PASS
+  - isSourceRefValid: well-formed ref accepted (positive) -- PASS
+  - isSourceRefValid: no-colon ref rejected (negative) -- PASS
+  - isSourceRefValid: empty ref rejected (boundary) -- PASS
+
+Full suite regression check: 189/190 passing. 1 pre-existing failure
+(tests/unit/occasion-trigger.test.ts, real-template-match content mismatch)
+confirmed via `git stash` to fail identically with this session's changes
+removed -- unrelated to Evidence Ledger, not introduced by this work.
+
+Live curl verification against http://127.0.0.1:3025 (real dev server, real SQLite DB):
+  1. Unauthenticated GET /api/admin/evidence/ -> 401 {"error":"Unauthorized"} (negative case)
+  2. Authenticated GET /api/admin/evidence/?summary=true -> 200, real baseline count (positive case)
+  3. POST /api/admin/leads/pipeline/ with a real contact_submissions.id
+     (80e21815-2bb4-4b28-9ed6-fd1c2727a33c, "Shannon Rodriguez") -> 200,
+     real score=16/cold computed from real submission fields (positive case,
+     confirms the pipeline wiring, not a synthetic call to recordEvidence directly)
+  4. GET /api/admin/evidence/?moduleKey=leads -> 200, exactly 1 real evidence
+     row: claimClass=fact, claimText="Lead scored 16 (cold tier) via the real
+     weighted rubric.", sourceRef="contact_submissions:80e21815-...",
+     confidence=high -- confirms end-to-end: real pipeline run wrote a real,
+     traceable evidence row, not a fabricated one
+  5. POST /api/admin/evidence/ missing sourceRef -> 400 (negative case)
+  6. POST /api/admin/evidence/ with real manual hypothesis entry -> 201 (positive case)
+  7. GET /admin/evidence/ (admin UI page) -> 200 (renders)
+
+Test-data hygiene: __e2e_test* evidence rows (2, from steps above + unit
+tests writing to the shared dev DB) deleted via direct sqlite3 DELETE after
+verification, confirmed via changes()=2. The real lead-scoring evidence row
+(step 4) and the real submission's score update are genuine data from a
+real pipeline run and were kept, not deleted.
+
+Scope decision: lean single-page admin UI, not the full Operational Portal
+10-tab standard used by primary business-process modules (competitor-analysis,
+occasions, module-registry) -- Evidence Ledger is cross-cutting infrastructure,
+not itself a phase/topic module. Disclosed in module_registry.missingItems.

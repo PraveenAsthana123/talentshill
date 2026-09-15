@@ -84,6 +84,16 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Self-generated gap-analysis backlog (docs/audits/2026-09-14_self-generated-gap-analysis-and-backlog.md).
+    // Cross-cutting strategic/evidence layer this codebase had zero of
+    // before this backlog -- distinct from the primary business-process
+    // modules above.
+    label: 'Strategic Layer',
+    items: [
+      { href: '/admin/evidence', label: 'Evidence Ledger' },
+    ],
+  },
+  {
     label: 'Integrations',
     items: [
       { href: '/admin/integrations', label: 'Hub' },

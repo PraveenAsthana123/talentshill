@@ -36,6 +36,17 @@ const RESOURCES = [
   // added 2026-09-14 -- admin-level, so scoped like broadcasts/
   // competitor_analysis rather than exposed to a lower-privilege role.
   'occasions',
+  // Self-generated gap-analysis backlog (docs/audits/2026-09-14_self-generated-gap-analysis-and-backlog.md),
+  // added 2026-09-14 -- admin-level throughout, same reasoning as
+  // 'occasions' above. One resource per genuinely new admin-facing
+  // capability; items that extend an existing surface (competitor
+  // numeric scoring, lead-scoring next-best-action, video script
+  // generation) reuse their existing resource instead of adding one.
+  'evidence', 'kpi_engine', 'opportunities', 'growth_readiness',
+  'business_diagnostic', 'geo_visibility', 'cro_friction', 'channel_attribution',
+  'presales_brief', 'research_router', 'demo_recommendation', 'sales_copilot',
+  'growth_scenario', 'vertical_pack', 'case_studies', 'golden_paths',
+  'partner_ecosystem', 'positioning', 'pmf', 'pr_media', 'abm',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];

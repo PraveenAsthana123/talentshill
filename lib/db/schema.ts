@@ -1977,3 +1977,27 @@ export const occasionMessages = sqliteTable('occasion_messages', {
   // trigger pipeline runs more than once in a day.
   uniqueIndex('uq_occasion_messages_contact_type_day').on(table.contactId, table.occasionType, table.festivalCode, table.triggeredDate),
 ]);
+
+// ── Evidence Ledger, added 2026-09-14 -- gap-analysis backlog #1/25 ──
+// Real claim-classification with mandatory source traceability, so any
+// number this app later surfaces (a KPI, a score, a brief) can be traced
+// back to what kind of evidence it actually is. `sourceRef` must always
+// point at a real row somewhere else in this DB (e.g. "contact_submissions:<id>")
+// -- recordEvidence() in lib/evidence/evidence-ledger.ts throws if it's empty.
+export const evidenceRecord = sqliteTable('evidence_record', {
+  id: text('id').primaryKey(),
+  moduleKey: text('module_key').notNull(), // ties to module_registry.moduleKey, e.g. 'leads'
+  claimClass: text('claim_class', { enum: ['fact', 'estimate', 'inference', 'hypothesis', 'unknown'] }).notNull(),
+  claimText: text('claim_text').notNull(), // the actual claim, e.g. "Lead scored 72 (hot tier)"
+  sourceRef: text('source_ref').notNull(), // required, e.g. "contact_submissions:<id>", "operation_run:<id>"
+  sourceTable: text('source_table'), // optional, real table name the sourceRef points into
+  confidence: text('confidence', { enum: ['low', 'medium', 'high'] }),
+  observedAt: integer('observed_at', { mode: 'timestamp' }).notNull(),
+  validUntil: integer('valid_until', { mode: 'timestamp' }), // null = no known expiry
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_evidence_record_module').on(table.moduleKey),
+  index('idx_evidence_record_class').on(table.claimClass),
+  index('idx_evidence_record_source').on(table.sourceRef),
+]);
