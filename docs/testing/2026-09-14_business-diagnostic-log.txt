@@ -1,0 +1,28 @@
+Business Diagnostic (gap-analysis backlog #8/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/business-diagnostic.test.ts -- 3/3 pass
+  - real weakest funnel transition correctly identified (positive case) -- PASS
+  - null conversionRate for zero-denominator transitions, constraint null (negative/boundary) -- PASS
+  - exactly 4 transitions for the 5-stage funnel (consistency) -- PASS
+
+Full suite regression: 224/225 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/business-diagnostic/ -> 401 (negative case)
+  2. GET /api/admin/business-diagnostic/ -> 200, real aggregates over 160
+     real contact_submissions:
+     - Demand Map: byIndustry top = "unknown" (160/160) -- honestly
+       reflects the real seeded data's industry field, not fabricated
+     - Funnel Constraint: unqualified->mql=100%, mql->sql=0.6% (1/160),
+       sql->opportunity=0% (0/1), opportunity->customer=no data (0
+       denominator) -- constraint correctly identified as sql->opportunity
+       (0%), a real degenerate case (fromCount=1) exercised live, not just
+       in the synthetic unit test
+  3. GET /admin/business-diagnostic/ (admin UI page) -> 200 (renders)
+
+Disclosed limitation (also shown in the admin UI): Funnel Constraint
+assumes qualificationStage reflects monotonic cumulative progress -- this
+app does not log a separate stage-transition-history table, so a lead
+that regressed stages would be undetectable. No test-data cleanup needed
+-- all values are real aggregates over real, pre-existing data.

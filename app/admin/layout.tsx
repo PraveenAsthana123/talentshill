@@ -94,6 +94,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/kpi-engine', label: 'KPI Engine' },
       { href: '/admin/opportunities', label: 'Opportunities' },
       { href: '/admin/growth-readiness', label: 'Growth Readiness' },
+      { href: '/admin/business-diagnostic', label: 'Business Diagnostic' },
     ],
   },
   {
