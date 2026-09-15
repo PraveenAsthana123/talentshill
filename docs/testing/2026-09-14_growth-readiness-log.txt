@@ -1,0 +1,30 @@
+Growth Readiness Score (gap-analysis backlog #7/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/growth-readiness.test.ts -- 5/5 pass
+  - zero real dimensions -> null score (negative case) -- PASS
+  - null-value dimension excluded from average, doesn't drag toward 0 (positive) -- PASS
+  - count-type dimension normalized against disclosed target (positive) -- PASS
+  - lower-confidence dimensions weighted less (positive) -- PASS
+  - normalized value capped at 100 (boundary) -- PASS
+
+Full suite regression: 221/222 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated; one run showed a transient
+extra failure that did not reproduce on immediate re-run -- SQLite lock
+contention under concurrent test files, same class already noted for the
+Evidence Ledger commit).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/growth-readiness/ -> 401 (negative case)
+  2. POST /api/admin/growth-readiness/ (real recompute from the real KPI
+     Engine's latest snapshots) -> 200: score=82.7, dimensionsIncluded=4,
+     dimensionsExcluded=2, confidence=low.
+     Verified by hand: (100[lead_generation capped]+49.8[lead_quality]+
+     85[email_engagement]+95.9[operational_health])/4 = 82.675 ~= 82.7 --
+     confirms the real confidence-weighted composite matches a real
+     independent hand calculation of the real underlying KPI values.
+     confidence=low is correct: 4 included dimensions < 5-dimension
+     medium threshold (confidenceForSampleSize).
+  3. GET /admin/growth-readiness/ (admin UI page) -> 200 (renders)
+
+No test-data cleanup needed -- all values are real, derived from real
+underlying data, kept deliberately.

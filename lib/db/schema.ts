@@ -2088,3 +2088,20 @@ export const leadNextBestAction = sqliteTable('lead_next_best_action', {
   index('idx_lead_nba_submission').on(table.submissionId),
   index('idx_lead_nba_action').on(table.action),
 ]);
+
+// ── Growth Readiness Score, added 2026-09-14 -- backlog #7/25 ──
+// Company-wide confidence-weighted composite over ALL real kpi_snapshot
+// dimensions (extends the pre-existing analytics-health-pipeline.ts
+// composite, which is scoped to the email/contact program only).
+// Normalization targets in lib/kpi/growth-readiness.ts are disclosed,
+// hardcoded business judgment.
+export const growthReadinessSnapshot = sqliteTable('growth_readiness_snapshot', {
+  id: text('id').primaryKey(),
+  score: real('score'), // null when zero dimensions have real data
+  dimensionsIncluded: integer('dimensions_included').notNull(),
+  dimensionsExcluded: integer('dimensions_excluded').notNull(),
+  confidence: text('confidence', { enum: ['unknown', 'low', 'medium', 'high'] }).notNull(),
+  computedAt: integer('computed_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_growth_readiness_computed').on(table.computedAt),
+]);
