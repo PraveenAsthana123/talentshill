@@ -1,0 +1,23 @@
+Demo Catalog Portal, own-modules extension (gap-analysis backlog #19/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/demo-catalog.test.ts -- 2/2 pass
+  (integration-style against the real dev DB)
+  - only real, live-verified modules returned, never partial/not_built (consistency) -- PASS
+  - counts non-negative and consistent with the real catalog length (consistency) -- PASS
+
+Full suite regression: 251/252 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/demo-catalog/ -> 401 (negative case)
+  2. GET -> 200, real counts: real=55, partial=11, notBuilt=10 -- reflects
+     the true current module_registry state (the pre-existing 15+ modules
+     plus this session's 18 real gap-analysis backlog items so far), not
+     a static/stale number
+
+Scope decision: distinct from app/demo (the public, generic AI/robotics
+solution-demo page) -- this is TalentsHill's own live-verified built-module
+catalog, for internal/sales-enablement use when a prospect asks "what have
+you actually built for yourselves." No dedicated admin UI page yet
+(API-only, disclosed); reuses the 'health' RBAC resource, same as the
+pre-existing module-registry endpoint (same underlying table).
