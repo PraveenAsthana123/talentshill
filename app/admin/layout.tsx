@@ -100,11 +100,12 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // Client Demo Showcase, added 2026-09-15, extended to the full
-    // 40-item marketing-type catalog same day -- see /admin/demos for
-    // the honest full picture (21 items have a real page below; 19 are
-    // registered as not_started with no page, by design). Plus the
-    // separate 90-item Research Methodology Catalog (all not_started).
+    // Client Demo Showcase, added 2026-09-15, extended same day to cover
+    // 35/40 marketing-type items + all 90 research methodologies -- see
+    // /admin/demos for the honest full picture. 5 marketing-type items
+    // stay deliberately not_started (product-led growth, local/multi-
+    // location, e-commerce, podcast, loyalty-points -- business models
+    // TalentsHill doesn't have).
     label: 'Demo Showcase',
     items: [
       { href: '/admin/demos', label: 'All 40 Demos (Overview)' },
@@ -129,7 +130,8 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/demos/video-marketing', label: 'Video Marketing' },
       { href: '/admin/demos/youtube-marketing', label: 'YouTube Marketing' },
       { href: '/admin/demos/competitive-intelligence', label: 'Competitive Intelligence' },
-      { href: '/admin/demos/research-catalog', label: 'Research Catalog (90, not started)' },
+      { href: '/admin/demos/marketing-activity', label: 'Marketing Activity Log' },
+      { href: '/admin/demos/research-catalog', label: 'Research Catalog (90 methodologies)' },
     ],
   },
   {

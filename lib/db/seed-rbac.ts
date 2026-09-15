@@ -55,6 +55,12 @@ const RESOURCES = [
   // Research Methodology Catalog (90 named methodologies, all honestly
   // not_started), added 2026-09-15.
   'research_catalog',
+  // Research Assessment Engine + distinct calculators (backing all 90
+  // catalog methodologies), added 2026-09-15.
+  'research_assessment',
+  // Marketing Activity Log (backing 12 of the demo_showcase not_started
+  // items), added 2026-09-15.
+  'marketing_activity_log',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];

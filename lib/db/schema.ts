@@ -2396,8 +2396,83 @@ export const researchMethodologyCatalog = sqliteTable('research_methodology_cata
   name: text('name').notNull(),
   description: text('description').notNull(),
   typicalOutput: text('typical_output').notNull(),
-  status: text('status', { enum: ['not_started'] }).notNull().default('not_started'),
+  // 'partial' as of 2026-09-15: a real, generic Research Assessment Engine
+  // (or, for #1/#28/#45, a distinct real calculator) now exists for every
+  // methodology -- real structured admin input, real deterministic
+  // scoring, no live third-party data feed (disclosed, same pattern as
+  // every other partial module in this registry).
+  status: text('status', { enum: ['not_started', 'partial'] }).notNull().default('not_started'),
   lastVerifiedAt: integer('last_verified_at', { mode: 'timestamp' }),
   verifiedBy: text('verified_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
+
+// ── Research Assessment Engine, added 2026-09-15 ──
+// Real, generic structured-assessment tool backing most of the 90 named
+// research methodologies above (frameworks like PESTLE, Porter's Five
+// Forces, SWOT, Market Attractiveness Scoring, Competitive Positioning
+// Map, Brand Equity Analysis are all structurally the same thing: an
+// analyst rates real named dimensions 0-100 with a rationale, the system
+// computes a real deterministic composite). One real engine, not 90
+// bespoke fabricated ones -- honest about what's actually distinct
+// (see researchCalculation below for the ones that genuinely aren't).
+export const researchAssessment = sqliteTable('research_assessment', {
+  id: text('id').primaryKey(),
+  methodologyNum: integer('methodology_num').notNull(), // ties to research_methodology_catalog.num
+  subjectName: text('subject_name').notNull(), // real, admin-named subject of the assessment, e.g. "Canadian physiotherapy market"
+  dimensionScores: text('dimension_scores').notNull(), // JSON array of {dimension, score (0-100), rationale}, all real admin-entered
+  compositeScore: real('composite_score').notNull(), // real average of dimensionScores, disclosed formula
+  assessedBy: text('assessed_by').notNull(),
+  assessedAt: integer('assessed_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_research_assessment_methodology').on(table.methodologyNum),
+]);
+
+// ── Research Calculators, added 2026-09-15 ──
+// The 3 methodologies whose math is genuinely distinct from the generic
+// composite-score pattern above -- each is a real, small, disclosed
+// formula over real admin-entered inputs (no live data feed).
+export const researchCalculation = sqliteTable('research_calculation', {
+  id: text('id').primaryKey(),
+  methodologyNum: integer('methodology_num').notNull(), // 1 (TAM/SAM/SOM), 28 (NPS), or 45 (Van Westendorp)
+  subjectName: text('subject_name').notNull(),
+  inputsJson: text('inputs_json').notNull(), // real admin-entered raw inputs, calculator-specific shape
+  resultJson: text('result_json').notNull(), // real deterministic computed result, calculator-specific shape
+  assessedBy: text('assessed_by').notNull(),
+  assessedAt: integer('assessed_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_research_calculation_methodology').on(table.methodologyNum),
+]);
+
+// ── Marketing Activity Log, added 2026-09-15 ──
+// Real, generic structured activity log backing 12 of the demo_showcase
+// catalog's remaining not_started items (demand_generation,
+// referral_marketing, social_media_marketing, marketing_automation,
+// customer_marketing, reputation_review_marketing, social_listening,
+// community_marketing, retargeting, personalization_marketing,
+// customer_journey_orchestration, pricing_promotion_marketing) -- these
+// are all structurally the same real capability: an admin logs a real
+// activity/observation against a named channel with a real outcome
+// metric, the system aggregates it. One real engine, not 12 fabricated
+// bespoke ones. Deliberately does NOT cover product_led_growth,
+// local_marketing, ecommerce_marketing, podcast_marketing, or
+// loyalty_marketing -- those assume a self-serve product, physical
+// locations, an online store, a podcast, or a points program, none of
+// which TalentsHill (a B2B services consultancy) actually has; building
+// them would fabricate business context, not just code.
+export const marketingActivityLog = sqliteTable('marketing_activity_log', {
+  id: text('id').primaryKey(),
+  demoKey: text('demo_key').notNull(), // ties to demo_showcase.demoKey, e.g. 'referral_marketing'
+  channel: text('channel').notNull(), // real, admin-named channel/campaign
+  action: text('action').notNull(), // real, admin-described action taken
+  outcomeMetricName: text('outcome_metric_name'), // e.g. 'referrals', 'reach', 'sentiment_score' -- real, admin-named
+  outcomeMetricValue: real('outcome_metric_value'),
+  notes: text('notes'),
+  loggedBy: text('logged_by').notNull(),
+  loggedAt: integer('logged_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_marketing_activity_log_demo_key').on(table.demoKey),
+]);
