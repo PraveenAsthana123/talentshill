@@ -2165,3 +2165,19 @@ export const videoScript = sqliteTable('video_script', {
 }, (table) => [
   index('idx_video_script_clip_plan').on(table.clipPlanId),
 ]);
+
+// ── Pre-Sales Growth Brief, added 2026-09-14 -- backlog #14/25 ──
+// Pure composition of real KPI Engine (#2) + Opportunity Engine (#3) +
+// Evidence Ledger (#1) data -- no new data source, no LLM call. A real
+// snapshot is persisted per generation so a brief handed to a
+// prospective client can be traced back to exactly what it said.
+export const growthBrief = sqliteTable('growth_brief', {
+  id: text('id').primaryKey(),
+  briefText: text('brief_text').notNull(),
+  topOpportunityDimension: text('top_opportunity_dimension'),
+  growthReadinessScore: real('growth_readiness_score'),
+  evidenceCount: integer('evidence_count').notNull(),
+  generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_growth_brief_generated').on(table.generatedAt),
+]);

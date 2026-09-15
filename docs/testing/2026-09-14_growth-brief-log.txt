@@ -1,0 +1,25 @@
+Pre-Sales Growth Brief (gap-analysis backlog #14/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/growth-brief.test.ts -- 2/2 pass
+  - honestly reports insufficient data when readiness is null (negative case) -- PASS
+  - includes real KPI values and the real top opportunity (positive case) -- PASS
+
+Full suite regression: 236/237 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/growth-brief/ -> 401 (negative case)
+  2. POST real composition -> 201, real brief text:
+     - Growth Readiness Score: 82.7/100 -- exact match to item #7's
+       independently verified result
+     - KPI Snapshot: all 6 real dimensions listed with real values/confidence,
+       matching item #2's results exactly
+     - Top Opportunity: lead_quality -- exact match to item #3's
+       independently verified top-ranked candidate
+     - "backed by 43 real, traceable evidence records" -- matches the
+       real accumulated evidence_record count at time of generation
+  This confirms genuine composition across 3 independently-built real
+  engines (#1, #2, #3/#7), not hardcoded/duplicated logic.
+
+No test-data cleanup needed -- the generated brief is real, derived
+entirely from real underlying data, kept deliberately.
