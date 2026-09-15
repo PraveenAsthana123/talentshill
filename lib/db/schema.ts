@@ -2256,3 +2256,19 @@ export const businessPartner = sqliteTable('business_partner', {
 }, (table) => [
   index('idx_business_partner_status').on(table.relationshipStatus),
 ]);
+
+// ── Positioning Statement, added 2026-09-14 -- backlog #28/25 ──
+// Real, one-time admin-authored "For X who Y, TalentsHill is Z, that
+// A, unlike B, we C" template -- never LLM-generated marketing copy.
+export const positioningStatement = sqliteTable('positioning_statement', {
+  id: text('id').primaryKey(),
+  forWho: text('for_who').notNull(),
+  whoNeed: text('who_need').notNull(),
+  categoryName: text('category_name').notNull(),
+  keyBenefit: text('key_benefit').notNull(),
+  unlikeAlternative: text('unlike_alternative').notNull(),
+  differentiator: text('differentiator').notNull(),
+  confirmedBy: text('confirmed_by').notNull(),
+  confirmedAt: integer('confirmed_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});

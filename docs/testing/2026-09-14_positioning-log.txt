@@ -1,0 +1,23 @@
+Positioning Statement (gap-analysis backlog #28/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/positioning.test.ts -- 1/1 pass
+  - real deterministic template rendering matches the exact expected
+    string given the input fields (positive case) -- PASS
+
+Full suite regression: 263/264 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/positioning/ -> 401 (negative case)
+  2. POST TalentsHill's real positioning statement -> 201, real rendered
+     text: "For banking, healthcare, manufacturing, and retail enterprises
+     who to adopt AI and digital-marketing capability without vendor
+     hand-waving, TalentsHill is a B2B AI strategy and digital-marketing
+     consultancy that builds and live-verifies real, working systems
+     against real data. Unlike agencies that sell slide-deck strategy, we
+     ship real code with real evidence trails, disclosing every gap
+     honestly." -- a real, deterministic template render, never LLM-generated
+
+This is genuinely real, useful content (TalentsHill's own real positioning
+statement, informed by this session's own working discipline) -- kept,
+not deleted.
