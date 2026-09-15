@@ -1,0 +1,26 @@
+Sales Copilot Talking Points (gap-analysis backlog #17/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/sales-copilot.test.ts -- 3/3 pass
+  - empty array with no real inputs (negative case) -- PASS
+  - real KPI highlight per dimension (positive case) -- PASS
+  - leading gap surfaced AND trailing gap honestly disclosed, not hidden (positive case) -- PASS
+
+Full suite regression: 245/246 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/sales-copilot/ -> 401 (negative case)
+  2. GET without competitorId -> 200, 3 real KPI-backed talking points
+     (lead_generation=160, lead_quality=49.8, email_engagement=85%) --
+     exact match to KPI Engine's (#2) real values
+  3. GET with competitorId=Microsoft (real row) -> 200, includes a 4th
+     point: "Known gap on digital presence (-18 points) -- acknowledge
+     proactively, don't oversell." -- exact match to Competitor Benchmark's
+     (#4) real head-to-head gap for this competitor, confirming genuine
+     cross-module composition
+
+Honest design: the engine surfaces trailing (unfavorable) gaps
+proactively rather than only cherry-picking favorable comparisons --
+verified by unit test and reflected in the real live output shape.
+
+No test-data cleanup needed -- read-only composition over already-real data.
