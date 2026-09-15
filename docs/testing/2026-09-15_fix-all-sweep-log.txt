@@ -1,0 +1,54 @@
+"Fix all" sweep -- 2026-09-15
+
+Scope: after closing the last pending test failure (occasion template
+selection bug), searched systematically for any other real, fixable
+issues across the codebase.
+
+1. Searched for the same bug class (non-deterministic "pick one active
+   row" queries with no ORDER BY and no enforced single-active
+   invariant) across all of lib/db/*.ts. Checked every candidate:
+   - rag-run-queries.ts getActiveConfig() -- SAFE, activateConfig()
+     deactivates all other configs before activating one (real enforced
+     single-active invariant)
+   - email-profile-queries.ts getDefaultProfile() -- SAFE, both
+     create/update paths unset all other defaults first
+   - email-profile-queries.ts SMTP-for-mapping / getProfileForEvent() --
+     SAFE, filtered by a real unique id / a DB-enforced unique(eventType)
+     constraint respectively, ambiguity structurally impossible
+   - blog-queries.ts getFeaturedPost() -- SAFE, already has
+     .orderBy(desc(publishedAt)).limit(1)
+   No other real instances of the bug class found.
+
+2. Searched for TODO/FIXME/XXX markers in lib/ and app/ (excluding
+   tests) -- zero found.
+
+3. Attempted `next lint` -- ESLint was never configured for this project
+   (interactive first-run prompt, no existing config file). Setting up a
+   new linter is a project-configuration decision, not a bug fix; left
+   alone rather than silently making that call.
+
+4. Ran the real, pre-existing Module Registry Drift Pipeline's exact
+   4-check logic (recently-verified / description-present / partial-
+   status-has-missing-items / admin-ui-implies-routes) across ALL 76
+   module_registry rows via direct SQL (first attempt used a units bug
+   in my own ad-hoc query -- ms vs seconds -- giving a false "everything
+   stale" reading; corrected and re-verified against the real API for
+   one row, which correctly scored recently_verified=100/100, confirming
+   the false positive was in my query, not the app). The corrected sweep
+   found exactly ONE real drift issue across the whole registry:
+
+   module_key='marketing' ("Marketing Hub"): hasAdminUi=true but
+   apiRouteCount=0. Investigated: confirmed 5 real API routes exist
+   (/api/admin/marketing/{dashboard,report,pipeline,monitoring,agentic})
+   and are genuinely consumed by the real app/admin/marketing/workflow
+   page's 5 tab components (grep-verified each fetch call) -- not
+   orphaned code, just a stale/never-set apiRouteCount field, same class
+   already fixed in broadcasts/appointments/video_editing/
+   reels_management/youtube earlier this session. Fixed: apiRouteCount
+   0 -> 5, description corrected to name the real backing page. Re-ran
+   the real drift pipeline via the live API: score 30->100.
+
+5. Re-ran the full corrected sweep: zero remaining rows fail any of the
+   4 real drift checks across all 76 module_registry entries.
+
+6. Final verification: npx tsc --noEmit clean; npx vitest run 275/275.
