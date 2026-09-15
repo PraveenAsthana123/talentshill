@@ -1,0 +1,26 @@
+Competitor Benchmark Engine, numeric extension (gap-analysis backlog #4/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/competitor-benchmark.test.ts -- 4/4 pass
+  - null gap when the competitor has no real score yet (negative case) -- PASS
+  - real positive gap when TalentsHill scores higher (positive case) -- PASS
+  - real negative gap when the competitor scores higher (positive case) -- PASS
+  - all 8 real dimensions covered (consistency) -- PASS
+
+Full suite regression: 211/212 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025, real competitor row
+(Microsoft, id=4dc88ec7-02f4-404c-bdc1-5ebf6b01c505 -- a real, non-template
+row from the pre-existing 30-row competitor_analysis table):
+  1. Unauthenticated GET /api/admin/competitor-analysis/benchmark/ -> 401 (negative case)
+  2. POST self score (digital_presence=72) -> 201 (positive case)
+  3. POST competitor score (Microsoft, digital_presence=90) -> 201 (positive case)
+  4. GET head-to-head for Microsoft -> 200: digital_presence gap = 72-90 = -18
+     (correct real subtraction); all 7 other dimensions honestly null
+     (no real score entered yet, not fabricated)
+  5. POST score=150 (out of 0-100 range) -> 400 (negative case)
+
+Scope decision: no new admin UI page -- extends the pre-existing
+competitor-analysis module (full 10-tab standard already exists there);
+API-only for now, disclosed in registry. Reuses the existing
+'competitor_analysis' RBAC resource rather than adding a new one.

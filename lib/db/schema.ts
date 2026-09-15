@@ -2047,3 +2047,26 @@ export const opportunityCandidate = sqliteTable('opportunity_candidate', {
   index('idx_opportunity_candidate_dimension').on(table.dimension),
   index('idx_opportunity_candidate_rank').on(table.rankScore),
 ]);
+
+// ── Competitor Benchmark (numeric), added 2026-09-14 -- backlog #4/25 ──
+// Extends the pre-existing competitor_analysis table (qualitative research)
+// with structured, admin-entered 0-100 scores per dimension, for both a
+// real competitor AND TalentsHill itself (subjectType='self') on the same
+// dimensions -- enabling a real head-to-head gap, not just narrative
+// observations. Same honest "admin-entered, not scraped" discipline as
+// competitor_campaign_observations.
+export const competitorBenchmarkScore = sqliteTable('competitor_benchmark_score', {
+  id: text('id').primaryKey(),
+  subjectType: text('subject_type', { enum: ['competitor', 'self'] }).notNull(),
+  competitorId: text('competitor_id').references(() => competitorAnalysis.id, { onDelete: 'cascade' }), // null when subjectType='self'
+  dimension: text('dimension', { enum: ['pricing_value', 'service_breadth', 'digital_presence', 'thought_leadership', 'client_trust_signals', 'delivery_speed', 'innovation_ai_adoption', 'market_reach'] }).notNull(),
+  score: integer('score').notNull(), // 0-100, real admin judgment
+  notes: text('notes'),
+  scoredBy: text('scored_by'),
+  scoredAt: integer('scored_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_competitor_benchmark_score_competitor').on(table.competitorId),
+  index('idx_competitor_benchmark_score_dimension').on(table.dimension),
+  uniqueIndex('uq_competitor_benchmark_score_subject_dim').on(table.subjectType, table.competitorId, table.dimension),
+]);
