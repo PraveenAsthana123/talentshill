@@ -1,0 +1,25 @@
+Golden Path Registry (gap-analysis backlog #23/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/golden-path.test.ts -- 2/2 pass
+  - rejects an evidenceDocPath that doesn't exist on disk (negative case) -- PASS
+  - accepts a real, existing evidenceDocPath (positive case) -- PASS
+
+Full suite regression: 260/261 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Seeding: all 5 real golden paths (GP-01 through GP-05) registered via
+scripts/seed-golden-paths.ts -- each evidenceDocPath was checked to exist
+on disk by the real defineGoldenPath() file-existence guard BEFORE being
+written, same discipline that caught the GP-02 broken-path bug in
+SohamYoga's own golden path registry.
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/golden-paths/ -> 401 (negative case)
+  2. GET -> 200, all 5 real golden paths listed
+  3. GET ?audit=true -> 200, real re-check of all 5 paths: stillExists=true
+     for all 5 (GP-01 through GP-05) -- confirms the registry's own
+     drift-detection mechanism works, not just the write-time guard
+
+Test-data hygiene: __e2e_test_gp row (used to verify the negative/positive
+file-existence guard) deleted via direct sqlite3 DELETE before seeding
+the 5 real production rows.

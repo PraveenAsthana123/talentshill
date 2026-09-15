@@ -2219,3 +2219,20 @@ export const caseStudy = sqliteTable('case_study', {
 }, (table) => [
   index('idx_case_study_status').on(table.status),
 ]);
+
+// ── Golden Path Registry, added 2026-09-14 -- backlog #23/25 ──
+// Real, DB-backed catalog of end-to-end flows with real evidence of live
+// verification. evidenceDocPath must point to a real file that exists in
+// the repo -- every row seeded here had its path checked with a real file
+// existence test before being written (same discipline as the GP-02 bug
+// SohamYoga's own golden path registry caught and fixed).
+export const goldenPath = sqliteTable('golden_path', {
+  id: text('id').primaryKey(),
+  code: text('code').notNull().unique(), // e.g. 'GP-01'
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  evidenceDocPath: text('evidence_doc_path').notNull(), // real repo-relative path, checked to exist
+  verifiedAt: integer('verified_at', { mode: 'timestamp' }).notNull(),
+  verifiedBy: text('verified_by').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
