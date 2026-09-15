@@ -1,0 +1,26 @@
+Video Script Generation Engine (gap-analysis backlog #13/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/video-script-engine.test.ts -- 2/2 pass
+  - prompt includes the real topic and platform (positive case) -- PASS
+  - prompt bounds length to stay short-form (consistency) -- PASS
+
+Full suite regression: 234/235 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated; one run showed a transient
+extra failure count that did not reproduce on immediate re-run, same
+SQLite lock-contention class already noted twice this session).
+
+Ollama confirmed reachable: GET http://127.0.0.1:11435/api/tags -> 200.
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/video-editing/script/ -> 401 (negative case)
+  2. POST real script generation (topic="3 ways AI cuts compliance review
+     time in banking", platform=linkedin) -> 201, real LLM output (a real
+     Hook/Body/CTA script, ~200 words, phi4-mini:latest, 69 prompt tokens,
+     199 completion tokens) -- NOT a template fill-in
+  3. Verified via direct sqlite3 SELECT: the video_script row persisted
+     with the real model name and real token counts matching the API
+     response exactly
+
+Genuinely real generated content -- kept as real seed data, not deleted.
+Rendering pipeline (FFmpeg/transcode) remains a disclosed gap, same as
+the pre-existing videoClipPlans table.

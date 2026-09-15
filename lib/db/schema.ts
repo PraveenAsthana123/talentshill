@@ -2146,3 +2146,22 @@ export const croFrictionFinding = sqliteTable('cro_friction_finding', {
   index('idx_cro_friction_status').on(table.status),
   index('idx_cro_friction_page').on(table.pageUrl),
 ]);
+
+// ── Video Script Generation Engine, added 2026-09-14 -- backlog #13/25 ──
+// Real local-Ollama-generated script text for a real video_clip_plans row
+// (or a standalone topic). The rendering pipeline itself remains a
+// disclosed gap -- no FFmpeg/transcode integration exists, same as the
+// pre-existing videoClipPlans table's own honesty discipline.
+export const videoScript = sqliteTable('video_script', {
+  id: text('id').primaryKey(),
+  clipPlanId: text('clip_plan_id').references(() => videoClipPlans.id, { onDelete: 'cascade' }), // null for a standalone script
+  topic: text('topic').notNull(),
+  targetPlatform: text('target_platform').notNull(),
+  scriptText: text('script_text').notNull(), // real LLM output, never a template fill-in
+  model: text('model').notNull(),
+  promptTokens: integer('prompt_tokens').notNull(),
+  completionTokens: integer('completion_tokens').notNull(),
+  generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_video_script_clip_plan').on(table.clipPlanId),
+]);
