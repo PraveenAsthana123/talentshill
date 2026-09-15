@@ -1,0 +1,31 @@
+Research-Depth Router (gap-analysis backlog #15/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/research-depth-router.test.ts -- 5/5 pass
+  - hot lead -> deep (positive case) -- PASS
+  - cold lead -> none, skips the costed call (negative case) -- PASS
+  - warm lead, no budget -> light (boundary case) -- PASS
+  - warm lead, budget known -> deep (positive case) -- PASS
+  - cool lead -> light (positive case) -- PASS
+
+Full suite regression: 241/242 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025 -- real gating change
+to lib/agents/lead-qualification-agent.ts, not just standalone unused logic:
+  1. POST /api/admin/leads/agentic/ against a real cold-tier submission
+     (80e21815-2bb4-4b28-9ed6-fd1c2727a33c, score=16) -> 200:
+     - SEARCH step: real score/tier computed first (reordered ahead of PLAN)
+     - PLAN step: tokensUsed=0, output="Skipped (Research-Depth Router:
+       cold tier -> depth=none)..." -- the real Ollama PLAN call was
+       genuinely NOT made for this lead
+     - ACT step: tokensUsed=206 -- ran normally, unaffected (the narrative
+       generation itself is not gated, only the PLAN pre-step)
+     - totalTokensUsed=206 (previously this run would have also spent
+       tokens on PLAN; confirms a real, measurable cost reduction, not
+       just an advisory log)
+  2. GET /api/admin/evidence/?moduleKey=research_depth_router -> 200, 1
+     real evidence row confirming the skip decision with its real source
+     (contact_submissions:80e21815-...)
+
+No test-data cleanup needed -- this exercised the real, pre-existing
+agentic endpoint against real seeded data; no throwaway rows created.

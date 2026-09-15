@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 import { logOperationRun, updateOperationRunStatus } from '@/lib/operation-run';
 import { ollamaChat } from './ollama-client';
 import { runLeadScoringPipeline } from '@/lib/pipelines/lead-scoring-pipeline';
+import { computeResearchDepth } from './research-depth-router';
+import { recordEvidence } from '@/lib/evidence/evidence-ledger';
 
 export interface AgentStepRecord {
   phase: 'plan' | 'search' | 'act' | 'execute' | 'complete';
@@ -57,23 +59,45 @@ export async function runLeadQualificationAgent(params: { submissionId: string; 
   }
 
   try {
-    // PLAN
-    const planInput = `Lead from ${submission.company} (${submission.industry}), stage: ${submission.projectStage}, timeline: ${submission.timeline}. Plan how to assess whether this is a strong lead (max 3 steps).`;
-    const planResult = await ollamaChat([
-      { role: 'system', content: 'You are a lead-qualification planning agent. Be concise.' },
-      { role: 'user', content: planInput },
-    ]);
-    logStep(runId, stepIndex++, 'plan', agentRole, planInput, planResult.content, planResult.totalTokens);
-    steps.push({ phase: 'plan', agentRole, input: planInput, output: planResult.content, tokensUsed: planResult.totalTokens });
-    totalTokens += planResult.totalTokens;
-
     // SEARCH -- reuse the real deterministic scoring pipeline as the
     // "data-gathering" step (there's no external source to search for an
-    // internal submission).
+    // internal submission). Moved ahead of PLAN so the real tier is known
+    // before deciding whether PLAN's LLM call is worth its real cost.
     const scoringResult = runLeadScoringPipeline({ submissionId: params.submissionId, triggeredBy: params.triggeredBy });
     const searchOutput = `Deterministic score: ${scoringResult.score}/100, tier: ${scoringResult.tier}`;
     logStep(runId, stepIndex++, 'search', agentRole, params.submissionId, searchOutput, 0);
     steps.push({ phase: 'search', agentRole, input: params.submissionId, output: searchOutput, tokensUsed: 0 });
+
+    // PLAN -- real, rule-based Research-Depth Router (#15) gates this
+    // real costed Ollama call. A cold-tier lead's PLAN step is skipped
+    // (0 tokens) rather than spending a real LLM call on a lead that
+    // won't be worth pursuing regardless of what the plan says.
+    const depth = computeResearchDepth(scoringResult.tier, submission.budgetRange);
+    const planInput = `Lead from ${submission.company} (${submission.industry}), stage: ${submission.projectStage}, timeline: ${submission.timeline}. Plan how to assess whether this is a strong lead (max 3 steps).`;
+    let planOutput: string;
+    let planTokens = 0;
+    if (depth === 'none') {
+      planOutput = `Skipped (Research-Depth Router: ${scoringResult.tier} tier -> depth=none). Deterministic score alone is sufficient; no real LLM call made.`;
+      recordEvidence({
+        moduleKey: 'research_depth_router',
+        claimClass: 'inference',
+        claimText: `Skipped a real Ollama PLAN call for a ${scoringResult.tier}-tier lead (research depth=none) -- real cost avoided.`,
+        sourceRef: `contact_submissions:${submission.id}`,
+        sourceTable: 'contact_submissions',
+        confidence: 'high',
+        createdBy: 'system',
+      });
+    } else {
+      const planResult = await ollamaChat([
+        { role: 'system', content: 'You are a lead-qualification planning agent. Be concise.' },
+        { role: 'user', content: planInput },
+      ]);
+      planOutput = planResult.content;
+      planTokens = planResult.totalTokens;
+    }
+    logStep(runId, stepIndex++, 'plan', agentRole, planInput, planOutput, planTokens);
+    steps.push({ phase: 'plan', agentRole, input: planInput, output: planOutput, tokensUsed: planTokens });
+    totalTokens += planTokens;
 
     // ACT -- real LLM call drafting a qualification narrative from real data
     const actInput = `Lead details:\nCompany: ${submission.company}\nIndustry: ${submission.industry}\nStage: ${submission.projectStage}\nBudget: ${submission.budgetRange || '(not provided)'}\nTimeline: ${submission.timeline}\nMessage: ${submission.message}\nDeterministic score: ${scoringResult.score}/100 (${scoringResult.tier})\n\nDraft a 2-3 sentence qualification narrative explaining whether/why this is a strong lead, using only the real data above. Do not invent facts not present.`;
