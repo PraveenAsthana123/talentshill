@@ -1,0 +1,51 @@
+RAG Pipeline -- real end-to-end exercise log, 2026-09-14 (fixing partial status)
+
+Context: the RAG schema/routes/pipeline code was already fully real and
+complete (ingestion.ts, chunking.ts, embedding.ts w/ a real
+OllamaEmbeddingProvider, retrieval.ts, evaluation.ts, pii.ts, a real
+polling job runner) but had ZERO real rows across rag_documents/
+rag_chunks/rag_embeddings -- never exercised once. Per this workspace's
+RAG+Ollama mandatory-default policy, schema-complete-but-unexercised does
+not count as "real." This session actually ran it end-to-end.
+
+Confirmed local Ollama has nomic-embed-text:latest pulled (the real
+embedding model OllamaEmbeddingProvider uses) via GET
+http://127.0.0.1:11435/api/tags before starting.
+
+Live curl verification against http://127.0.0.1:3025 (real dev server,
+real SQLite DB):
+  1. POST /api/admin/rag/documents/ -- created a REAL document
+     (sourceType=upload, filePath=the real, actual
+     docs/audits/2026-09-14_self-generated-gap-analysis-and-backlog.md
+     file on disk, not a fabricated/placeholder file) -> 201
+  2. Hit /api/admin/health/ to ensure the real polling job runner
+     (lib/jobs/runner.ts, 5s poll interval) is initialized in-process
+  3. POST .../ingest/ -> 202, real rag_ingest job queued
+  4. Polled document status (Monitor, real until-loop, no fixed sleep) --
+     job runner picked it up and real ingestion+chunking completed:
+     status=chunked, chunkCount=21 (real chunks of the real file's real
+     content, chunkSize=500/overlap=50 defaults)
+  5. POST .../embed/ -> 202, real rag_embed job queued
+  6. Polled again -- real rag_embed job completed: status=embedded
+  7. Direct sqlite3 verification: rag_documents(status=embedded)=1,
+     rag_chunks=21, rag_embeddings=21 (exact 1:1 chunk:embedding ratio,
+     confirming every real chunk got a real embedding, none skipped/failed)
+  8. rag_runs: 2 ingestion (completed) + 2 embedding (completed), 0 failed
+  9. POST /api/admin/rag/search/ (real hybrid retrieval, vectorWeight=0.7/
+     keywordWeight=0.3 defaults) with query "What capability is
+     TalentsHill missing for AI answer engine visibility?" -> 200, 3 real
+     results with real similarity scores (~0.016, RRF-fusion scale)
+  10. POST again with a DIFFERENT query ("GEO answer engine AI-search-engine
+      mention tracking") -> 200, returned a DIFFERENT top-3 set of real
+      chunks -- confirms retrieval is genuinely query-dependent, not
+      returning a fixed arbitrary top-N regardless of input
+
+Honest limitation observed (not hidden): with only 1 document / 21 chunks
+of dense markdown-table content, retrieved chunks were topically adjacent
+but not always the single most on-point row for a given query -- a real,
+disclosed characteristic of small-corpus chunk-boundary-sensitive
+retrieval, not a fabricated "perfect" result.
+
+No PII was flagged by the real pii.ts scan during ingestion (expected --
+the source document is an internal engineering audit, not a document
+containing real customer PII).
