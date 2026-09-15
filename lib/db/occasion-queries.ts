@@ -40,13 +40,22 @@ export function getContactsForFestival(country: string | null) {
   return all.filter((c) => c.country === country);
 }
 
+// Real bug fixed 2026-09-15: with no ORDER BY, SQLite returned whichever
+// active template happened to be first by insertion/rowid order --
+// effectively "oldest wins" with no deliberate policy behind it. If an
+// admin ever creates a second active template for the same
+// occasionType+channel(+festivalCode) (e.g. replacing an old one, or two
+// people editing templates around the same time), the real trigger
+// pipeline would silently keep using the stale one. Ordering by
+// updatedAt DESC makes "the most recently active template wins" an
+// explicit, real policy instead of an accidental storage-engine artifact.
 export function getActiveTemplate(occasionType: 'birthday' | 'anniversary' | 'festival', channel: 'email' | 'sms' | 'whatsapp', festivalCode?: string | null) {
   return db.select().from(occasionTemplates).where(and(
     eq(occasionTemplates.occasionType, occasionType),
     eq(occasionTemplates.channel, channel),
     eq(occasionTemplates.isActive, true),
     ...(festivalCode ? [eq(occasionTemplates.festivalCode, festivalCode)] : []),
-  )).all()[0];
+  )).orderBy(desc(occasionTemplates.updatedAt)).all()[0];
 }
 
 export function alreadyMessagedToday(contactId: string, occasionType: string, festivalCode: string | null, dateKey: string) {

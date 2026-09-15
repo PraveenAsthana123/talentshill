@@ -1,0 +1,43 @@
+Occasion Template Selection -- real bug fix, 2026-09-15 (the "pending" fix)
+
+Root cause investigation of the test failure repeatedly flagged as
+"pre-existing, unrelated" throughout the 2026-09-14 session (confirmed
+via git stash each time to not be caused by that session's own changes,
+but never actually fixed):
+
+tests/unit/occasion-trigger.test.ts > "logs a real birthday message for a
+contact whose real date_of_birth matches today (positive case)" expected
+messageBody='Happy Birthday Priya!' but received a different real
+message: "Hi Priya, Wishing you a very happy birthday from all of us at
+TalentsHill!..."
+
+Real root cause: getActiveTemplate() in lib/db/occasion-queries.ts had no
+ORDER BY clause. The real occasion_templates table has exactly one
+pre-existing active birthday/email template ("Standard Birthday (Email)",
+a real seeded row from earlier in the 2026-09-14 session). The test adds
+its OWN active birthday/email template via addTemplate(). With two real
+active templates now matching the same (occasionType, channel) pair,
+`.all()[0]` returned whichever one SQLite happened to return first
+(insertion/rowid order) -- the pre-existing OLDER template, not the
+test's newer one. This was never a test-isolation bug or fixture
+problem; it was a real, deterministic-but-unintended selection bug that
+would affect production too: if an admin ever created a second active
+template for the same occasion+channel (replacing an old one, A/B
+testing, etc.), the real trigger pipeline would silently keep sending the
+stale one.
+
+Fix: added `.orderBy(desc(occasionTemplates.updatedAt))` so the most
+recently active template deterministically wins -- an explicit, sensible
+real policy instead of an accidental storage-engine artifact.
+
+Verification:
+  1. npx tsc --noEmit -> clean
+  2. npx vitest run tests/unit/occasion-trigger.test.ts -> 10/10 pass
+     (previously 9/10)
+  3. npx vitest run (full suite) -> 275/275 pass -- first fully green run
+     of this entire session; every previous run through 2026-09-14 had
+     this exact 1 known failure
+
+No other module_registry entries needed updating -- this was an internal
+bug fix to the pre-existing 'occasions' module (already builtStatus='real'),
+not a change to what's built.
