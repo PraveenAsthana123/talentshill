@@ -8,9 +8,9 @@ A full-stack Next.js platform powering the digital operations of an enterprise A
 
 | Metric | Count |
 |--------|-------|
-| Database tables | 80 (verified via `sqlite_master`, 2026-09-09) |
-| Admin API routes | 96, all RBAC-gated (verified 2026-09-09, see [Testing & Evidence](#testing--evidence)) |
-| Admin pages | 64 |
+| Database tables | 136 (verified via `sqlite_master`, 2026-09-15 -- up from 80 on 2026-09-09, reflecting the gap-analysis backlog + Client Demo Showcase built since) |
+| Admin API routes | 445, all RBAC-gated (verified via `find app/api/admin -name route.ts`, 2026-09-15 -- up from 96 on 2026-09-09) |
+| Admin pages | 92 (verified via `find app/admin -name page.tsx`, 2026-09-15 -- up from 64 on 2026-09-09) |
 | Public pages | 27 (17 original + 10 new solutions pages, 2026-09-09) |
 | Query files | 38 |
 | Reusable UI components | 9 |
@@ -116,6 +116,9 @@ A full-stack Next.js platform powering the digital operations of an enterprise A
 - **Health dashboard** -- System health monitoring
 - **Maintenance mode** -- Configurable maintenance mode
 - **Job queue** -- Background job processing with retries, priority, logging
+
+### Client Demo Showcase
+- **7 prioritized, client-facing demos** at `/admin/demos` -- Control Tower, Lead Generation AI, Affiliate AI, SEO+Content AI, Social+Influencer AI, Performance Marketing AI, Lifecycle/Churn AI. Real, registry-backed readiness per demo (2 `ready` pure compositions of already-real engines, 5 `partial` extending real-but-manual-data modules), each disclosing its real gaps rather than hiding them. Scoped to these 7 (not all 40 marketing-type use cases in the source catalog) per that catalog's own recommendation -- see `docs/testing/2026-09-15_demo-showcase-log.txt`.
 
 ### Appointments
 - **Booking system** -- Service-based appointment scheduling

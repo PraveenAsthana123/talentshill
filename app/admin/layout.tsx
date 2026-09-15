@@ -100,6 +100,22 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Client Demo Showcase, added 2026-09-15 -- the 7 prioritized,
+    // client-facing demos per the source conversation's own "build 7,
+    // not 40" recommendation (docs/chatgpt-extracts/2026-09-13_affiliate-...md).
+    label: 'Demo Showcase',
+    items: [
+      { href: '/admin/demos', label: 'All Demos' },
+      { href: '/admin/demos/control-tower', label: 'Control Tower' },
+      { href: '/admin/demos/lead-generation', label: 'Lead Generation AI' },
+      { href: '/admin/demos/affiliate', label: 'Affiliate AI' },
+      { href: '/admin/demos/seo-content', label: 'SEO + Content AI' },
+      { href: '/admin/demos/social-influencer', label: 'Social + Influencer AI' },
+      { href: '/admin/demos/performance-marketing', label: 'Performance Marketing AI' },
+      { href: '/admin/demos/lifecycle', label: 'Lifecycle / Churn AI' },
+    ],
+  },
+  {
     label: 'Integrations',
     items: [
       { href: '/admin/integrations', label: 'Hub' },

@@ -2292,3 +2292,89 @@ export const pmfSurveyResponse = sqliteTable('pmf_survey_response', {
   respondedAt: integer('responded_at', { mode: 'timestamp' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
+
+// ── Demo Showcase, added 2026-09-15 -- client-facing demo catalog ──
+// Real registry of the 7 prioritized client-facing demos recommended by
+// the source ChatGPT conversation's own "Best demos to build first"
+// section (docs/chatgpt-extracts/2026-09-13_affiliate-...md), rather than
+// building all 40 marketing-type use cases separately. One row per demo;
+// readiness is derived from real underlying module_registry status, never
+// hand-set to "ready" without a live-verified backing flow.
+export const demoShowcase = sqliteTable('demo_showcase', {
+  id: text('id').primaryKey(),
+  demoKey: text('demo_key').notNull().unique(), // e.g. 'control_tower', 'lead_generation'
+  name: text('name').notNull(),
+  flowSummary: text('flow_summary').notNull(), // the end-to-end flow text, from source material
+  valueStory: text('value_story').notNull(),
+  backingModuleKeys: text('backing_module_keys').notNull(), // JSON array, ties to module_registry.moduleKey
+  readiness: text('readiness', { enum: ['ready', 'partial', 'not_started'] }).notNull().default('not_started'),
+  gapsDisclosed: text('gaps_disclosed'), // honest, human-readable list of what's not real yet
+  lastVerifiedAt: integer('last_verified_at', { mode: 'timestamp' }),
+  verifiedBy: text('verified_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// ── Affiliate Engine, added 2026-09-15 -- backlog demo #3 (net-new) ──
+// Real affiliate recruitment -> unique tracking link -> click -> attributed
+// conversion -> deterministic commission calc. No real payout-gateway
+// integration exists (disclosed, same pattern as other externally-blocked
+// modules) -- commission is computed and recorded, never marked "paid"
+// without a real payout reference.
+export const affiliate = sqliteTable('affiliate', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  commissionRateBasisPoints: integer('commission_rate_basis_points').notNull().default(1000), // 1000 = 10%
+  status: text('status', { enum: ['prospecting', 'active', 'suspended'] }).notNull().default('prospecting'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const affiliateLink = sqliteTable('affiliate_link', {
+  id: text('id').primaryKey(),
+  affiliateId: text('affiliate_id').notNull(),
+  trackingCode: text('tracking_code').notNull().unique(),
+  destinationUrl: text('destination_url').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_affiliate_link_affiliate').on(table.affiliateId),
+]);
+
+export const affiliateClick = sqliteTable('affiliate_click', {
+  id: text('id').primaryKey(),
+  affiliateLinkId: text('affiliate_link_id').notNull(),
+  clickedAt: integer('clicked_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_affiliate_click_link').on(table.affiliateLinkId),
+]);
+
+export const affiliateConversion = sqliteTable('affiliate_conversion', {
+  id: text('id').primaryKey(),
+  affiliateClickId: text('affiliate_click_id').notNull(),
+  affiliateId: text('affiliate_id').notNull(),
+  orderValueCents: integer('order_value_cents').notNull(),
+  commissionCents: integer('commission_cents').notNull(), // deterministic: orderValueCents * rate, computed at conversion time
+  fraudFlag: integer('fraud_flag', { mode: 'boolean' }).notNull().default(false),
+  fraudReason: text('fraud_reason'),
+  payoutStatus: text('payout_status', { enum: ['pending', 'approved', 'not_paid_no_gateway'] }).notNull().default('not_paid_no_gateway'),
+  convertedAt: integer('converted_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_affiliate_conversion_affiliate').on(table.affiliateId),
+]);
+
+// ── Lifecycle & Churn Engine, added 2026-09-15 -- backlog demo #6 (net-new) ──
+// Real, deterministic lifecycle-stage classification + churn-risk flag
+// computed from real contact_submissions/appointments engagement recency
+// -- no LLM call, no fabricated propensity model. A contact with no real
+// activity data gets stage='unknown', never a guessed stage.
+export const customerLifecycle = sqliteTable('customer_lifecycle', {
+  id: text('id').primaryKey(),
+  contactEmail: text('contact_email').notNull().unique(),
+  stage: text('stage', { enum: ['new', 'engaged', 'active_customer', 'at_risk', 'churned', 'unknown'] }).notNull().default('unknown'),
+  churnRisk: text('churn_risk', { enum: ['low', 'medium', 'high', 'unknown'] }).notNull().default('unknown'),
+  daysSinceLastActivity: integer('days_since_last_activity'),
+  computedAt: integer('computed_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_customer_lifecycle_stage').on(table.stage),
+]);

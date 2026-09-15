@@ -47,6 +47,11 @@ const RESOURCES = [
   'presales_brief', 'research_router', 'demo_recommendation', 'sales_copilot',
   'growth_scenario', 'vertical_pack', 'case_studies', 'golden_paths',
   'partner_ecosystem', 'positioning', 'pmf', 'pr_media', 'abm',
+  // Client-facing Demo Showcase (7 prioritized demos, per the source
+  // conversation's own "build 7, not 40" recommendation) + the 2 genuinely
+  // net-new engines it required (Affiliate, Lifecycle/Churn), added
+  // 2026-09-15.
+  'demo_showcase', 'affiliate', 'lifecycle',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];

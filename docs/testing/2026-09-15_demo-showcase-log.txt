@@ -1,0 +1,81 @@
+Client Demo Showcase -- 7 prioritized demos -- live verification log, 2026-09-15
+
+Context: user re-pasted the already-extracted ChatGPT conversation
+(docs/chatgpt-extracts/2026-09-13_affiliate-...md, "Affiliate Marketing Use
+Cases") and asked to build an end-to-end demo list for a digital marketing
+agency to showcase. That conversation's own "Best demos to build first"
+section (msg 19) explicitly recommends NOT building all 40 marketing-type
+use cases separately -- build 7 prioritized demos plus a master Control
+Tower instead. Adopted that scope rather than fabricating 40 shallow
+stubs.
+
+Schema: 6 new tables (demo_showcase, affiliate, affiliate_link,
+affiliate_click, affiliate_conversion, customer_lifecycle) pushed via
+`npx drizzle-kit push` -- verified present via `sqlite3 .tables`.
+RBAC: 3 new resources (demo_showcase, affiliate, lifecycle) registered in
+lib/db/seed-rbac.ts RESOURCES array, re-seeded via `npx tsx lib/db/seed-rbac.ts`
+(idempotent -- clears role_permissions per role before reassigning, confirmed
+by reading the seed function before running it).
+
+Unit tests (vitest):
+  tests/unit/affiliate-engine.test.ts -- 3/3 pass (checkFraudHeuristic:
+    <2s gap flagged, several-minute gap clean, exact-2000ms boundary clean)
+  tests/unit/lifecycle-churn.test.ts -- 7/7 pass (classifyLifecycle: no-data
+    -> unknown, unqualified -> new, mql/sql/opportunity -> engaged,
+    customer at every recency boundary -> active_customer/at_risk/churned)
+
+Full suite regression: 285/285 passing on a clean re-run. First run showed
+5 failures, all "database is locked" / 5000ms timeouts in
+chat-sales-qualification / market-opportunity-scoring / voice-call-
+qualification / webinar-pipeline-conversion -- same transient SQLite
+lock-contention class already documented for the Evidence Ledger commit
+(concurrent test files hitting the same file-backed DB), not related to
+this change (my 2 new test files are pure-function, no DB access). Did not
+reproduce on immediate re-run.
+
+Full typecheck (`npx tsc --noEmit`): 0 errors across the entire project.
+
+Live verification against http://127.0.0.1:3025 (admin@talentshill.com):
+  1. Unauthenticated GET /api/admin/demos/control-tower/ -> 401 (negative)
+  2. Unauthenticated POST /api/admin/affiliate/, /api/admin/lifecycle/,
+     GET /api/admin/demos/ -> 401 each (negative)
+  3. GET /api/admin/demos/ -> 200, 7 real rows: control_tower=ready,
+     lead_generation=ready, affiliate_marketing=partial, seo_content=partial,
+     social_influencer=partial, performance_marketing=partial,
+     lifecycle_churn=partial
+  4. GET /api/admin/demos/control-tower/ -> 200, real composition:
+     lead_generation=160 (high conf), lead_quality=49.8, email_engagement=85%
+     -- exact match to the pre-existing KPI Engine's own live-verified values
+  5. GET /api/admin/demos/lead-generation/ -> 200, 5 most-recent real leads
+     with real score/tier/qualificationStage/researchDepth
+  6. Affiliate full walkthrough (POST /api/admin/affiliate/):
+     recruit -> id; create_link -> trackingCode=f59d6349; click -> id;
+     immediate convert (orderValueCents=100000) -> commissionCents=10000,
+     fraudFlag=true, reason="Click-to-conversion gap was 1195ms (<2s)...";
+     second click + 2.5s sleep + convert (orderValueCents=1000000) ->
+     commissionCents=100000 (exact 10% match), fraudFlag=false -- confirms
+     the fraud heuristic boundary and commission math both work against a
+     real code path, not just the unit-tested pure function
+  7. Invalid conversion (fake affiliateClickId) -> 400
+     {"error":"recordConversion requires a real, already-recorded
+     affiliateClickId."} (negative case)
+  8. POST /api/admin/lifecycle/ (recompute) -> {"computed":160}; GET ->
+     all 160 real contacts classified stage="engaged" (none have reached
+     qualificationStage="customer" yet -- same real 0% sql->opportunity
+     constraint already documented by the pre-existing Business Diagnostic
+     module), atRiskOrChurned=[] -- correct, since no real "customer" stage
+     contact exists yet to be at risk. Not a bug; honestly reflects real
+     current data.
+  9. All 7 demo pages (/admin/demos, /admin/demos/{control-tower,
+     lead-generation,affiliate,lifecycle,seo-content,social-influencer,
+     performance-marketing}) -> 200 after following the Next.js
+     trailing-slash 308 redirect.
+
+module_registry: 2 genuinely net-new modules added (affiliate, lifecycle),
+plus the demo_showcase catalog module itself -- all built_status='real',
+verified_by='claude-session-2026-09-15-demo-showcase'.
+
+Scope disclosed, not silently dropped: 33 of the 40 marketing-type use
+cases from the source catalog remain un-demoed by design (the source
+material's own advice). The 90-item market-research catalog from the same
+conversation is untouched by this work.
