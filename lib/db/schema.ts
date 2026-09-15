@@ -2272,3 +2272,17 @@ export const positioningStatement = sqliteTable('positioning_statement', {
   confirmedAt: integer('confirmed_at', { mode: 'timestamp' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
+
+// ── PMF Sean-Ellis Survey, added 2026-09-14 -- backlog #29/25 ──
+// Real "how would you feel if you could no longer use TalentsHill"
+// survey -- distinct from the pre-existing survey_responses/scoring.ts,
+// which is an AI-maturity lead-magnet quiz, not a PMF instrument.
+export const pmfSurveyResponse = sqliteTable('pmf_survey_response', {
+  id: text('id').primaryKey(),
+  respondentEmail: text('respondent_email').notNull(),
+  howWouldYouFeel: text('how_would_you_feel', { enum: ['very_disappointed', 'somewhat_disappointed', 'not_disappointed'] }).notNull(),
+  mainBenefit: text('main_benefit'),
+  whoWouldBenefit: text('who_would_benefit'),
+  respondedAt: integer('responded_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});

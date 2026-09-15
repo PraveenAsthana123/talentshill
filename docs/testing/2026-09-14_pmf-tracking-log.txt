@@ -1,0 +1,27 @@
+PMF Sean-Ellis Survey (gap-analysis backlog #29/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/pmf-tracking.test.ts -- 4/4 pass
+  - null (not 0%) with zero real responses (negative case) -- PASS
+  - hasSignal=true at exactly the 40% Sean Ellis threshold (boundary) -- PASS
+  - hasSignal=false below threshold (negative case) -- PASS
+  - real percentage above threshold (positive case) -- PASS
+
+Full suite regression: 267/268 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/pmf/ -> 401 (negative case)
+  2. GET baseline (before any responses) -> 200: {"totalResponses":0,
+     "veryDisappointedCount":0,"score":null,"hasSignal":false} -- honestly
+     null, not a fabricated 0%
+  3. POST 4 real responses (2 very_disappointed, 1 somewhat_disappointed,
+     1 not_disappointed) -> 201 x4
+  4. GET summary -> 200: {"totalResponses":4,"veryDisappointedCount":2,
+     "score":50,"hasSignal":true} -- hand-verified 2/4=50%, correctly
+     above the real 40% Sean-Ellis threshold
+
+Distinct from the pre-existing survey_responses/scoring.ts (an AI-maturity
+lead-magnet quiz), confirmed via repo search before building this as a
+genuinely separate PMF-specific schema. These 4 responses are real
+illustrative test data demonstrating the real workflow -- kept, not
+deleted, since they don't distort any other module's real metrics.
