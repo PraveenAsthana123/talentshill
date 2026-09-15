@@ -92,6 +92,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/admin/evidence', label: 'Evidence Ledger' },
       { href: '/admin/kpi-engine', label: 'KPI Engine' },
+      { href: '/admin/opportunities', label: 'Opportunities' },
     ],
   },
   {

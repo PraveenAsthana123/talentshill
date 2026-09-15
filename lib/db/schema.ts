@@ -2022,3 +2022,28 @@ export const kpiSnapshot = sqliteTable('kpi_snapshot', {
   index('idx_kpi_snapshot_dimension').on(table.dimension),
   index('idx_kpi_snapshot_period').on(table.periodStart, table.periodEnd),
 ]);
+
+// ── Opportunity & Benchmark Engine, added 2026-09-14 -- backlog #3/25 ──
+// Ranks real gaps found in kpi_snapshot (a dimension below a disclosed
+// threshold, or with zero real data = an instrumentation gap) by real
+// impact x feasibility x confidence, and points each at a real existing
+// module as remediation. THRESHOLDS/SOLUTION_MAP in
+// lib/opportunity/opportunity-engine.ts are disclosed, hardcoded business
+// judgment -- not derived data -- same honesty pattern as SohamYoga's
+// OpportunityEngine.
+export const opportunityCandidate = sqliteTable('opportunity_candidate', {
+  id: text('id').primaryKey(),
+  dimension: text('dimension').notNull(), // ties to kpi_snapshot.dimension
+  gapType: text('gap_type', { enum: ['below_threshold', 'no_data'] }).notNull(),
+  kpiSnapshotId: text('kpi_snapshot_id').references(() => kpiSnapshot.id),
+  impactScore: integer('impact_score').notNull(), // 1-10, disclosed hardcoded weight per dimension
+  feasibilityScore: integer('feasibility_score').notNull(), // 1-10, disclosed hardcoded weight per dimension
+  confidenceWeight: real('confidence_weight').notNull(), // derived from the real kpi_snapshot confidence
+  rankScore: real('rank_score').notNull(), // impact x feasibility x confidenceWeight
+  recommendedModuleKey: text('recommended_module_key').notNull(), // ties to module_registry.moduleKey, a real existing module
+  rationale: text('rationale').notNull(),
+  computedAt: integer('computed_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_opportunity_candidate_dimension').on(table.dimension),
+  index('idx_opportunity_candidate_rank').on(table.rankScore),
+]);

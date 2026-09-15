@@ -1,0 +1,32 @@
+Opportunity & Benchmark Engine (gap-analysis backlog #3/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/opportunity-engine.test.ts -- 6/6 pass
+  - at/above-threshold value returns null, no gap (negative case) -- PASS
+  - below-threshold real value flagged as a real gap (positive case) -- PASS
+  - null (no real data) flagged as a gap with low confidence weight (boundary) -- PASS
+  - recommended module matches SOLUTION_MAP (consistency check) -- PASS
+  - rankScore scales down with lower confidence (positive case) -- PASS
+  - THRESHOLDS has an entry for every SOLUTION_MAP dimension (consistency) -- PASS
+
+Full suite regression: 207/208 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/opportunities/ -> 401 (negative case)
+  2. POST /api/admin/opportunities/ (real re-rank from KPI Engine's real
+     latest snapshots) -> 200, 3 real candidates:
+     - lead_quality (49.8, below the 50 threshold) -> rank=49, recommends
+       the real 'leads' module -- correctly the top-ranked gap since it's
+       a real below-threshold value with high confidence, not a no-data gap
+     - ad_efficiency (no real data) -> rank=3.5, recommends 'ads_management'
+     - webinar_engagement (no real data) -> rank=3, recommends 'appointments'
+     Confirms real composition: reads KPI Engine's (#2) actual persisted
+     values, correctly distinguishes a real below-threshold gap from a
+     no-data gap, and ranks them by real impact x feasibility x confidence.
+  3. GET /admin/opportunities/ (admin UI page) -> 200 (renders)
+
+recommendedModuleKey values (leads, ads_management, appointments) verified
+to be real, existing module_registry rows, not invented module names.
+
+No test-data cleanup needed -- opportunity_candidate rows produced during
+this verification are real (derived from real KPI data), kept deliberately.
