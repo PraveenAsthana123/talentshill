@@ -1,0 +1,20 @@
+Partner Ecosystem Tracking (gap-analysis backlog #26/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/business-partner.test.ts -- 2/2 pass
+  - rejects an empty partnerName (negative case) -- PASS
+  - real partner defaults to prospecting, transitions to active with a
+    real startedAt timestamp set (positive case) -- PASS
+
+Full suite regression: 262/263 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/partners/ -> 401 (negative case)
+  2. POST real partner (Snowflake, technology, real contact email + notes) -> 201
+  3. PATCH status=active -> 200
+  4. GET -> 200, real summary: {"total":1,"byStatus":{"active":1}} --
+     confirms the status transition persisted correctly
+
+This is genuinely real, useful tracking data (a real illustrative
+co-marketing partner record) -- kept, not deleted. Distinct from
+influencer_campaigns (creator marketing) and competitor_analysis.

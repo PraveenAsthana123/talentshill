@@ -2236,3 +2236,23 @@ export const goldenPath = sqliteTable('golden_path', {
   verifiedBy: text('verified_by').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
+
+// ── Partner Ecosystem, added 2026-09-14 -- backlog #26/25 ──
+// Real, admin-entered B2B co-marketing/partner tracking -- distinct from
+// influencer_campaigns (creator/influencer marketing) and from
+// competitor_analysis. No partner-portal/CRM-sync integration exists.
+export const businessPartner = sqliteTable('business_partner', {
+  id: text('id').primaryKey(),
+  partnerName: text('partner_name').notNull(),
+  partnerType: text('partner_type', { enum: ['technology', 'agency', 'referral', 'co_marketing', 'reseller', 'other'] }).notNull(),
+  relationshipStatus: text('relationship_status', { enum: ['prospecting', 'active', 'inactive'] }).notNull().default('prospecting'),
+  contactName: text('contact_name'),
+  contactEmail: text('contact_email'),
+  notes: text('notes'),
+  startedAt: integer('started_at', { mode: 'timestamp' }),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_business_partner_status').on(table.relationshipStatus),
+]);
