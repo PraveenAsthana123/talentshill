@@ -5,6 +5,7 @@ import { calculateLeadScore } from '@/lib/contact/lead-scoring';
 import { classifyQualificationStage, resolveQualificationStageOnRescore, type QualificationStage } from '@/lib/contact/lead-qualification-stage';
 import { sendHotLeadAlertIfNeeded } from '@/lib/contact/lead-alert';
 import { recordEvidence } from '@/lib/evidence/evidence-ledger';
+import { recordNextBestAction } from '@/lib/contact/next-best-action';
 
 export interface ScoringStageResult {
   stage: string;
@@ -84,6 +85,9 @@ export function runLeadScoringPipeline(params: { submissionId: string; triggered
     .set({ leadScore: result.score, leadTier: result.tier, qualificationStage })
     .where(eq(schema.contactSubmissions.id, params.submissionId)).run();
   stages.push({ stage: 'write_score', input: { totalScore: result.score, tier: result.tier, qualificationStage }, process: 'Update contact_submissions.leadScore/leadTier/qualificationStage', output: { leadScore: result.score, leadTier: result.tier, qualificationStage }, status: 'ok' });
+
+  const nbaId = recordNextBestAction(submission.id, result.tier, result.score, submission.budgetRange);
+  stages.push({ stage: 'next_best_action', input: { tier: result.tier, budgetRange: submission.budgetRange }, process: 'Real deterministic rule lookup, see lib/contact/next-best-action.ts', output: { nbaId }, status: 'ok' });
 
   // Fire-and-forget, same non-blocking pattern as app/api/contact/route.ts.
   // Uses submission.alertSentAt from BEFORE this update, so a lead that

@@ -2070,3 +2070,21 @@ export const competitorBenchmarkScore = sqliteTable('competitor_benchmark_score'
   index('idx_competitor_benchmark_score_dimension').on(table.dimension),
   uniqueIndex('uq_competitor_benchmark_score_subject_dim').on(table.subjectType, table.competitorId, table.dimension),
 ]);
+
+// ── Lead Next-Best-Action, added 2026-09-14 -- backlog #6/25 ──
+// Structured, deterministic, stored recommendation -- distinct from the
+// existing lead-qualification-agent.ts's free-text LLM narrative. One
+// real row per real scoring run, computed by a real rule lookup in
+// lib/contact/next-best-action.ts (never LLM-estimated).
+export const leadNextBestAction = sqliteTable('lead_next_best_action', {
+  id: text('id').primaryKey(),
+  submissionId: text('submission_id').notNull().references(() => contactSubmissions.id, { onDelete: 'cascade' }),
+  action: text('action', { enum: ['schedule_call', 'send_pricing', 'request_budget_info', 'nurture_email', 'no_action_cold'] }).notNull(),
+  reason: text('reason').notNull(),
+  tier: text('tier').notNull(),
+  score: integer('score').notNull(),
+  computedAt: integer('computed_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_lead_nba_submission').on(table.submissionId),
+  index('idx_lead_nba_action').on(table.action),
+]);

@@ -1,0 +1,27 @@
+Lead Scoring + Next-Best-Action (gap-analysis backlog #6/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/next-best-action.test.ts -- 5/5 pass
+  - hot lead -> schedule_call (positive case) -- PASS
+  - warm lead, no budget -> request_budget_info (negative case) -- PASS
+  - warm lead, budget known -> send_pricing (positive case) -- PASS
+  - cool lead -> nurture_email (positive case) -- PASS
+  - cold lead, even with budget -> no_action_cold (boundary case) -- PASS
+
+Full suite regression: 216/217 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025, real submission
+(80e21815-2bb4-4b28-9ed6-fd1c2727a33c, "Shannon Rodriguez", real cold-tier
+lead score=16):
+  1. POST /api/admin/leads/pipeline/ -- pipeline now includes a real
+     next_best_action stage; wrote a real lead_next_best_action row
+  2. Unauthenticated GET /api/admin/leads/next-best-action/ -> 401 (negative case)
+  3. GET .../next-best-action/?submissionId=... -> 200, real row:
+     action=no_action_cold, reason="Cold lead -- no immediate action,
+     deprioritize.", tier=cold, score=16 -- correctly matches the real
+     cold-tier branch, confirming the wiring end-to-end (not just the
+     unit-tested pure function in isolation)
+
+Scope decision: reuses the 'leads' RBAC resource, no new admin UI page
+(the pre-existing app/admin/leads page is not extended with an NBA column
+in this pass -- API-only, disclosed).
