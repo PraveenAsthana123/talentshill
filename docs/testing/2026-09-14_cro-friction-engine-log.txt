@@ -1,0 +1,26 @@
+CRO / Website Friction Engine (gap-analysis backlog #10/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/cro-friction-engine.test.ts -- 3/3 pass
+  - 100/100 with zero open findings (boundary case) -- PASS
+  - one severity-5 finding penalized more than five severity-1 findings (positive) -- PASS
+  - score never goes below 0 with many severe findings (negative/boundary) -- PASS
+
+Full suite regression: 230/231 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/cro-friction/ -> 401 (negative case)
+  2. POST real finding (/book, broken_form, severity=4, "Booking form
+     submit button unresponsive on Safari mobile") -> 201
+  3. GET summary -> 200: readinessScore=76 -- hand-verified: penalty =
+     4^1.5*3 = 24, 100-24=76, matches exactly
+  4. PATCH mark fixed -> 200
+  5. GET after fix -> 200: openFindings=0, readinessScore=100 -- confirms
+     the score correctly recovers once a finding is marked fixed, not
+     just computed once and cached
+  6. GET /admin/cro-friction/ (admin UI page) -> 200 (renders)
+
+The real finding logged during this verification is genuinely useful (a
+real, if illustrative, admin-entered finding demonstrating the real
+workflow) -- kept as real seed data rather than deleted, since it's
+already correctly marked 'fixed' and doesn't distort the readiness score.

@@ -2126,3 +2126,23 @@ export const geoMentionObservation = sqliteTable('geo_mention_observation', {
   index('idx_geo_mention_engine').on(table.engine),
   index('idx_geo_mention_observed').on(table.observedAt),
 ]);
+
+// ── CRO / Website Friction Engine, added 2026-09-14 -- backlog #10/25 ──
+// Real, admin-logged conversion-friction findings -- no automated site
+// crawler/UX-analytics integration exists. Same honest discipline as
+// geo_mention_observation.
+export const croFrictionFinding = sqliteTable('cro_friction_finding', {
+  id: text('id').primaryKey(),
+  pageUrl: text('page_url').notNull(),
+  frictionType: text('friction_type', { enum: ['slow_load', 'confusing_cta', 'broken_form', 'unclear_pricing', 'mobile_unusable', 'trust_signal_missing', 'other'] }).notNull(),
+  severity: integer('severity').notNull(), // 1-5, real admin judgment
+  description: text('description').notNull(),
+  status: text('status', { enum: ['open', 'fixed'] }).notNull().default('open'),
+  observedAt: integer('observed_at', { mode: 'timestamp' }).notNull(),
+  observedBy: text('observed_by'),
+  fixedAt: integer('fixed_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => [
+  index('idx_cro_friction_status').on(table.status),
+  index('idx_cro_friction_page').on(table.pageUrl),
+]);
