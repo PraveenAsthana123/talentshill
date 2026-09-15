@@ -1,0 +1,31 @@
+Case Study Engine (gap-analysis backlog #22/25) -- live verification log, 2026-09-14
+
+Unit tests (vitest): tests/unit/case-study.test.ts -- 5/5 pass
+  - canPublish rejects null/empty evidenceId (negative case x2) -- PASS
+  - canPublish accepts a non-empty evidenceId (positive case) -- PASS
+  - refuses to publish a case study with no evidenceId (negative case) -- PASS
+  - a fabricated evidenceId is rejected by the REAL foreign-key constraint
+    at creation time, not just the app-level check (negative case) -- PASS
+    (this is a genuine discovery from live testing: the FK on
+    case_study.evidence_id -> evidence_record.id, enforced by SQLite with
+    foreign_keys=ON, is a stronger guarantee than canPublish() alone --
+    a fabricated citation can never even be persisted, let alone published)
+
+Full suite regression: 258/259 passing (same pre-existing occasion-trigger.test.ts
+failure already logged, confirmed unrelated).
+
+Live curl verification against http://127.0.0.1:3025:
+  1. Unauthenticated GET /api/admin/case-studies/ -> 401 (negative case)
+  2. POST real draft (no evidenceId) -> 201
+  3. PATCH publish that draft -> 400 {"published":false,"reason":"no
+     evidenceId citation -- cannot publish without real evidence"} (negative case)
+  4. Fetched a real evidence_record id from the KPI Engine's evidence trail
+  5. POST a new case study WITH that real evidenceId -> 201
+  6. PATCH publish it -> 200 {"published":true} (positive case)
+  7. POST with a fabricated evidenceId ("fabricated-nonexistent-id") -> 400
+     {"error":"FOREIGN KEY constraint failed"} -- confirmed the real DB
+     constraint blocks it before the app-level check even runs
+
+Test-data hygiene: the unpublished draft (step 2) was deleted after
+verification. The properly-cited, published case study (step 5-6) is
+genuinely real content citing a real evidence record -- kept, not deleted.

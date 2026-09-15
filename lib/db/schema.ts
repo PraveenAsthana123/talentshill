@@ -2198,3 +2198,24 @@ export const verticalPack = sqliteTable('vertical_pack', {
   confirmedAt: integer('confirmed_at', { mode: 'timestamp' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
+
+// ── Case Study Engine, added 2026-09-14 -- backlog #22/25 ──
+// Real case study, gated from publishing without at least one real
+// evidence_record citation -- see fabrication-guard.ts's existing
+// documentation of the local LLM once inventing a fake case study; this
+// table is the structural backstop, not a regex guard.
+export const caseStudy = sqliteTable('case_study', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  clientContext: text('client_context').notNull(),
+  challenge: text('challenge').notNull(),
+  solutionText: text('solution_text').notNull(),
+  outcome: text('outcome').notNull(),
+  evidenceId: text('evidence_id').references(() => evidenceRecord.id), // required before status can become 'published'
+  status: text('status', { enum: ['draft', 'published'] }).notNull().default('draft'),
+  createdBy: text('created_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  publishedAt: integer('published_at', { mode: 'timestamp' }),
+}, (table) => [
+  index('idx_case_study_status').on(table.status),
+]);
