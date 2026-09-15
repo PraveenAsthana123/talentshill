@@ -100,12 +100,14 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // Client Demo Showcase, added 2026-09-15 -- the 7 prioritized,
-    // client-facing demos per the source conversation's own "build 7,
-    // not 40" recommendation (docs/chatgpt-extracts/2026-09-13_affiliate-...md).
+    // Client Demo Showcase, added 2026-09-15, extended to the full
+    // 40-item marketing-type catalog same day -- see /admin/demos for
+    // the honest full picture (21 items have a real page below; 19 are
+    // registered as not_started with no page, by design). Plus the
+    // separate 90-item Research Methodology Catalog (all not_started).
     label: 'Demo Showcase',
     items: [
-      { href: '/admin/demos', label: 'All Demos' },
+      { href: '/admin/demos', label: 'All 40 Demos (Overview)' },
       { href: '/admin/demos/control-tower', label: 'Control Tower' },
       { href: '/admin/demos/lead-generation', label: 'Lead Generation AI' },
       { href: '/admin/demos/affiliate', label: 'Affiliate AI' },
@@ -113,6 +115,21 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/demos/social-influencer', label: 'Social + Influencer AI' },
       { href: '/admin/demos/performance-marketing', label: 'Performance Marketing AI' },
       { href: '/admin/demos/lifecycle', label: 'Lifecycle / Churn AI' },
+      { href: '/admin/demos/geo-aeo', label: 'AEO / GEO' },
+      { href: '/admin/demos/abm', label: 'ABM' },
+      { href: '/admin/demos/partner-marketing', label: 'Partner Marketing' },
+      { href: '/admin/demos/cro', label: 'CRO' },
+      { href: '/admin/demos/email-marketing', label: 'Email Marketing' },
+      { href: '/admin/demos/brand-marketing', label: 'Brand Marketing' },
+      { href: '/admin/demos/market-research', label: 'Market Research' },
+      { href: '/admin/demos/conversational-marketing', label: 'Conversational Marketing' },
+      { href: '/admin/demos/voice-ai-marketing', label: 'Voice AI Marketing' },
+      { href: '/admin/demos/sms-whatsapp', label: 'SMS / WhatsApp' },
+      { href: '/admin/demos/event-webinar', label: 'Event / Webinar' },
+      { href: '/admin/demos/video-marketing', label: 'Video Marketing' },
+      { href: '/admin/demos/youtube-marketing', label: 'YouTube Marketing' },
+      { href: '/admin/demos/competitive-intelligence', label: 'Competitive Intelligence' },
+      { href: '/admin/demos/research-catalog', label: 'Research Catalog (90, not started)' },
     ],
   },
   {

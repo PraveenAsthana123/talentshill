@@ -1,0 +1,72 @@
+Client Demo Showcase -- extended to the full 40-item marketing catalog + 90-item research catalog
+Live verification log, 2026-09-15 (follow-up to 2026-09-15_demo-showcase-log.txt)
+
+Context: user said "complete all pending" after the initial 7-demo showcase,
+followed by explicit autonomous/no-stop instructions ("autonomus ...one bye
+one", "no stoping", "all approve"). Interpreted as: extend the demo catalog
+to the full 40 marketing-type use cases from the source conversation (not
+just the 7 prioritized ones), plus register the separate 90-item market-
+research methodology catalog -- both honestly, with real backing where it
+exists and explicit not_started where it doesn't. No fabrication: every new
+page reuses an already-real, already-tested module's existing dashboard/
+summary endpoint; nothing was invented to fill a card.
+
+14 new demo pages built, each backed by an existing real, RBAC-gated API
+(4 reuse existing routes directly -- geo-visibility, abm, partners,
+cro-friction; 10 reuse existing dashboard endpoints via a new shared
+GenericKpiDashboard component that renders whatever real kpis fields that
+module's dashboard route returns, rather than hardcoding field names per
+module):
+  AEO/GEO, ABM, Partner Marketing, CRO, Email Marketing, Brand Marketing,
+  Market Research (own demo, distinct from the 90-item catalog),
+  Conversational Marketing, Voice AI Marketing, SMS/WhatsApp, Event/Webinar,
+  Video Marketing, YouTube Marketing, Competitive Intelligence.
+
+Schema: 1 new table (research_methodology_catalog) + 2 new columns on
+demo_showcase (source_num, page_route) pushed via `npx drizzle-kit push`.
+RBAC: 1 new resource (research_catalog) added, re-seeded.
+
+demo_showcase registry extended from 7 to 41 rows (40 marketing-type items,
+1 cross-cutting Control Tower). Every one of the 40 source-catalog numbers
+(1-40) is represented, including #7/#8/#11 which fold into an existing
+demo's page rather than getting a separate one (same underlying real
+table) -- registered under their own sourceNum anyway so nothing is
+silently absorbed without a trace. Final breakdown:
+  2 ready, 22 partial, 17 not_started (verified via
+  GET /api/admin/demos/ -> readyCount/partialCount/notStartedCount).
+
+research_methodology_catalog seeded with all 90 real, named methodologies
+from the source conversation's own catalog (msg 21), parsed programmatically
+from the raw extracted JSON (not hand-transcribed) and verified 90/90,
+no gaps, no duplicates before writing the seed script. Every row is
+status='not_started' -- confirmed the pre-existing Market Research module
+implements none of these as a distinct capability.
+
+Full typecheck (`npx tsc --noEmit`): 0 errors across the entire project,
+run twice (after the 14 pages, again after the registry/nav changes).
+
+Full test suite: 48/48 files, 285/285 tests pass (clean run, no transient
+failures this time).
+
+Live verification against http://127.0.0.1:3025 (admin@talentshill.com):
+  - 18 API endpoints backing the 14 new pages + the 2 catalog endpoints ->
+    200 each (geo-visibility, abm, partners, cro-friction, campaigns/
+    dashboard, templates/dashboard, branding/dashboard, market-research/
+    dashboard, chat/dashboard, voice-ai/dashboard, broadcasts/dashboard,
+    appointments/dashboard, video-editing/dashboard, videos/dashboard,
+    youtube/dashboard, competitor-analysis/dashboard, research-catalog,
+    demos)
+  - All 15 new pages (14 demos + research-catalog) -> 200 after following
+    the Next.js trailing-slash redirect; checked rendered HTML for
+    "application error"/"internal server error"/"unhandled" -> none found
+  - GET /api/admin/research-catalog/ -> total=90, notStartedCount=90
+  - GET /api/admin/demos/ -> total=41, ready=2, partial=22, notStarted=17
+  - Spot-checked /api/admin/chat/dashboard/ raw response -- real kpis
+    (totalSessions=26, totalRequests=25, totalRuns=144, etc.), confirming
+    the generic dashboard component renders real, non-fabricated data.
+
+Net picture after this session's full body of work: of the source
+conversation's 130 total use cases (40 marketing-type + 90 research),
+2 are demo-ready, 22 have a real partial demo with disclosed gaps, 17
+marketing-type items and all 90 research methodologies are honestly
+registered as not_started with zero fabricated coverage.

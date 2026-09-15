@@ -52,6 +52,9 @@ const RESOURCES = [
   // net-new engines it required (Affiliate, Lifecycle/Churn), added
   // 2026-09-15.
   'demo_showcase', 'affiliate', 'lifecycle',
+  // Research Methodology Catalog (90 named methodologies, all honestly
+  // not_started), added 2026-09-15.
+  'research_catalog',
 ];
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'manage'];

@@ -2303,6 +2303,8 @@ export const pmfSurveyResponse = sqliteTable('pmf_survey_response', {
 export const demoShowcase = sqliteTable('demo_showcase', {
   id: text('id').primaryKey(),
   demoKey: text('demo_key').notNull().unique(), // e.g. 'control_tower', 'lead_generation'
+  sourceNum: integer('source_num'), // 1-40, matches the source catalog's own numbering (msg 19). Null for the 2 cross-cutting demos (control_tower has no single source number) not present in the original 40.
+  pageRoute: text('page_route'), // e.g. '/admin/demos/control-tower'; null if not yet built (not_started)
   name: text('name').notNull(),
   flowSummary: text('flow_summary').notNull(), // the end-to-end flow text, from source material
   valueStory: text('value_story').notNull(),
@@ -2378,3 +2380,24 @@ export const customerLifecycle = sqliteTable('customer_lifecycle', {
 }, (table) => [
   index('idx_customer_lifecycle_stage').on(table.stage),
 ]);
+
+// ── Research Methodology Catalog, added 2026-09-15 ──
+// Honest registry of the 90 named market-research methodologies from the
+// source conversation's own catalog (msg 21 of the extracted conversation).
+// The pre-existing Market Research module (briefs + Ollama synthesis +
+// opportunity scoring) does not implement any of these as a distinct,
+// data-driven capability -- every row here is status='not_started' by
+// design, not by oversight. Exists so the full 130-item picture (40
+// marketing-type + 90 research) is visible in one place, honestly, rather
+// than only the 23 demoed items being discoverable.
+export const researchMethodologyCatalog = sqliteTable('research_methodology_catalog', {
+  id: text('id').primaryKey(),
+  num: integer('num').notNull().unique(), // 1-90, matches the source catalog's own numbering
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  typicalOutput: text('typical_output').notNull(),
+  status: text('status', { enum: ['not_started'] }).notNull().default('not_started'),
+  lastVerifiedAt: integer('last_verified_at', { mode: 'timestamp' }),
+  verifiedBy: text('verified_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
