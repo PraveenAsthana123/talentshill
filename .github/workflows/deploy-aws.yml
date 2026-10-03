@@ -24,6 +24,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+      - name: Secret scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
       - run: npm test
 
   build-and-deploy:

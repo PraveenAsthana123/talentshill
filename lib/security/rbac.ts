@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { hasPermission } from '@/lib/db/rbac-queries';
-
-const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
+import { getSecretKey } from './session';
 
 export function getSessionUserId(request: NextRequest): string | null {
   const token = request.cookies.get('admin_session')?.value;
@@ -24,8 +23,7 @@ export async function getSessionUserIdAsync(request: NextRequest): Promise<strin
   if (!token) return null;
 
   try {
-    const secret = new TextEncoder().encode(SESSION_SECRET);
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecretKey());
     return (payload.userId as string) || null;
   } catch {
     return null;

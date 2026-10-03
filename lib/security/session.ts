@@ -1,5 +1,8 @@
 import { SignJWT, jwtVerify } from 'jose';
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
+import { validateEnv } from './validate-env';
+
+validateEnv();
 
 export interface SessionPayload {
   userId: string;
@@ -36,7 +39,7 @@ if (!SESSION_SECRET) {
   );
 }
 
-function getSecretKey(): Uint8Array {
+export function getSecretKey(): Uint8Array {
   return new TextEncoder().encode(EFFECTIVE_SECRET);
 }
 
