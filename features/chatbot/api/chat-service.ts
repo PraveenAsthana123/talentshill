@@ -48,13 +48,34 @@ function generateResponse(message: string): string {
   return 'Thank you for your interest in Talents Hill! We specialize in AI, Robotics, IoT, and Quantum consulting for enterprises. How can I help you? You can ask about our services, solutions, demos, or careers.';
 }
 
-export async function sendMessage(userMessage: string): Promise<{ stream: AsyncGenerator<string>; fullText: string }> {
+export async function sendMessage(
+  userMessage: string,
+  sessionToken?: string,
+): Promise<{ stream: AsyncGenerator<string>; fullText: string }> {
   const sanitized = sanitizePrompt(userMessage);
   trackChatEvent('message_sent', { length: sanitized.length });
 
-  // In production, replace with actual API call:
-  // const response = await fetch('/api/chat', { method: 'POST', body: JSON.stringify({ message: sanitized }) });
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: sanitized, sessionToken }),
+    });
 
+    if (response.ok) {
+      const data = await response.json() as { response?: string; sessionToken?: string };
+      const fullText = data.response ?? generateResponse(sanitized);
+      return { stream: simulateStream(fullText), fullText };
+    }
+    // API returned an error — fall through to keyword fallback
+    console.warn('[chatbot] /api/chat returned', response.status, '— using fallback response');
+  } catch (err) {
+    // Network failure (e.g. SSR / pre-render context where fetch to own
+    // origin is unavailable) — fall through to keyword fallback
+    console.warn('[chatbot] /api/chat unreachable —', err instanceof Error ? err.message : err);
+  }
+
+  // Fallback: keyword-based response so the widget never goes silent
   const fullText = generateResponse(sanitized);
   return { stream: simulateStream(fullText), fullText };
 }

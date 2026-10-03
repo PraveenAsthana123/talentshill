@@ -11,10 +11,33 @@ export interface SessionPayload {
 
 export const SESSION_COOKIE_NAME = 'admin_session';
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
+const DEV_FALLBACK = 'dev-secret-change-me';
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
+// In production, the app must not start with the known dev secret.
+// Fail loudly at module load so a misconfigured deployment surfaces
+// immediately rather than silently signing tokens with a public value.
+if (process.env.NODE_ENV === 'production' && !SESSION_SECRET) {
+  throw new Error(
+    'SESSION_SECRET environment variable is not set. ' +
+    'Generate a strong secret (e.g. openssl rand -hex 32) and set it ' +
+    'in your deployment environment before starting the server.'
+  );
+}
+
+const EFFECTIVE_SECRET = SESSION_SECRET ?? DEV_FALLBACK;
+
+if (!SESSION_SECRET) {
+  // Development/test only — make the fallback visible in logs so it is
+  // never silently used in a staging or shared environment.
+  console.warn(
+    '[security] SESSION_SECRET is not set — using insecure dev fallback. ' +
+    'Set SESSION_SECRET before deploying to any shared or public environment.'
+  );
+}
 
 function getSecretKey(): Uint8Array {
-  return new TextEncoder().encode(SESSION_SECRET);
+  return new TextEncoder().encode(EFFECTIVE_SECRET);
 }
 
 export async function signToken(payload: SessionPayload): Promise<string> {

@@ -58,6 +58,9 @@ export default function CampaignWizardPage() {
           emailProfileId: form.emailProfileId || undefined,
           subject: form.subject,
           throttlePerMinute: form.throttlePerMinute,
+          scheduledAt: form.scheduledAt || undefined,
+          enableAbTest: form.enableAbTest || undefined,
+          variantBSubject: form.enableAbTest ? form.variantBSubject : undefined,
         }),
       });
       const data = await res.json();

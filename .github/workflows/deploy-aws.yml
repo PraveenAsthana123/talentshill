@@ -1,5 +1,9 @@
 name: Build & Deploy to AWS
 
+# This app requires a Node.js server (API routes, background jobs, SQLite).
+# Static export (out/) is NOT supported.
+# Deployment target: AWS EC2 or ECS via SSH + PM2 / Docker.
+
 on:
   push:
     branches: [main]
@@ -7,33 +11,40 @@ on:
 
 env:
   AWS_REGION: us-east-1
+  NODE_ENV: production
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
   build-and-deploy:
+    needs: test
     runs-on: ubuntu-latest
 
-    permissions:
-      id-token: write
-      contents: read
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --omit=dev
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Build static export
+      - name: Build Next.js (Node.js server output)
         run: npm run build
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -42,11 +53,46 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy to S3
-        run: aws s3 sync ./out s3://${{ secrets.S3_BUCKET_NAME }} --delete
+      # ── Option A: EC2 via SSH ────────────────────────────────────────────
+      # Uncomment and configure if deploying to an EC2 instance.
+      #
+      # - name: Deploy to EC2 via SSH
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.EC2_HOST }}
+      #     username: ${{ secrets.EC2_USER }}
+      #     key: ${{ secrets.EC2_SSH_KEY }}
+      #     script: |
+      #       cd /srv/talentshill
+      #       git pull origin main
+      #       npm ci --omit=dev
+      #       npm run build
+      #       pm2 restart talentshill || pm2 start npm --name talentshill -- start
+      #       pm2 save
 
-      - name: Invalidate CloudFront cache
+      # ── Option B: ECS (Docker) ───────────────────────────────────────────
+      # Uncomment if deploying via ECS + ECR.
+      #
+      # - name: Login to Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
+      #
+      # - name: Build and push Docker image
+      #   run: |
+      #     docker build \
+      #       --build-arg SESSION_SECRET="${{ secrets.SESSION_SECRET }}" \
+      #       -t ${{ steps.login-ecr.outputs.registry }}/talentshill:${{ github.sha }} .
+      #     docker push ${{ steps.login-ecr.outputs.registry }}/talentshill:${{ github.sha }}
+      #
+      # - name: Deploy to ECS
+      #   run: |
+      #     aws ecs update-service \
+      #       --cluster ${{ secrets.ECS_CLUSTER }} \
+      #       --service ${{ secrets.ECS_SERVICE }} \
+      #       --force-new-deployment
+
+      - name: Deployment placeholder
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          echo "Next.js Node.js build completed successfully."
+          echo "Configure EC2_SSH or ECS secrets (see workflow comments) to enable live deployment."
+          echo "Do NOT deploy to S3 static hosting — this app requires a Node.js runtime."

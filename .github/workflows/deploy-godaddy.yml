@@ -1,39 +1,111 @@
 name: Build & Deploy to GoDaddy
 
+# This app requires a Node.js server (API routes, background jobs, SQLite).
+# Static export (out/) is NOT supported.
+# GoDaddy shared hosting CANNOT run Next.js Node.js server.
+# Deployment target: GoDaddy VPS or Dedicated Server via SSH + PM2.
+# If you only have GoDaddy shared hosting, migrate to a VPS/EC2/Railway/Render.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+env:
+  NODE_ENV: production
+
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
   build-and-deploy:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --omit=dev
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Build static export
+      - name: Build Next.js (Node.js server output)
         run: npm run build
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
-      - name: Deploy to GoDaddy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./out/
-          server-dir: ${{ secrets.FTP_SERVER_DIR || '/public_html/' }}
-          dangerous-clean-slate: false
+      # ── GoDaddy VPS via SSH ──────────────────────────────────────────────
+      # Requires GoDaddy VPS or Dedicated Server with SSH access.
+      # GoDaddy shared hosting does NOT support Node.js server processes.
+      #
+      # To enable: add these secrets in GitHub repo settings:
+      #   GODADDY_HOST       — VPS IP or hostname
+      #   GODADDY_USER       — SSH username (often 'root' or a created user)
+      #   GODADDY_SSH_KEY    — Private SSH key (PEM format)
+      #
+      # - name: Deploy to GoDaddy VPS via SSH
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.GODADDY_HOST }}
+      #     username: ${{ secrets.GODADDY_USER }}
+      #     key: ${{ secrets.GODADDY_SSH_KEY }}
+      #     script: |
+      #       cd /srv/talentshill
+      #       git pull origin main
+      #       npm ci --omit=dev
+      #       npm run build
+      #       pm2 restart talentshill || pm2 start npm --name talentshill -- start
+      #       pm2 save
+
+      # ── Alternative: Docker on GoDaddy VPS ──────────────────────────────
+      # If the VPS has Docker installed, deploy via container:
+      #
+      # - name: Build and transfer Docker image
+      #   run: |
+      #     docker build \
+      #       --build-arg SESSION_SECRET="${{ secrets.SESSION_SECRET }}" \
+      #       -t talentshill:${{ github.sha }} .
+      #     docker save talentshill:${{ github.sha }} | gzip > talentshill.tar.gz
+      #
+      # - name: Deploy Docker image to GoDaddy VPS
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.GODADDY_HOST }}
+      #     username: ${{ secrets.GODADDY_USER }}
+      #     key: ${{ secrets.GODADDY_SSH_KEY }}
+      #     script: |
+      #       docker load < /tmp/talentshill.tar.gz
+      #       docker stop talentshill || true
+      #       docker rm talentshill || true
+      #       docker run -d --name talentshill --restart always \
+      #         -p 3000:3000 \
+      #         -e SESSION_SECRET="${{ secrets.SESSION_SECRET }}" \
+      #         talentshill:${{ github.sha }}
+
+      - name: Deployment placeholder
+        run: |
+          echo "Next.js Node.js build completed successfully."
+          echo ""
+          echo "IMPORTANT: GoDaddy shared hosting CANNOT serve this app."
+          echo "You need a GoDaddy VPS or Dedicated Server (or migrate to EC2/Railway/Render)."
+          echo ""
+          echo "To enable live deployment:"
+          echo "  1. Provision a GoDaddy VPS (Linux)"
+          echo "  2. Install Node.js 20+, PM2, git on the VPS"
+          echo "  3. Add GODADDY_HOST, GODADDY_USER, GODADDY_SSH_KEY secrets"
+          echo "  4. Uncomment the SSH deployment step above"
+          echo ""
+          echo "Do NOT use FTP + ./out/ — this app requires a Node.js runtime."
