@@ -5,16 +5,24 @@ export const linkedinProvider: IntegrationProvider = {
   name: 'LinkedIn',
   category: 'social',
   configSchema: { apiKey: { type: 'string', required: true } },
+
   async connect(config) {
-    return { success: true, message: 'LinkedIn connected successfully (stub)' };
+    const key = config?.apiKey?.trim();
+    if (!key) {
+      return { success: false, message: 'LinkedIn requires an OAuth access token from the LinkedIn Developer Portal. Complete the OAuth flow first.' };
+    }
+    return { success: true, message: 'LinkedIn token stored. Send a test post to verify the connection.' };
   },
+
   async disconnect() {
     return { success: true };
   },
+
   async testConnection() {
-    return { success: true, message: 'LinkedIn connection is healthy (stub)' };
+    return { success: false, message: 'Live LinkedIn verification requires a valid OAuth token and API call. Configure your LinkedIn app credentials first.' };
   },
+
   async getStatus() {
-    return { connected: true };
+    return { connected: false };
   },
 };

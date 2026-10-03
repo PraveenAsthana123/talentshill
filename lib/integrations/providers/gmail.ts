@@ -5,16 +5,24 @@ export const gmailProvider: IntegrationProvider = {
   name: 'Gmail',
   category: 'messaging',
   configSchema: { apiKey: { type: 'string', required: true } },
+
   async connect(config) {
-    return { success: true, message: 'Gmail connected successfully (stub)' };
+    const key = config?.apiKey?.trim();
+    if (!key) {
+      return { success: false, message: 'Gmail requires a Google OAuth refresh token. Complete the Google OAuth consent flow to generate one.' };
+    }
+    return { success: true, message: 'Gmail token stored. Send a test email to verify the connection.' };
   },
+
   async disconnect() {
     return { success: true };
   },
+
   async testConnection() {
-    return { success: true, message: 'Gmail connection is healthy (stub)' };
+    return { success: false, message: 'Live Gmail verification requires a valid Google OAuth token. Complete setup under Integrations → Gmail.' };
   },
+
   async getStatus() {
-    return { connected: true };
+    return { connected: false };
   },
 };

@@ -5,16 +5,24 @@ export const quoraProvider: IntegrationProvider = {
   name: 'Quora',
   category: 'social',
   configSchema: { apiKey: { type: 'string', required: true } },
+
   async connect(config) {
-    return { success: true, message: 'Quora connected successfully (stub)' };
+    const key = config?.apiKey?.trim();
+    if (!key) {
+      return { success: false, message: 'Quora Ads API access requires approval from Quora. Apply at quora.com/business/ads-api.' };
+    }
+    return { success: true, message: 'Quora credentials stored. Fetch campaigns to verify the connection.' };
   },
+
   async disconnect() {
     return { success: true };
   },
+
   async testConnection() {
-    return { success: true, message: 'Quora connection is healthy (stub)' };
+    return { success: false, message: 'Live Quora verification requires an approved API token. Configure under Integrations → Quora.' };
   },
+
   async getStatus() {
-    return { connected: true };
+    return { connected: false };
   },
 };

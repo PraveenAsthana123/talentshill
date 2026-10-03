@@ -5,16 +5,24 @@ export const instagramProvider: IntegrationProvider = {
   name: 'Instagram',
   category: 'social',
   configSchema: { apiKey: { type: 'string', required: true } },
+
   async connect(config) {
-    return { success: true, message: 'Instagram connected successfully (stub)' };
+    const key = config?.apiKey?.trim();
+    if (!key) {
+      return { success: false, message: 'Instagram requires a Facebook Page Access Token with instagram_basic and instagram_content_publish permissions.' };
+    }
+    return { success: true, message: 'Instagram token stored. Post a test image to verify the connection.' };
   },
+
   async disconnect() {
     return { success: true };
   },
+
   async testConnection() {
-    return { success: true, message: 'Instagram connection is healthy (stub)' };
+    return { success: false, message: 'Live Instagram verification requires a valid access token and a connected Facebook Page. Configure under Integrations → Instagram.' };
   },
+
   async getStatus() {
-    return { connected: true };
+    return { connected: false };
   },
 };
