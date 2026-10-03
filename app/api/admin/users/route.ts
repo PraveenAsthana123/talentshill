@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getAllUsers, createUser } from '@/lib/db/admin-queries';
 import { getUserRoles, setUserRoles } from '@/lib/db/rbac-queries';
 import { hashPassword } from '@/lib/security/password';
 import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
 import { logOperationRun } from '@/lib/operation-run';
+
+const CreateUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(128),
+  name: z.string().min(1).max(200),
+  role: z.enum(['admin', 'editor', 'viewer']).default('editor'),
+  roleIds: z.array(z.string()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -32,20 +41,21 @@ export const GET = withPermission('users', 'read')(async (_request: NextRequest,
 export const POST = withPermission('users', 'create')(async (request: NextRequest, _context: unknown) => {
   try {
     const body = await request.json();
-    if (!body.email || !body.password || !body.name) {
-      return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 });
+    const parsed = CreateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const passwordHash = hashPassword(body.password);
+    const passwordHash = hashPassword(parsed.data.password);
     const user = createUser({
-      email: body.email,
+      email: parsed.data.email,
       passwordHash,
-      name: body.name,
-      role: body.role || 'editor',
+      name: parsed.data.name,
+      role: parsed.data.role,
     });
 
-    if (body.roleIds && Array.isArray(body.roleIds)) {
-      setUserRoles(user.id, body.roleIds);
+    if (parsed.data.roleIds && parsed.data.roleIds.length > 0) {
+      setUserRoles(user.id, parsed.data.roleIds);
     }
 
     const roles = getUserRoles(user.id);
@@ -53,7 +63,7 @@ export const POST = withPermission('users', 'create')(async (request: NextReques
     const triggeredBy = await getSessionUserIdAsync(request);
     logOperationRun({
       moduleKey: 'users', operationName: 'create_user', executionMode: 'manual', status: 'completed',
-      inputPayload: { email: body.email }, outputPayload: { id: user.id }, triggeredBy,
+      inputPayload: { email: parsed.data.email }, outputPayload: { id: user.id }, triggeredBy,
     });
 
     return NextResponse.json({ user: { ...user, roles } }, { status: 201 });

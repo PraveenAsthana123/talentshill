@@ -345,8 +345,15 @@ npm install
 cp .env.example .env.local
 # Edit .env.local with your values (see Environment Variables below)
 
-# Push the database schema
+# Push the database schema (development / first run)
 npx drizzle-kit push
+
+# Migration trail: the baseline SQL migration lives in drizzle/0000_cold_wallow.sql
+# (generated 2026-10-03 via `npx drizzle-kit generate`). It captures the full
+# 136-table schema as of that date. For subsequent schema changes, run
+# `npx drizzle-kit generate` to produce a new numbered migration file, then apply
+# it in production via `npx drizzle-kit migrate`. The drizzle/ folder is committed
+# to git so the full schema history is tracked.
 
 # Seed the database (admin user, RBAC, feature flags, frameworks, integrations)
 npx tsx lib/db/seed.ts

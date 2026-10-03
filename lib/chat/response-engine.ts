@@ -2,6 +2,8 @@ import { evaluateMessage } from './evaluators';
 import { createEval } from '@/lib/db/chat-eval-queries';
 import { createMessage, getMessages } from '@/lib/db/chat-queries';
 import { sendEmail } from '@/lib/email/mailer';
+import { hybridRetrieve } from '@/lib/rag/retrieval';
+import { logger } from '@/lib/logger';
 
 interface ResponseContext {
   sessionId: string;
@@ -58,6 +60,75 @@ export function generateResponse(message: string, context: ResponseContext): str
   return "Thank you for your message. I want to make sure I give you the most helpful response. Could you tell me a bit more about what you're looking for? Whether it's about our AI solutions, pricing, or getting in touch with our team, I'm here to help!";
 }
 
+/**
+ * Attempt to answer using Ollama with RAG-retrieved context.
+ * Falls back to the keyword engine if Ollama is unreachable or returns an error.
+ */
+async function generateResponseWithOllama(
+  message: string,
+  context: ResponseContext
+): Promise<string> {
+  const ollamaBase = process.env.OLLAMA_BASE_URL || 'http://localhost:11435';
+  const model = process.env.OLLAMA_MODEL || 'llama3.2';
+
+  // 1. Retrieve relevant context via hybrid RAG
+  let ragContext = '';
+  try {
+    const chunks = await hybridRetrieve(message, { k: 3, rerankEnabled: false });
+    if (chunks.length > 0) {
+      ragContext =
+        'Relevant context from TalentsHill knowledge base:\n' +
+        chunks.map((c, i) => `[${i + 1}] ${c.content}`).join('\n\n') +
+        '\n\n';
+    }
+  } catch (ragErr) {
+    logger.warn({ err: ragErr }, '[chat] RAG retrieval failed — proceeding without context');
+  }
+
+  // 2. Build prompt
+  const systemPrompt =
+    'You are a helpful assistant for TalentsHill, an enterprise AI consulting firm. ' +
+    'Answer concisely and professionally. If you are unsure, offer to connect the visitor with the team.';
+
+  const userPrompt = ragContext
+    ? `${ragContext}User question: ${message}`
+    : message;
+
+  // 3. Call Ollama
+  try {
+    const res = await fetch(`${ollamaBase}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        stream: false,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+
+    if (!res.ok) {
+      logger.warn({ status: res.status }, '[chat] Ollama returned non-OK — falling back to keyword engine');
+      return generateResponse(message, context);
+    }
+
+    const data = (await res.json()) as { message?: { content?: string } };
+    const text = data?.message?.content?.trim();
+    if (text) {
+      return text;
+    }
+
+    logger.warn('[chat] Ollama response had no content — falling back to keyword engine');
+    return generateResponse(message, context);
+  } catch (err) {
+    logger.warn({ err }, '[chat] Ollama unreachable — falling back to keyword engine');
+    return generateResponse(message, context);
+  }
+}
+
 // Process a user message: evaluate, generate response, evaluate response, persist, optionally email
 export async function processMessage(
   userMessage: string,
@@ -91,8 +162,8 @@ export async function processMessage(
     userEvals[type] = { passed: result.passed, score: result.score };
   }
 
-  // 3. Generate response
-  const responseText = generateResponse(userMessage, context);
+  // 3. Generate response — try Ollama with RAG context first, fall back to keyword engine
+  const responseText = await generateResponseWithOllama(userMessage, context);
 
   // 4. Persist response
   const responseMessageId = createMessage({

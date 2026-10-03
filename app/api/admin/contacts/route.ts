@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getContacts, getContactCount, createContact, bulkDeleteContacts, bulkUpdateTags } from '@/lib/db/contact-crm-queries';
 import { withPermission, getSessionUserIdAsync, checkPermission } from '@/lib/security/rbac';
 import { logOperationRun } from '@/lib/operation-run';
+
+const CreateContactSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  company: z.string().max(200).optional(),
+  phone: z.string().max(30).optional(),
+  source: z.string().max(50).optional(),
+  tags: z.array(z.string()).optional(),
+  status: z.enum(['active', 'unsubscribed', 'bounced', 'inactive']).optional(),
+});
+
+const BulkDeleteSchema = z.object({
+  action: z.literal('bulk-delete'),
+  ids: z.array(z.string()).min(1),
+});
+
+const BulkTagSchema = z.object({
+  action: z.literal('bulk-tag'),
+  ids: z.array(z.string()).min(1),
+  tags: z.array(z.string()).min(1),
+});
 
 export const GET = withPermission('contacts', 'read')(async (request: NextRequest, _context: unknown) => {
   try {
@@ -36,18 +59,26 @@ export async function POST(request: NextRequest, context: unknown) {
     const body = await request.json();
 
     // Bulk actions require 'manage' -- more sensitive than a single create.
-    if (body.action === 'bulk-delete' && Array.isArray(body.ids)) {
+    if (body.action === 'bulk-delete') {
+      const parsed = BulkDeleteSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
+      }
       if (!checkPermission(userId, 'contacts', 'manage')) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
       }
-      bulkDeleteContacts(body.ids);
+      bulkDeleteContacts(parsed.data.ids);
       return NextResponse.json({ success: true });
     }
-    if (body.action === 'bulk-tag' && Array.isArray(body.ids) && Array.isArray(body.tags)) {
+    if (body.action === 'bulk-tag') {
+      const parsed = BulkTagSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
+      }
       if (!checkPermission(userId, 'contacts', 'manage')) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
       }
-      bulkUpdateTags(body.ids, body.tags);
+      bulkUpdateTags(parsed.data.ids, parsed.data.tags);
       return NextResponse.json({ success: true });
     }
 
@@ -55,10 +86,11 @@ export async function POST(request: NextRequest, context: unknown) {
     if (!checkPermission(userId, 'contacts', 'create')) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
-    const { email, firstName, lastName, company, phone, source, tags, status } = body;
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    const parsed = CreateContactSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
+    const { email, firstName, lastName, company, phone, source, tags, status } = parsed.data;
 
     const id = createContact({ email, firstName, lastName, company, phone, source, tags, status });
 

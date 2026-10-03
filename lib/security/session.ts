@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import { validateEnv } from './validate-env';
+import { logger } from '@/lib/logger';
 
 validateEnv();
 
@@ -33,7 +34,7 @@ const EFFECTIVE_SECRET = SESSION_SECRET ?? DEV_FALLBACK;
 if (!SESSION_SECRET) {
   // Development/test only — make the fallback visible in logs so it is
   // never silently used in a staging or shared environment.
-  console.warn(
+  logger.warn(
     '[security] SESSION_SECRET is not set — using insecure dev fallback. ' +
     'Set SESSION_SECRET before deploying to any shared or public environment.'
   );

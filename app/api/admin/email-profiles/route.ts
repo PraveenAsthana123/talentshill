@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getAllProfiles, createProfile } from '@/lib/db/email-profile-queries';
 import { withPermission, getSessionUserIdAsync } from '@/lib/security/rbac';
 import { logOperationRun } from '@/lib/operation-run';
+
+const CreateEmailProfileSchema = z.object({
+  name: z.string().min(1).max(200),
+  fromName: z.string().min(1).max(200),
+  fromEmail: z.string().email(),
+  replyTo: z.string().email().optional(),
+  signature: z.string().optional(),
+  isDefault: z.boolean().optional(),
+});
 
 export const GET = withPermission('email_profiles', 'read')(async (
   _request: NextRequest,
@@ -21,11 +31,11 @@ export const POST = withPermission('email_profiles', 'create')(async (
 ) => {
   try {
     const body = await request.json();
-    const { name, fromName, fromEmail, replyTo, signature, isDefault } = body;
-
-    if (!name || !fromName || !fromEmail) {
-      return NextResponse.json({ error: 'Name, fromName, and fromEmail are required' }, { status: 400 });
+    const parsed = CreateEmailProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
+    const { name, fromName, fromEmail, replyTo, signature, isDefault } = parsed.data;
 
     const id = createProfile({ name, fromName, fromEmail, replyTo, signature, isDefault });
     const userId = await getSessionUserIdAsync(request);
