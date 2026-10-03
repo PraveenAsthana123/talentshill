@@ -1,198 +1,348 @@
 #!/usr/bin/env python3
 """
-TalentsHill Portal — Automated Installation Script
-Supports: Ubuntu 22.04/24.04 LTS
+TalentsHill Portal — Full Server Setup Script
+Supports: Ubuntu 22.04 / 24.04 LTS (fresh VPS, e.g. GoDaddy VPS)
 
 Usage:
-  sudo python3 scripts/install.py          # full install
-  python3 scripts/install.py --check       # dry-run check only
-  python3 scripts/install.py --skip-docker
+  sudo python3 scripts/install.py                         # full install (Docker mode)
+  sudo python3 scripts/install.py --mode pm2              # PM2 instead of Docker
+  sudo python3 scripts/install.py --check                 # check what's installed
+  sudo python3 scripts/install.py --skip-ollama           # skip Ollama
+  sudo python3 scripts/install.py --domain talentshill.com --email admin@talentshill.com
+
+What this installs:
+  1.  Base packages (curl, wget, git, build-essential, ufw, fail2ban)
+  2.  Node.js 20 LTS + npm + PM2
+  3.  Docker Engine + Docker Compose plugin
+  4.  nginx + Certbot (Let's Encrypt HTTPS)
+  5.  Ollama (local AI) + nomic-embed-text + llama3.2 models
+  6.  Firewall (UFW): 22/80/443 only
+  7.  Fail2ban: SSH brute-force protection
+  8.  Persistent data dirs (/opt/talentshill/data, /opt/talentshill/uploads)
+  9.  Local dep bundle (@sohamyoga/shared-social-platforms → packed tarball)
+  10. npm ci
+  11. .env from .env.example
+  12. DB migrations (drizzle-kit push)
+  13. nginx site + optional HTTPS via certbot
+  14. App start via Docker Compose or PM2 (systemd-enabled)
+  15. Health check
 """
-import argparse
-import os
-import subprocess
-import sys
-import shutil
-import platform
+
+import argparse, os, subprocess, sys, shutil, time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-PM2_CONFIG = REPO_ROOT / "pm2.config.js"
-NGINX_CONF_SRC = REPO_ROOT / "nginx" / "talentshill.conf"
-LOG_FILE = Path("/var/log/talentshill-install.log")
+REPO_ROOT   = Path(__file__).resolve().parent.parent
+NGINX_CONF  = REPO_ROOT / "nginx" / "talentshill.conf"
+ENV_EXAMPLE = REPO_ROOT / ".env.example"
+ENV_FILE    = REPO_ROOT / ".env"
+DATA_DIR    = Path("/opt/talentshill/data")
+UPLOADS_DIR = Path("/opt/talentshill/uploads")
+LOG_FILE    = Path("/var/log/talentshill-install.log")
+LOCAL_DEP   = Path("/mnt/deepa/sohamyoga/packages/shared-social-platforms")
+PACKED_DEP  = REPO_ROOT / "vendor" / "shared-social-platforms.tgz"
 
-GREEN  = "\033[92m"; YELLOW = "\033[93m"; RED = "\033[91m"; CYAN = "\033[96m"; RESET = "\033[0m"
-def info(m):  print(f"{GREEN}[✔] {m}{RESET}")
-def warn(m):  print(f"{YELLOW}[!] {m}{RESET}")
-def error(m): print(f"{RED}[✘] {m}{RESET}")
-def step(m):  print(f"\n{CYAN}══ {m} ══{RESET}")
+G="\033[92m"; Y="\033[93m"; R="\033[91m"; C="\033[96m"; B="\033[1m"; X="\033[0m"
+def info(m):  _log("✔", G, m)
+def warn(m):  _log("!", Y, m)
+def error(m): _log("✘", R, m)
+def step(m):  print(f"\n{C}{B}{'─'*54}\n  {m}\n{'─'*54}{X}")
+def _log(s, c, m):
+    print(f"{c}[{s}] {m}{X}")
+    try:
+        open(LOG_FILE,"a").write(f"[{s}] {m}\n")
+    except: pass
 
-def run(cmd, check=True, capture=False):
-    kwargs = dict(shell=True, text=True)
-    if capture: kwargs["capture_output"] = True
-    result = subprocess.run(cmd, **kwargs)
-    if check and result.returncode != 0:
-        error(f"Failed: {cmd}")
-        raise SystemExit(result.returncode)
-    return result
+def run(cmd, check=True, capture=False, quiet=False):
+    kw = dict(shell=True, text=True)
+    if capture or quiet: kw["capture_output"] = True
+    r = subprocess.run(cmd, **kw)
+    if check and r.returncode != 0:
+        error(f"FAILED: {cmd}")
+        if capture or quiet: print((r.stderr or r.stdout or "")[-500:])
+        raise SystemExit(r.returncode)
+    return r
 
 def which(b): return shutil.which(b) is not None
-def check_root():
-    if os.geteuid() != 0:
-        error("Run as root: sudo python3 scripts/install.py"); sys.exit(1)
+def root():
+    if os.geteuid() != 0: error("Run as root: sudo python3 scripts/install.py"); sys.exit(1)
 
 def install_base():
-    step("Base Packages")
+    step("1/14  Base Packages")
     run("apt-get update -qq")
-    run("apt-get install -y curl wget git unzip gnupg lsb-release ca-certificates "
-        "apt-transport-https software-properties-common build-essential ufw fail2ban htop")
-    info("Base packages installed")
+    run("DEBIAN_FRONTEND=noninteractive apt-get install -y curl wget git unzip gnupg "
+        "lsb-release ca-certificates apt-transport-https software-properties-common "
+        "build-essential ufw fail2ban htop nano", quiet=True)
+    info("Base packages OK")
 
 def install_nodejs():
-    step("Node.js 20 LTS")
-    if which("node"):
-        ver = run("node -v", capture=True).stdout.strip()
-        info(f"Node.js: {ver}")
-        if not ver.startswith("v20"):
-            warn("Not v20 — upgrading")
-        else:
-            return
-    run("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
-    run("apt-get install -y nodejs")
-    run("npm install -g npm@latest pm2")
-    info("Node.js 20 + PM2 installed")
+    step("2/14  Node.js 20 LTS + PM2")
+    ver = run("node -v 2>/dev/null", capture=True, check=False).stdout.strip()
+    if not ver.startswith("v20"):
+        run("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -", quiet=True)
+        run("apt-get install -y nodejs", quiet=True)
+    run("npm install -g npm@latest pm2", quiet=True)
+    info(f"Node {run('node -v',capture=True).stdout.strip()}  PM2 {run('pm2 -v',capture=True).stdout.strip()}")
 
 def install_docker():
-    step("Docker Engine")
-    if which("docker"):
-        info(f"Docker: {run('docker --version', capture=True).stdout.strip()}")
-        return
-    run("curl -fsSL https://get.docker.com | sh")
-    run("systemctl enable --now docker")
-    info("Docker installed")
+    step("3/14  Docker Engine + Compose")
+    if not which("docker"):
+        run("curl -fsSL https://get.docker.com | sh", quiet=True)
+        run("systemctl enable --now docker")
+    if run("docker compose version", capture=True, check=False).returncode != 0:
+        run("apt-get install -y docker-compose-plugin", quiet=True)
+    info(run("docker compose version", capture=True).stdout.strip())
 
 def install_nginx():
-    step("nginx + Certbot")
+    step("4/14  nginx + Certbot")
     if not which("nginx"):
-        run("apt-get install -y nginx certbot python3-certbot-nginx")
+        run("apt-get install -y nginx certbot python3-certbot-nginx", quiet=True)
         run("systemctl enable nginx")
-    info("nginx ready")
+    info(run("nginx -v 2>&1", capture=True).stderr.strip())
 
 def install_ollama():
-    step("Ollama (AI inference)")
+    step("5/14  Ollama (local AI)")
     if not which("ollama"):
-        run("curl -fsSL https://ollama.ai/install.sh | sh")
-    run("systemctl enable --now ollama 2>/dev/null || ollama serve &>/var/log/ollama.log &", check=False)
-    run("ollama pull nomic-embed-text", check=False)
-    run("ollama pull llama3.2", check=False)
-    info("Ollama + models ready")
+        run("curl -fsSL https://ollama.com/install.sh | sh", quiet=True)
+    run("systemctl enable --now ollama 2>/dev/null || true", check=False)
+    time.sleep(3)
+    for model in ["nomic-embed-text", "llama3.2"]:
+        r = run(f"ollama pull {model}", check=False)
+        (info if r.returncode == 0 else warn)(f"{'Pulled' if r.returncode==0 else 'SKIP'}: {model}")
 
-def install_trivy():
-    step("Trivy")
-    if which("trivy"): return
-    run("wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -")
-    run('echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/trivy.list')
-    run("apt-get update -qq && apt-get install -y trivy")
-    info("Trivy installed")
+def configure_firewall():
+    step("6/14  Firewall (UFW)")
+    run("ufw --force reset", quiet=True)
+    for rule in ["default deny incoming","default allow outgoing",
+                 "allow 22/tcp","allow 80/tcp","allow 443/tcp"]:
+        run(f"ufw {rule}", quiet=True)
+    run("ufw --force enable", quiet=True)
+    info("UFW: 22/80/443 open, everything else blocked")
 
-def install_terraform():
-    step("Terraform")
-    if which("terraform"): return
-    run("wget -O /tmp/tf.zip https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip")
-    run("unzip -o /tmp/tf.zip -d /usr/local/bin/ && chmod +x /usr/local/bin/terraform")
-    info("Terraform installed")
+def configure_fail2ban():
+    step("7/14  Fail2ban")
+    jail = Path("/etc/fail2ban/jail.local")
+    if not jail.exists():
+        jail.write_text("[DEFAULT]\nbantime=3600\nfindtime=600\nmaxretry=5\n\n"
+                        "[sshd]\nenabled=true\nport=ssh\n")
+    run("systemctl enable --now fail2ban", quiet=True)
+    info("Fail2ban: SSH protection enabled (5 attempts → 1h ban)")
 
-def install_aws_cli():
-    step("AWS CLI v2")
-    if which("aws"):
-        info(f"AWS CLI: {run('aws --version', capture=True).stdout.strip()}")
+def create_directories():
+    step("8/14  Persistent Directories")
+    for d in [DATA_DIR, UPLOADS_DIR, REPO_ROOT/"logs"]:
+        d.mkdir(parents=True, exist_ok=True)
+        info(f"  {d}")
+    # Symlinks so the app finds data/ and public/uploads/ at expected paths
+    db_link = REPO_ROOT / "data"
+    up_link = REPO_ROOT / "public" / "uploads"
+    for link, target in [(db_link, DATA_DIR), (up_link, UPLOADS_DIR)]:
+        if not link.exists() and not link.is_symlink():
+            link.symlink_to(target)
+            info(f"  Symlink {link} → {target}")
+
+def bundle_local_dep():
+    step("9/14  Bundle Local Dependency")
+    vendor = REPO_ROOT / "vendor"
+    vendor.mkdir(exist_ok=True)
+    if PACKED_DEP.exists():
+        info(f"Already packed: {PACKED_DEP.name}"); return
+    if LOCAL_DEP.exists():
+        r = run(f"npm pack {LOCAL_DEP} --pack-destination {vendor}", capture=True)
+        tgz = vendor / r.stdout.strip().split("\n")[-1]
+        tgz.rename(PACKED_DEP)
+        info(f"Packed → {PACKED_DEP}")
+    else:
+        warn("shared-social-platforms source not found — assuming tarball is pre-committed")
+        warn(f"Expected: {PACKED_DEP}")
+        warn("Desktop prep: npm pack ../sohamyoga/packages/shared-social-platforms --pack-destination ./vendor")
         return
-    run("curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip")
-    run("unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install")
-    info("AWS CLI installed")
+    # Patch package.json
+    pkg = REPO_ROOT / "package.json"
+    txt = pkg.read_text()
+    old = '"@sohamyoga/shared-social-platforms": "file:../sohamyoga/packages/shared-social-platforms"'
+    new = '"@sohamyoga/shared-social-platforms": "file:./vendor/shared-social-platforms.tgz"'
+    if old in txt:
+        pkg.write_text(txt.replace(old, new))
+        info("package.json patched — dep now points to tarball")
+    else:
+        info("package.json already patched")
 
 def npm_install():
-    step("npm ci")
-    run(f"npm ci --prefix {REPO_ROOT} --omit=dev 2>&1 | tail -3")
-    info("Dependencies installed")
+    step("10/14  npm ci")
+    run(f"cd {REPO_ROOT} && npm ci --omit=dev", quiet=True)
+    info("node_modules ready")
 
-def copy_env():
-    step(".env setup")
-    env_ex = REPO_ROOT / ".env.example"
-    env = REPO_ROOT / ".env"
-    if env_ex.exists() and not env.exists():
-        run(f"cp {env_ex} {env}")
-        warn("Created .env — EDIT with real secrets before starting!")
-    elif env.exists():
-        info(".env already exists")
+def setup_env():
+    step("11/14  .env File")
+    if not ENV_FILE.exists():
+        shutil.copy(ENV_EXAMPLE, ENV_FILE)
+        warn(f"Created {ENV_FILE} from .env.example")
+        warn("⚠  Edit before first start:")
+        for k in ["SESSION_SECRET (64 random chars)", "ADMIN_EMAIL", "ADMIN_PASSWORD",
+                  "SMTP_HOST / SMTP_USER / SMTP_PASS", "NEXT_PUBLIC_SITE_URL=https://talentshill.com"]:
+            warn(f"   {k}")
+    else:
+        info(".env already exists — not overwritten")
 
-def configure_pm2():
-    step("PM2")
-    run("pm2 startup systemd -u root --hp /root 2>&1 | tail -2", check=False)
-    if PM2_CONFIG.exists():
-        run(f"pm2 start {PM2_CONFIG} --env production 2>&1 | tail -3", check=False)
-        run("pm2 save", check=False)
-        info("PM2 configured")
+def run_migrations():
+    step("12/14  Database Migrations")
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    r = run(f"cd {REPO_ROOT} && npx drizzle-kit push --force 2>&1", capture=True, check=False)
+    (info if r.returncode == 0 else warn)("Migrations " + ("applied" if r.returncode == 0 else "FAILED — run manually: npx drizzle-kit push"))
+    if r.returncode != 0: print(r.stdout[-400:])
+
+def configure_nginx(domain, email):
+    step("13/14  nginx Config + HTTPS")
+    avail = Path("/etc/nginx/sites-available/talentshill.conf")
+    enabl = Path("/etc/nginx/sites-enabled/talentshill.conf")
+
+    if NGINX_CONF.exists():
+        shutil.copy(NGINX_CONF, avail)
+        info(f"Copied {NGINX_CONF.name} → {avail}")
+    else:
+        avail.write_text(f"""server {{
+    listen 80;
+    server_name {domain} www.{domain};
+    location / {{
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }}
+    location /_next/static/ {{ alias {REPO_ROOT}/.next/static/; expires 365d; }}
+    location /uploads/       {{ alias {UPLOADS_DIR}/; expires 30d; }}
+}}\n""")
+
+    if not enabl.exists(): enabl.symlink_to(avail)
+    default = Path("/etc/nginx/sites-enabled/default")
+    if default.exists(): default.unlink(); info("Removed default nginx site")
+    run("nginx -t && systemctl reload nginx")
+    info("nginx config loaded")
+
+    if domain and "localhost" not in domain and email:
+        warn(f"Requesting Let's Encrypt cert for {domain}...")
+        r = run(f"certbot --nginx -d {domain} -d www.{domain} "
+                f"--non-interactive --agree-tos -m {email} --redirect", check=False)
+        if r.returncode == 0:
+            info(f"HTTPS live: https://{domain}")
+            run("systemctl enable --now certbot.timer 2>/dev/null || "
+                "(crontab -l 2>/dev/null; echo '0 3 * * * certbot renew --quiet') | crontab -", check=False)
+        else:
+            warn("certbot failed — DNS may not be pointing here yet")
+            warn(f"Run manually once DNS is live: certbot --nginx -d {domain} -m {email} --agree-tos")
+    else:
+        warn("No domain/email provided — skipping HTTPS. Run certbot manually.")
+
+def start_app(mode):
+    step("14/14  Start App")
+    if mode == "docker":
+        run(f"cd {REPO_ROOT} && docker compose build --no-cache", quiet=True)
+        run(f"cd {REPO_ROOT} && docker compose up -d")
+        run("systemctl enable docker")
+        info("Docker Compose started — auto-restarts on reboot")
+    else:
+        run(f"cd {REPO_ROOT} && NODE_ENV=production npm run build", quiet=True)
+        if "talentshill" in run("pm2 list", capture=True, check=False).stdout:
+            run("pm2 reload talentshill")
+        else:
+            run(f"pm2 start {REPO_ROOT}/pm2.config.js --env production")
+        run("pm2 save")
+        r = run("pm2 startup systemd -u root --hp /root 2>&1", capture=True, check=False)
+        for line in r.stdout.splitlines():
+            if line.strip().startswith("sudo"):
+                run(line.strip(), check=False); break
+        info("PM2 started — auto-restarts on reboot via systemd")
+
+def health_check():
+    step("Health Check")
+    warn("Waiting 20 s for app to start...")
+    time.sleep(20)
+    for i in range(12):
+        r = run("curl -sf http://127.0.0.1:3000/api/health", capture=True, check=False)
+        if r.returncode == 0:
+            info(f"PASSED: {r.stdout.strip()}"); return True
+        time.sleep(5)
+    error("FAILED after 80 s — check logs:")
+    run("pm2 logs talentshill --lines 20 2>/dev/null || docker compose logs --tail 30", check=False)
+    return False
 
 def check_only():
-    step("Dependency Check")
-    checks = {
-        "node": ("node -v", "v20"),
-        "npm":  ("npm -v", "."),
-        "docker": ("docker --version", "Docker"),
-        "nginx": ("nginx -v 2>&1", "nginx"),
-        "ollama": ("ollama --version", "0."),
-        "terraform": ("terraform version 2>/dev/null | head -1", "Terraform"),
-        "trivy": ("trivy --version 2>/dev/null | head -1", "Trivy"),
-        "aws": ("aws --version", "aws-cli"),
-        "pm2": ("pm2 --version", "."),
-    }
+    step("Installation Check")
+    checks = [
+        ("node",      "node -v",                   "v20"),
+        ("npm",       "npm -v",                    "."),
+        ("pm2",       "pm2 -v",                    "."),
+        ("docker",    "docker --version",           "Docker"),
+        ("compose",   "docker compose version",     "Compose"),
+        ("nginx",     "nginx -v 2>&1",              "nginx"),
+        ("certbot",   "certbot --version 2>&1",     "certbot"),
+        ("ollama",    "ollama --version 2>&1",      "ollama"),
+        ("fail2ban",  "fail2ban-client -V 2>&1",    "Fail2Ban"),
+        ("ufw",       "ufw status",                 "."),
+        ("git",       "git --version",              "git"),
+    ]
     ok = True
-    for name, (cmd, expect) in checks.items():
+    for name, cmd, expect in checks:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        if r.returncode == 0 and expect in r.stdout + r.stderr:
-            info(f"{name:18} {(r.stdout+r.stderr).strip().split(chr(10))[0]}")
-        else:
-            warn(f"{name:18} NOT FOUND")
-            ok = False
+        out = (r.stdout+r.stderr).strip().split("\n")[0]
+        if r.returncode == 0: info(f"  {name:<14} {out}")
+        else: warn(f"  {name:<14} NOT INSTALLED"); ok = False
+    print()
+    info("  .env            exists") if ENV_FILE.exists() else warn("  .env            MISSING")
+    info(f"  data dir        {DATA_DIR}") if DATA_DIR.exists() else warn(f"  data dir        MISSING ({DATA_DIR})")
+    info(f"  vendor tgz      exists") if PACKED_DEP.exists() else warn("  vendor tgz      MISSING (shared-social-platforms.tgz)")
     return ok
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true")
-    parser.add_argument("--skip-docker", action="store_true")
-    parser.add_argument("--skip-ollama", action="store_true")
-    args = parser.parse_args()
+    p = argparse.ArgumentParser()
+    p.add_argument("--check",       action="store_true")
+    p.add_argument("--mode",        default="docker", choices=["docker","pm2"])
+    p.add_argument("--skip-ollama", action="store_true")
+    p.add_argument("--skip-ssl",    action="store_true")
+    p.add_argument("--domain",      default="talentshill.com")
+    p.add_argument("--email",       default="")
+    a = p.parse_args()
 
-    print(f"\n{CYAN}{'='*55}\n  TalentsHill Portal — Installation\n  Root: {REPO_ROOT}\n{'='*55}{RESET}\n")
+    print(f"\n{C}{B}╔══════════════════════════════════════════════╗")
+    print(f"║  TalentsHill — VPS Setup Script            ║")
+    print(f"║  Ubuntu 22.04/24.04  |  Mode: {a.mode:<14}║")
+    print(f"╚══════════════════════════════════════════════╝{X}\n")
 
-    if args.check:
-        sys.exit(0 if check_only() else 1)
+    if a.check: sys.exit(0 if check_only() else 1)
+    root()
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-    check_root()
     install_base()
     install_nodejs()
-    if not args.skip_docker:
-        install_docker()
+    install_docker()
     install_nginx()
-    if not args.skip_ollama:
-        install_ollama()
-    install_trivy()
-    install_terraform()
-    install_aws_cli()
-    copy_env()
+    if not a.skip_ollama: install_ollama()
+    configure_firewall()
+    configure_fail2ban()
+    create_directories()
+    bundle_local_dep()
     npm_install()
-    configure_pm2()
+    setup_env()
+    run_migrations()
+    configure_nginx(a.domain, "" if a.skip_ssl else a.email)
+    start_app(a.mode)
+    ok = health_check()
 
-    print(f"\n{GREEN}{'='*55}\n  TalentsHill installation complete!\n{'='*55}{RESET}")
-    print("""
-Next steps:
-  1. Edit .env with real secrets (SESSION_SECRET, ADMIN_*)
-  2. Run migrations:   npx drizzle-kit migrate
-  3. Start (Docker):  docker compose up -d
-     Start (PM2):     pm2 start pm2.config.js --env production
-  4. Health check:    bash scripts/health-check.sh
-""")
+    print(f"\n{C}{B}{'═'*48}{X}")
+    if ok:
+        print(f"{G}{B}  ✔  TalentsHill is RUNNING{X}")
+        print(f"     https://{a.domain}")
+        print(f"     https://{a.domain}/admin")
+    else:
+        print(f"{Y}{B}  !  Started but health check failed — check logs{X}")
+    print(f"\n{Y}Next steps:{X}")
+    print(f"  1. Edit .env:    nano {ENV_FILE}")
+    print(f"     SESSION_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, SMTP_*")
+    print(f"  2. Point DNS:    talentshill.com  A  →  $(curl -s ifconfig.me)")
+    print(f"  3. HTTPS:        certbot --nginx -d {a.domain} -m {a.email or 'you@email.com'} --agree-tos")
+    print(f"  4. Deploy later: bash scripts/deploy-forward.sh")
+    print(f"  5. Monitor:      bash scripts/health-monitor.sh")
+    print(f"{'═'*48}\n")
 
 if __name__ == "__main__":
     main()
