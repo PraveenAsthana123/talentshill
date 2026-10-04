@@ -21,6 +21,9 @@ export function createCampaign(data: {
   templateId?: string;
   subject?: string;
   throttlePerMinute?: number;
+  scheduledAt?: Date;
+  enableAbTest?: boolean;
+  variantBSubject?: string;
   createdBy?: string;
 }) {
   const now = new Date();
@@ -37,6 +40,9 @@ export function createCampaign(data: {
       templateId: data.templateId,
       subject: data.subject,
       throttlePerMinute: data.throttlePerMinute ?? 60,
+      scheduledAt: data.scheduledAt,
+      enableAbTest: data.enableAbTest ?? false,
+      variantBSubject: data.variantBSubject,
       createdBy: data.createdBy,
       createdAt: now,
       updatedAt: now,

@@ -172,7 +172,7 @@ export default function ManualTab() {
         return (
           <div className={styles.stepContent}>
             <h3 className={styles.stepTitle}>View Results</h3>
-            <p className={styles.hint}>View detailed campaign analytics from the <a href="/admin/analytics/campaigns" target="_blank" rel="noreferrer">Campaign Analytics</a> page.</p>
+            <p className={styles.hint}>View detailed campaign analytics from the <a href="/admin/analytics" target="_blank" rel="noreferrer">Campaign Analytics</a> page.</p>
             <Button variant="ghost" onClick={() => store.reset()}>Start New Workflow</Button>
           </div>
         );

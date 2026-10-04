@@ -51,7 +51,7 @@ function generateResponse(message: string): string {
 export async function sendMessage(
   userMessage: string,
   sessionToken?: string,
-): Promise<{ stream: AsyncGenerator<string>; fullText: string }> {
+): Promise<{ stream: AsyncGenerator<string>; fullText: string; sessionToken?: string }> {
   const sanitized = sanitizePrompt(userMessage);
   trackChatEvent('message_sent', { length: sanitized.length });
 
@@ -65,7 +65,7 @@ export async function sendMessage(
     if (response.ok) {
       const data = await response.json() as { response?: string; sessionToken?: string };
       const fullText = data.response ?? generateResponse(sanitized);
-      return { stream: simulateStream(fullText), fullText };
+      return { stream: simulateStream(fullText), fullText, sessionToken: data.sessionToken };
     }
     // API returned an error — fall through to keyword fallback
     console.warn('[chatbot] /api/chat returned', response.status, '— using fallback response');

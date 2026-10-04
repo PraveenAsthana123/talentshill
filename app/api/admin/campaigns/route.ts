@@ -13,6 +13,9 @@ const CreateCampaignSchema = z.object({
   templateId: z.string().optional(),
   subject: z.string().max(500).optional(),
   throttlePerMinute: z.number().min(1).max(1000).default(60),
+  scheduledAt: z.string().datetime().optional(),
+  enableAbTest: z.boolean().optional(),
+  variantBSubject: z.string().max(500).optional(),
 });
 
 export const GET = withPermission('campaigns', 'read')(async (_request: NextRequest, _context: unknown) => {
@@ -31,11 +34,15 @@ export const POST = withPermission('campaigns', 'create')(async (request: NextRe
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
-    const { name, type, audienceType, audienceId, emailProfileId, templateId, subject, throttlePerMinute } = parsed.data;
+    const { name, type, audienceType, audienceId, emailProfileId, templateId, subject, throttlePerMinute,
+            scheduledAt, enableAbTest, variantBSubject } = parsed.data;
 
     const userId = await getSessionUserIdAsync(request);
     const id = createCampaign({
       name, type, audienceType, audienceId, emailProfileId, templateId, subject, throttlePerMinute,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
+      enableAbTest,
+      variantBSubject,
       createdBy: userId ?? undefined,
     });
 

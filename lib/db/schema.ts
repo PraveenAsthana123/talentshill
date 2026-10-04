@@ -600,6 +600,8 @@ export const campaigns = sqliteTable('campaigns', {
   totalClicked: integer('total_clicked').default(0),
   totalBounced: integer('total_bounced').default(0),
   totalUnsubscribed: integer('total_unsubscribed').default(0),
+  enableAbTest: integer('enable_ab_test', { mode: 'boolean' }).default(false),
+  variantBSubject: text('variant_b_subject'),
   createdBy: text('created_by'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
